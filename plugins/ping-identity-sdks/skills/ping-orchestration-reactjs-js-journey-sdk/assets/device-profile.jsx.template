@@ -1,0 +1,92 @@
+/*
+ * 
+ *
+ * device-profile.jsx.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * DeviceProfile Callback Component
+ *
+ * INSTRUCTIONS:
+ *   Place in client/components/journey/device-profile.jsx
+ *
+ * Handles: DeviceProfileCallback
+ *
+ * Automatically collects device metadata (browser, platform, hardware, etc.)
+ * and sets it on the callback. No user interaction required — the component
+ * auto-submits after data collection.
+ *
+ * The DeviceProfileCallback collects information from the browser's
+ * navigator, screen, and other Web APIs and sends it to PingAM.
+ *
+ * SDK integration points:
+ *   - callback.getInputValue()     → current collected data
+ *   - callback.setInputValue(data) → set the collected device data
+ */
+
+import { useEffect } from 'react';
+
+/**
+ * Collects basic device profile data from the browser.
+ */
+function collectDeviceProfile() {
+  return {
+    identifier: navigator.userAgent,
+    metadata: {
+      hardware: {
+        cpuClass: navigator.hardwareConcurrency || null,
+        deviceMemory: navigator.deviceMemory || null,
+        display: {
+          width: screen.width,
+          height: screen.height,
+          pixelDepth: screen.pixelDepth,
+        },
+      },
+      browser: {
+        userAgent: navigator.userAgent,
+        appName: navigator.appName,
+        appVersion: navigator.appVersion,
+        language: navigator.language,
+        platform: navigator.platform,
+      },
+      platform: {
+        deviceName: navigator.platform,
+        fonts: [],
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        timezoneOffset: new Date().getTimezoneOffset(),
+      },
+    },
+  };
+}
+
+/**
+ * @function DeviceProfile — Automatically collects device data and submits
+ * @param {Object} props
+ * @param {Object} props.callback — The callback object from PingAM
+ * @param {Function} props.onSubmit — Submit handler to advance after collection
+ */
+export default function DeviceProfile({ callback, onSubmit }) {
+  useEffect(() => {
+    try {
+      const profile = collectDeviceProfile();
+      callback.setInputValue(JSON.stringify(profile));
+    } catch (error) {
+      console.error('Device profile collection failed:', error);
+      callback.setInputValue(JSON.stringify({}));
+    }
+
+    if (onSubmit) {
+      onSubmit();
+    }
+  }, [callback]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div style={{ textAlign: 'center', padding: '1rem' }}>
+      <p>Collecting device information...</p>
+    </div>
+  );
+}

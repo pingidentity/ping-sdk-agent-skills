@@ -1,0 +1,64 @@
+/*
+ * 
+ *
+ * AccessTokenView.swift.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * Access Token View — displays the current OAuth access token.
+ *
+ * INSTRUCTIONS:
+ *   1. Place in YourApp/Views/AccessTokenView.swift
+ */
+
+import SwiftUI
+
+struct AccessTokenView: View {
+    let menuItem: MenuItem
+    @StateObject private var viewModel = AccessTokenViewModel()
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                if viewModel.isLoading {
+                    ProgressView("Fetching token...")
+                } else if let error = viewModel.error {
+                    ErrorMessageView(message: error)
+                } else if let accessToken = viewModel.accessToken {
+                    VStack(spacing: 12) {
+                        CopyableText(label: "Access Token", value: accessToken)
+
+                        if let idToken = viewModel.idToken {
+                            CopyableText(label: "ID Token", value: idToken)
+                        }
+
+                        if let refreshToken = viewModel.refreshToken {
+                            CopyableText(label: "Refresh Token", value: refreshToken)
+                        }
+
+                        if let expiry = viewModel.expiry {
+                            CopyableText(label: "Expires", value: expiry)
+                        }
+                    }
+
+                    Button("Refresh Token") {
+                        Task { await viewModel.fetchToken(forceRenew: true) }
+                    }
+                    .buttonStyle(.bordered)
+                } else {
+                    Text("No token available. Please authenticate first.")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding()
+        }
+        .navigationTitle(menuItem.rawValue)
+        .task {
+            await viewModel.fetchToken()
+        }
+    }
+}

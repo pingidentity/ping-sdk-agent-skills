@@ -1,0 +1,69 @@
+/*
+ * 
+ *
+ * protect-initialize.jsx.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * PingOne Protect Initialize Callback Component
+ *
+ * INSTRUCTIONS:
+ *   Place in client/components/journey/protect-initialize.jsx
+ *   Requires: npm install @forgerock/protect
+ *
+ * Handles: PingOneProtectInitializeCallback
+ *
+ * Initializes the PingOne Protect SDK for threat signal collection.
+ * Auto-submits after initialization completes.
+ *
+ * SDK integration points:
+ *   - callback.setClientError(msg) → set error message if initialization fails
+ *   - Uses @forgerock/protect to initialize the signals SDK
+ */
+
+import { useEffect, useContext } from 'react';
+
+/**
+ * @function ProtectInitialize — Initializes PingOne Protect and auto-submits
+ * @param {Object} props
+ * @param {Object} props.callback — The callback object from PingAM
+ * @param {Function} props.onSubmit — Submit handler to advance after initialization
+ * @param {Object} [props.protectApi] — Initialized protect API instance (from context)
+ */
+export default function ProtectInitialize({ callback, onSubmit, protectApi }) {
+  useEffect(() => {
+    async function initialize() {
+      try {
+        if (protectApi) {
+          await protectApi.start();
+        }
+        callback.setInputValue('');
+      } catch (error) {
+        console.error('PingOne Protect initialization failed:', error);
+        // Set client error on the callback
+        const clientErrorInput = callback.payload?.input?.find(
+          (i) => i.name?.includes('clientError'),
+        );
+        if (clientErrorInput) {
+          callback.setInputValue(error.message || 'Protect init failed', clientErrorInput.name);
+        }
+      }
+
+      if (onSubmit) {
+        onSubmit();
+      }
+    }
+
+    initialize();
+  }, [callback]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div style={{ textAlign: 'center', padding: '1rem' }}>
+      <p>Initializing security checks...</p>
+    </div>
+  );
+}

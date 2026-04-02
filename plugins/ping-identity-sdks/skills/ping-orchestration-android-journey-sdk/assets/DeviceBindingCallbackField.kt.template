@@ -1,0 +1,84 @@
+/*
+ * 
+ *
+ * DeviceBindingCallbackField.kt.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * DeviceBindingCallbackField + PinCollectorDialog
+ * Place in com/example/myapp/auth/callback/DeviceBindingCallbackField.kt
+ * Requires: implementation(project(":mfa:binding"))
+ */
+
+package com.example.myapp.auth.callback
+
+import android.os.Build
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.pingidentity.device.binding.Prompt
+
+@Composable
+fun DeviceBindingCallbackField(viewModel: DeviceBindingCallbackViewModel, onNext: () -> Unit) {
+    val currentOnNext by rememberUpdatedState(onNext)
+    var deviceName by remember { mutableStateOf(Build.MODEL) }
+
+    viewModel.activePinPrompt?.let { prompt ->
+        PinCollectorDialog(prompt = prompt, onPinEntered = { viewModel.submitPin(it.toCharArray()) }, onCancelled = { viewModel.cancelPin() })
+    }
+
+    Box(modifier = Modifier.padding(4.dp).fillMaxSize().wrapContentSize(Alignment.TopStart)) {
+        Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+            if (viewModel.isLoading) CircularProgressIndicator()
+        }
+        Column(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(modifier = Modifier.fillMaxWidth(), value = deviceName, onValueChange = { deviceName = it }, label = { Text("Device Name") })
+            Spacer(Modifier.height(8.dp))
+            Button(modifier = Modifier.align(Alignment.End), enabled = !viewModel.isLoading, onClick = {
+                viewModel.bind(deviceName = deviceName) { result -> result.onFailure { it.printStackTrace() }; currentOnNext() }
+            }) { Text(if (viewModel.isLoading) "Binding..." else "Continue") }
+        }
+    }
+}
+
+@Composable
+fun PinCollectorDialog(prompt: Prompt, onPinEntered: (String) -> Unit, onCancelled: () -> Unit) {
+    var pin by remember { mutableStateOf("") }
+    var showPin by remember { mutableStateOf(false) }
+    Dialog(onDismissRequest = onCancelled, properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = false)) {
+        Card(modifier = Modifier.fillMaxWidth().padding(16.dp), elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface, contentColor = MaterialTheme.colorScheme.onSurface), shape = MaterialTheme.shapes.large) {
+            Column(modifier = Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                if (prompt.title.isNotEmpty()) Text(prompt.title, style = MaterialTheme.typography.headlineSmall)
+                if (prompt.subtitle.isNotEmpty()) Text(prompt.subtitle, style = MaterialTheme.typography.bodyLarge)
+                if (prompt.description.isNotEmpty()) Text(prompt.description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                OutlinedTextField(value = pin, onValueChange = { pin = it }, label = { Text("Enter PIN") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
+                    visualTransformation = if (showPin) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                    trailingIcon = { IconButton(onClick = { showPin = !showPin }) { Icon(if (showPin) Icons.Filled.Visibility else Icons.Filled.VisibilityOff, contentDescription = if (showPin) "Hide PIN" else "Show PIN") } },
+                    shape = MaterialTheme.shapes.medium)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(onClick = onCancelled) { Text("Cancel") }
+                    Spacer(Modifier.width(8.dp))
+                    Button(onClick = { if (pin.isNotEmpty()) onPinEntered(pin) }, enabled = pin.isNotEmpty()) { Text("Confirm") }
+                }
+            }
+        }
+    }
+}

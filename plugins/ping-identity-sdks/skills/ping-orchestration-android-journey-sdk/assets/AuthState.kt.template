@@ -1,0 +1,33 @@
+/*
+ * 
+ *
+ * AuthState.kt.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * Auth State — holds the current Journey node and a recomposition counter.
+ *
+ * INSTRUCTIONS:
+ *   Place this file alongside AuthViewModel.kt, e.g.:
+ *     com/example/myapp/auth/AuthState.kt
+ */
+
+package com.example.myapp.auth
+
+import com.pingidentity.orchestrate.Node
+
+/**
+ * Represents the current state of the authentication UI.
+ *
+ * @param node     The current Journey node (null before the first start() call)
+ * @param counter  Incremented on [AuthViewModel.refresh] to force recomposition
+ *                 when the node reference itself has not changed.
+ */
+data class AuthState(
+    val node: Node? = null,
+    val counter: Int = 0,
+)

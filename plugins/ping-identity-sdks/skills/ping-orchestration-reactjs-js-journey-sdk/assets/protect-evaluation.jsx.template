@@ -1,0 +1,73 @@
+/*
+ * 
+ *
+ * protect-evaluation.jsx.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * PingOne Protect Evaluation Callback Component
+ *
+ * INSTRUCTIONS:
+ *   Place in client/components/journey/protect-evaluation.jsx
+ *   Requires: npm install @forgerock/protect
+ *
+ * Handles: PingOneProtectEvaluationCallback
+ *
+ * Collects threat signals from the PingOne Protect SDK and sets them on
+ * the callback for server-side risk evaluation. Auto-submits after
+ * data collection.
+ *
+ * SDK integration points:
+ *   - callback.setInputValue(signals) → set collected threat signals
+ *   - Uses @forgerock/protect getData() to collect signals
+ */
+
+import { useEffect } from 'react';
+
+/**
+ * @function ProtectEvaluation — Collects Protect signals and auto-submits
+ * @param {Object} props
+ * @param {Object} props.callback — The callback object from PingAM
+ * @param {Function} props.onSubmit — Submit handler to advance after data collection
+ * @param {Object} [props.protectApi] — Initialized protect API instance (from context)
+ */
+export default function ProtectEvaluation({ callback, onSubmit, protectApi }) {
+  useEffect(() => {
+    async function evaluate() {
+      try {
+        if (protectApi) {
+          const signals = await protectApi.getData();
+          callback.setInputValue(signals);
+        } else {
+          callback.setInputValue('');
+        }
+      } catch (error) {
+        console.error('PingOne Protect evaluation failed:', error);
+        // Set client error
+        const clientErrorInput = callback.payload?.input?.find(
+          (i) => i.name?.includes('clientError'),
+        );
+        if (clientErrorInput) {
+          callback.setInputValue(error.message || 'Protect evaluation failed', clientErrorInput.name);
+        }
+        callback.setInputValue('');
+      }
+
+      if (onSubmit) {
+        onSubmit();
+      }
+    }
+
+    evaluate();
+  }, [callback]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div style={{ textAlign: 'center', padding: '1rem' }}>
+      <p>Evaluating security signals...</p>
+    </div>
+  );
+}

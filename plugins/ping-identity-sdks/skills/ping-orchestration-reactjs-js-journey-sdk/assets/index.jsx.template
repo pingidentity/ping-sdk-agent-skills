@@ -1,0 +1,51 @@
+/*
+ * 
+ *
+ * index.jsx.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * Application Entry Point
+ *
+ * INSTRUCTIONS:
+ *   Place in client/index.jsx
+ *
+ * Bootstraps the React application with the OIDC context provider.
+ * The OIDC client is initialized before any routes are rendered,
+ * ensuring authentication state is available throughout the app.
+ */
+
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { CONFIG } from './constants';
+import { useInitOidcState, OidcContext } from './context/oidc.context';
+import Router from './router';
+
+/**
+ * @function App — Root component that provides OIDC context
+ */
+function App() {
+  const oidcState = useInitOidcState(CONFIG);
+  const [{ oidcClient }] = oidcState;
+
+  // Wait for the OIDC client to initialize before rendering
+  if (!oidcClient) {
+    return <p>Initializing application...</p>;
+  }
+
+  return (
+    <OidcContext.Provider value={oidcState}>
+      <Router />
+    </OidcContext.Provider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+);

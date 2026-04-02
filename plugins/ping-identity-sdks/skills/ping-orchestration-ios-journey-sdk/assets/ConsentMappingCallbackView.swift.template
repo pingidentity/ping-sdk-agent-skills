@@ -1,0 +1,67 @@
+/*
+ * 
+ *
+ * ConsentMappingCallbackView.swift.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * Consent Mapping Callback View — consent to share profile data.
+ *
+ * INSTRUCTIONS:
+ *   1. Place in YourApp/Callbacks/ConsentMappingCallbackView.swift
+ */
+
+import SwiftUI
+import PingJourney
+
+struct ConsentMappingCallbackView: View {
+    let callback: ConsentMappingCallback
+    let onNodeUpdated: () -> Void
+
+    @State private var accepted: Bool = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(callback.displayName ?? callback.name)
+                .font(.subheadline)
+                .fontWeight(.medium)
+
+            if let message = callback.message, !message.isEmpty {
+                Text(message)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if !callback.fields.isEmpty {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Data to share:")
+                        .font(.caption)
+                        .fontWeight(.medium)
+
+                    ForEach(callback.fields, id: \.self) { field in
+                        HStack(spacing: 4) {
+                            Image(systemName: "circle.fill")
+                                .font(.system(size: 4))
+                                .foregroundStyle(.secondary)
+                            Text(field)
+                                .font(.caption)
+                        }
+                    }
+                }
+                .padding(8)
+                .background(Color.groupedBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+
+            Toggle(callback.isRequired ? "Required — I consent" : "I consent", isOn: $accepted)
+                .onChange(of: accepted) { newValue in
+                    callback.accepted = newValue
+                }
+        }
+        .padding(.vertical, 4)
+    }
+}

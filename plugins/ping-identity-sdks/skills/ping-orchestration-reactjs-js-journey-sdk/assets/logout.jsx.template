@@ -1,0 +1,40 @@
+/*
+ * 
+ *
+ * logout.jsx.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * Logout View
+ *
+ * INSTRUCTIONS:
+ *   Place in client/views/logout.jsx
+ *
+ * Revokes tokens, clears session storage, and redirects to the app origin.
+ * The setAuthentication(false) call internally invokes oidcClient.user.logout()
+ * to ensure access artifacts are revoked on the Ping server.
+ */
+
+import { useContext, useEffect } from 'react';
+import { OidcContext } from '../context/oidc.context';
+
+/**
+ * @function Logout — React view for the logout page
+ */
+export default function Logout() {
+  const [, { setAuthentication, setEmail, setUser }] = useContext(OidcContext);
+
+  useEffect(() => {
+    // Clear all authentication state
+    // setAuthentication(false) calls oidcClient.user.logout() internally
+    setAuthentication(false);
+    setEmail('');
+    setUser('');
+  }, [setAuthentication, setEmail, setUser]);
+
+  return <p>Logging out...</p>;
+}

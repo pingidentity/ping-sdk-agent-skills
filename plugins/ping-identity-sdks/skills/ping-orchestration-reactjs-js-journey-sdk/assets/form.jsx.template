@@ -1,0 +1,306 @@
+/*
+ * 
+ *
+ * form.jsx.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * Journey Form — main component that renders the current Journey step's callbacks.
+ *
+ * INSTRUCTIONS:
+ *   1. Place in client/components/journey/form.jsx
+ *   2. Ensure all callback components are available in the same directory
+ *   3. This component is used by both Login and Register views
+ *
+ * The Form component:
+ *   - Uses the useJourney hook to manage the authentication flow
+ *   - Maps each callback type to its corresponding React component
+ *   - Handles form submission by setting the submission step
+ *   - Navigates away on LoginSuccess
+ */
+
+import { useEffect, useContext, useReducer } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { callbackType } from '@forgerock/journey-client';
+import { WebAuthn, WebAuthnStepType } from '@forgerock/journey-client/webauthn';
+import useJourney from './journey.hook';
+import { OidcContext } from '../../context/oidc.context';
+import { JOURNEY_LOGIN, JOURNEY_REGISTER } from '../../constants';
+
+// Callback components — core
+import Text from './text';
+import TextInput from './text-input';
+import Password from './password';
+import BooleanComponent from './boolean';
+import NumberInput from './number';
+import Choice from './choice';
+import Confirmation from './confirmation';
+import Kba from './kba';
+import TermsConditions from './terms-conditions';
+import TextOutput from './text-output';
+import SuspendedTextOutput from './suspended-text-output';
+import PollingWait from './polling-wait';
+import SelectIdP from './select-idp';
+import Redirect from './redirect';
+import HiddenValue from './hidden-value';
+import Metadata from './metadata';
+
+// Callback components — optional modules
+import DeviceProfile from './device-profile';
+import ReCaptcha from './recaptcha';
+import ReCaptchaEnterprise from './recaptcha-enterprise';
+import ProtectInitialize from './protect-initialize';
+import ProtectEvaluation from './protect-evaluation';
+import WebAuthnComponent from './webauthn';
+
+// Fallback
+import Unknown from './unknown';
+
+/**
+ * Reducer to derive form metadata from the action type.
+ * Maps 'login' / 'register' to the corresponding Journey tree name and UI labels.
+ */
+function formReducer(state, action) {
+  switch (action.type) {
+    case 'login':
+      return {
+        title: 'Sign In',
+        buttonText: 'Sign In',
+        tree: JOURNEY_LOGIN,
+      };
+    case 'register':
+      return {
+        title: 'Register',
+        buttonText: 'Register',
+        tree: JOURNEY_REGISTER,
+      };
+    default:
+      return state;
+  }
+}
+
+/**
+ * Maps a callback to its corresponding React component.
+ *
+ * @param {Object} callback — callback object from the Journey step
+ * @param {number} idx — array index for React key
+ * @param {Object} options — additional options (onAutoSubmit, onRedirect)
+ * @returns {JSX.Element}
+ */
+function mapCallbackToComponent(callback, idx, { onAutoSubmit, onRedirect } = {}) {
+  const inputName = callback.payload?.input?.[0]?.name || `callback_${idx}`;
+
+  switch (callback.getType()) {
+    // ── Text / Name inputs ────────────────────────────────────────────────
+    case callbackType.NameCallback:
+    case callbackType.ValidatedCreateUsernameCallback:
+    case callbackType.StringAttributeInputCallback:
+      return <Text callback={callback} inputName={inputName} key={inputName} />;
+
+    case callbackType.TextInputCallback:
+      return <TextInput callback={callback} inputName={inputName} key={inputName} />;
+
+    // ── Password inputs ───────────────────────────────────────────────────
+    case callbackType.PasswordCallback:
+    case callbackType.ValidatedCreatePasswordCallback:
+      return <Password callback={callback} inputName={inputName} key={inputName} />;
+
+    // ── Attribute inputs ──────────────────────────────────────────────────
+    case callbackType.BooleanAttributeInputCallback:
+      return <BooleanComponent callback={callback} inputName={inputName} key={inputName} />;
+
+    case callbackType.NumberAttributeInputCallback:
+      return <NumberInput callback={callback} inputName={inputName} key={inputName} />;
+
+    // ── Selection inputs ──────────────────────────────────────────────────
+    case callbackType.ChoiceCallback:
+      return <Choice callback={callback} inputName={inputName} key={inputName} />;
+
+    case callbackType.ConfirmationCallback:
+      return <Confirmation callback={callback} inputName={inputName} key={inputName} />;
+
+    case callbackType.SelectIdPCallback:
+      return <SelectIdP callback={callback} inputName={inputName} key={inputName} onSubmit={onAutoSubmit} />;
+
+    // ── Knowledge-based / consent ─────────────────────────────────────────
+    case callbackType.KbaCreateCallback:
+      return <Kba callback={callback} inputName={inputName} key={inputName} />;
+
+    case callbackType.TermsAndConditionsCallback:
+      return <TermsConditions callback={callback} inputName={inputName} key={inputName} />;
+
+    // ── Text output (read-only) ───────────────────────────────────────────
+    case callbackType.TextOutputCallback:
+      return <TextOutput callback={callback} key={inputName} />;
+
+    case callbackType.SuspendedTextOutputCallback:
+      return <SuspendedTextOutput callback={callback} key={inputName} />;
+
+    // ── Auto-advancing (no user interaction) ──────────────────────────────
+    case callbackType.PollingWaitCallback:
+      return <PollingWait callback={callback} key={inputName} onSubmit={onAutoSubmit} />;
+
+    case callbackType.RedirectCallback:
+      return <Redirect key={inputName} onRedirect={onRedirect} />;
+
+    case callbackType.DeviceProfileCallback:
+      return <DeviceProfile callback={callback} key={inputName} onSubmit={onAutoSubmit} />;
+
+    // ── Hidden / Metadata (non-visual) ────────────────────────────────────
+    case callbackType.HiddenValueCallback:
+      return <HiddenValue callback={callback} key={inputName} />;
+
+    case callbackType.MetadataCallback:
+      return <Metadata callback={callback} key={inputName} />;
+
+    // ── reCAPTCHA ─────────────────────────────────────────────────────────
+    case callbackType.ReCaptchaCallback:
+      return <ReCaptcha callback={callback} inputName={inputName} key={inputName} onSubmit={onAutoSubmit} />;
+
+    case callbackType.ReCaptchaEnterpriseCallback:
+      return <ReCaptchaEnterprise callback={callback} inputName={inputName} key={inputName} onSubmit={onAutoSubmit} />;
+
+    // ── PingOne Protect ───────────────────────────────────────────────────
+    case callbackType.PingOneProtectInitializeCallback:
+      return <ProtectInitialize callback={callback} key={inputName} onSubmit={onAutoSubmit} />;
+
+    case callbackType.PingOneProtectEvaluationCallback:
+      return <ProtectEvaluation callback={callback} key={inputName} onSubmit={onAutoSubmit} />;
+
+    // ── Fallback ──────────────────────────────────────────────────────────
+    default:
+      return <Unknown callback={callback} key={inputName} />;
+  }
+}
+
+/**
+ * @function Form — Renders the Journey step as an interactive form
+ * @param {Object} props
+ * @param {Object} props.action — { type: 'login' | 'register' }
+ * @param {Function} [props.followUp] — called after successful authentication
+ * @param {JSX.Element} [props.topMessage] — content above the form (e.g., navigation links)
+ * @returns {JSX.Element}
+ */
+export default function Form({ action, followUp, topMessage }) {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [, methods] = useContext(OidcContext);
+
+  // Derive form metadata from the action type
+  const [formMetadata] = useReducer(formReducer, action, (initial) =>
+    formReducer({}, initial),
+  );
+
+  // Check for OAuth redirect parameters (code & state from callback.html)
+  const codeParam = searchParams.get('code');
+  const stateParam = searchParams.get('state');
+  const resumeUrl =
+    codeParam && stateParam ? `${window.location.origin}${window.location.pathname}?${searchParams.toString()}` : null;
+
+  // Initialize the Journey hook
+  const [
+    { formFailureMessage, renderStep, submittingForm, user },
+    { setSubmissionStep, setSubmittingForm, redirect },
+  ] = useJourney({ formMetadata, resumeUrl });
+
+  // Navigate away when authentication succeeds and user info is available
+  useEffect(() => {
+    if (user) {
+      methods.setUser(user);
+      methods.setAuthentication(true);
+
+      if (followUp) {
+        followUp();
+      }
+
+      navigate('/');
+    }
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /**
+   * Handle form submission — sets the current step as the submission step,
+   * which triggers the useJourney hook to call client.next().
+   */
+  function handleSubmit(event) {
+    event.preventDefault();
+    setSubmittingForm(true);
+    setSubmissionStep(renderStep);
+  }
+
+  // ── Render states ────────────────────────────────────────────────────────
+
+  // Loading — waiting for the journey to initialize
+  if (!renderStep) {
+    return <p>Loading...</p>;
+  }
+
+  // LoginSuccess — waiting for token exchange and user info
+  if (renderStep.type === 'LoginSuccess') {
+    return <p>Success! Redirecting...</p>;
+  }
+
+  // Step — check for WebAuthn first, then render callbacks
+  if (renderStep.type === 'Step') {
+    // Check if this is a WebAuthn step
+    const webAuthnType = WebAuthn.getWebAuthnStepType(renderStep);
+    if (webAuthnType !== WebAuthnStepType.None) {
+      return (
+        <WebAuthnComponent
+          step={renderStep}
+          onSubmit={() => {
+            setSubmittingForm(true);
+            setSubmissionStep(renderStep);
+          }}
+        />
+      );
+    }
+
+    // Auto-submit handler for callbacks that don't require user interaction
+    function handleAutoSubmit() {
+      setSubmittingForm(true);
+      setSubmissionStep(renderStep);
+    }
+
+    // Redirect handler for RedirectCallback
+    function handleRedirect() {
+      redirect(renderStep);
+    }
+
+    return (
+      <form onSubmit={handleSubmit}>
+        {topMessage}
+
+        <h2>{formMetadata.title}</h2>
+
+        {formFailureMessage && (
+          <div role="alert" style={{ color: 'red', marginBottom: '1rem' }}>
+            {formFailureMessage}
+          </div>
+        )}
+
+        {renderStep.callbacks.map((cb, idx) =>
+          mapCallbackToComponent(cb, idx, {
+            onAutoSubmit: handleAutoSubmit,
+            onRedirect: handleRedirect,
+          }),
+        )}
+
+        <button type="submit" disabled={submittingForm}>
+          {submittingForm ? 'Submitting...' : formMetadata.buttonText}
+        </button>
+      </form>
+    );
+  }
+
+  // Fallback — unexpected step type
+  return (
+    <div role="alert" style={{ color: 'red' }}>
+      <p>An error occurred during authentication.</p>
+      {renderStep.message && <p>{renderStep.message}</p>}
+    </div>
+  );
+}

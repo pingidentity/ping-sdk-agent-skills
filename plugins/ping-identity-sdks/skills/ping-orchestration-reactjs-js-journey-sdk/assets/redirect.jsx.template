@@ -1,0 +1,48 @@
+/*
+ * 
+ *
+ * redirect.jsx.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * Redirect Callback Component
+ *
+ * INSTRUCTIONS:
+ *   Place in client/components/journey/redirect.jsx
+ *
+ * Handles: RedirectCallback
+ *
+ * When a RedirectCallback is received, the browser must navigate to the
+ * external URL (e.g., social login provider). This component calls
+ * client.redirect(step) via the redirect method from useJourney.
+ *
+ * After the external flow completes, the browser returns to your app,
+ * and client.resume(url) continues the Journey.
+ *
+ * This component renders a loading message while the redirect occurs.
+ */
+
+import { useEffect } from 'react';
+
+/**
+ * @function Redirect — Initiates a browser redirect for external authentication
+ * @param {Object} props
+ * @param {Function} props.onRedirect — Function to call to initiate the redirect
+ */
+export default function Redirect({ onRedirect }) {
+  useEffect(() => {
+    if (onRedirect) {
+      onRedirect();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div style={{ textAlign: 'center', padding: '1rem' }}>
+      <p>Redirecting to external provider...</p>
+    </div>
+  );
+}

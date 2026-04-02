@@ -1,0 +1,44 @@
+/*
+ * 
+ *
+ * suspended-text-output.jsx.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * SuspendedTextOutput Callback Component
+ *
+ * INSTRUCTIONS:
+ *   Place in client/components/journey/suspended-text-output.jsx
+ *
+ * Handles: SuspendedTextOutputCallback
+ *
+ * Displayed when the Journey is suspended (e.g., magic link / email
+ * verification). The user must complete an action outside the app
+ * (check email, click link) before the journey can continue.
+ *
+ * SDK integration points:
+ *   - callback.getMessage()     → the message to display
+ *   - callback.getMessageType() → message type indicator
+ */
+
+/**
+ * @function SuspendedTextOutput — Renders a suspended journey message
+ * @param {Object} props
+ * @param {Object} props.callback — The callback object from PingAM
+ */
+export default function SuspendedTextOutput({ callback }) {
+  const message = callback.getMessage();
+
+  return (
+    <div style={{ textAlign: 'center', padding: '1rem' }}>
+      <p>{message}</p>
+      <p style={{ fontSize: '0.875rem', color: '#666' }}>
+        Check your email to continue.
+      </p>
+    </div>
+  );
+}

@@ -1,0 +1,39 @@
+/*
+ * 
+ *
+ * register.jsx.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * Register View
+ *
+ * INSTRUCTIONS:
+ *   Place in client/views/register.jsx
+ *
+ * Renders the registration form using the registration Journey/Tree.
+ */
+
+import { Link } from 'react-router-dom';
+import Form from '../components/journey/form';
+
+/**
+ * @function Register — React view for the registration page
+ */
+export default function Register() {
+  return (
+    <div>
+      <Form
+        action={{ type: 'register' }}
+        topMessage={
+          <p>
+            Already have an account? <Link to="/login">Sign in here!</Link>
+          </p>
+        }
+      />
+    </div>
+  );
+}

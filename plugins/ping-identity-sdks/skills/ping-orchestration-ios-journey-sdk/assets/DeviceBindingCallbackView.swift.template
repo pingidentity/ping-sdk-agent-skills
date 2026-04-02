@@ -1,0 +1,51 @@
+/*
+ * 
+ *
+ * DeviceBindingCallbackView.swift.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * Device Binding Callback View — binds the device to the user account.
+ * Requires: PingBinding module.
+ *
+ * INSTRUCTIONS:
+ *   1. Place in YourApp/Callbacks/DeviceBindingCallbackView.swift
+ *   2. Add PingBinding as an SPM dependency.
+ */
+
+import SwiftUI
+import PingBinding
+
+struct DeviceBindingCallbackView: View {
+    let callback: DeviceBindingCallback
+    let onNext: () -> Void
+
+    @State private var status: String = "Binding device..."
+    @State private var error: String?
+
+    var body: some View {
+        VStack(spacing: 12) {
+            if let error = error {
+                ErrorMessageView(message: "Device binding failed: \(error)")
+            } else {
+                ProgressView(status)
+            }
+        }
+        .padding()
+        .onAppear {
+            Task {
+                let result = await callback.bind()
+                switch result {
+                case .success:
+                    onNext()
+                case .failure(let bindingError):
+                    error = bindingError.localizedDescription
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,77 @@
+/*
+ * 
+ *
+ * LogOutView.swift.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * Logout View — ends the session and revokes tokens.
+ *
+ * INSTRUCTIONS:
+ *   1. Place in YourApp/Views/LogOutView.swift
+ */
+
+import SwiftUI
+
+struct LogOutView: View {
+    @Binding var path: [MenuItem]
+    @StateObject private var viewModel = LogOutViewModel()
+
+    var body: some View {
+        VStack(spacing: 24) {
+            if viewModel.isLoading {
+                ProgressView("Logging out...")
+            } else if viewModel.isLoggedOut {
+                VStack(spacing: 16) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 60))
+                        .foregroundStyle(.green)
+
+                    Text("Successfully Logged Out")
+                        .font(.title2)
+                        .fontWeight(.bold)
+
+                    Button("Back to Home") {
+                        path.removeAll()
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            } else if let error = viewModel.error {
+                VStack(spacing: 16) {
+                    ErrorMessageView(message: error)
+
+                    Button("Try Again") {
+                        Task { await viewModel.logout() }
+                    }
+                    .buttonStyle(.bordered)
+                }
+            } else {
+                VStack(spacing: 16) {
+                    Image(systemName: "rectangle.portrait.and.arrow.right")
+                        .font(.system(size: 48))
+                        .foregroundStyle(.secondary)
+
+                    Text("Are you sure you want to log out?")
+                        .font(.title3)
+
+                    Text("This will revoke your tokens and end your session.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+
+                    Button("Logout") {
+                        Task { await viewModel.logout() }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.red)
+                }
+            }
+        }
+        .padding()
+        .navigationTitle("Logout")
+    }
+}

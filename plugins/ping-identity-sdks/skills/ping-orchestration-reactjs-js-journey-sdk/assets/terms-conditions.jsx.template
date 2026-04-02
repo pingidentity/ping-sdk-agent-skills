@@ -1,0 +1,58 @@
+/*
+ * 
+ *
+ * terms-conditions.jsx.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * Terms & Conditions Callback Component
+ *
+ * INSTRUCTIONS:
+ *   Place in client/components/journey/terms-conditions.jsx
+ *
+ * Handles: TermsAndConditionsCallback
+ *
+ * SDK integration points:
+ *   - callback.getTerms()        → the terms and conditions text
+ *   - callback.setAccepted(val)  → set whether the user accepted
+ */
+
+/**
+ * @function TermsConditions — Renders a checkbox with expandable terms text
+ * @param {Object} props
+ * @param {Object} props.callback — The callback object from PingAM
+ * @param {string} props.inputName — Unique input name for the field
+ */
+export default function TermsConditions({ callback, inputName }) {
+  const terms = callback.getTerms();
+  const termsPreview = terms.substring(0, 50) + '...';
+
+  function setValue(event) {
+    callback.setAccepted(event.target.checked);
+  }
+
+  return (
+    <div style={{ marginBottom: '1rem' }}>
+      <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+        <input
+          id={inputName}
+          type="checkbox"
+          defaultChecked={false}
+          onChange={setValue}
+          style={{ marginTop: '0.25rem' }}
+        />
+        <span>
+          Please accept our Terms and Conditions
+          <details>
+            <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>{termsPreview}</summary>
+            <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>{terms}</p>
+          </details>
+        </span>
+      </label>
+    </div>
+  );
+}

@@ -1,0 +1,98 @@
+/*
+ * 
+ *
+ * ErrorView.swift.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * Error display views for Journey error and failure nodes.
+ *
+ * INSTRUCTIONS:
+ *   1. Place in YourApp/Views/ErrorView.swift
+ */
+
+import SwiftUI
+
+// MARK: - ErrorNodeView
+
+/// Displays an error or failure node with a retry button.
+struct ErrorNodeView: View {
+    let title: String
+    let message: String
+    var onRetry: (() -> Void)? = nil
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 48))
+                .foregroundStyle(.red)
+
+            Text(title)
+                .font(.title3)
+                .fontWeight(.bold)
+
+            Text(message)
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+
+            if let onRetry = onRetry {
+                Button("Try Again") {
+                    onRetry()
+                }
+                .buttonStyle(.borderedProminent)
+                .padding(.top, 8)
+            }
+        }
+        .padding()
+    }
+}
+
+// MARK: - ErrorMessageView
+
+/// Inline error message banner.
+struct ErrorMessageView: View {
+    let message: String
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.circle.fill")
+                .foregroundStyle(.red)
+
+            Text(message)
+                .font(.subheadline)
+                .foregroundStyle(.primary)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.red.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+}
+
+// MARK: - WarningMessageView
+
+/// Inline warning message banner.
+struct WarningMessageView: View {
+    let message: String
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+
+            Text(message)
+                .font(.subheadline)
+                .foregroundStyle(.primary)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.orange.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+}

@@ -1,0 +1,42 @@
+/*
+ * 
+ *
+ * TextInputCallbackView.swift.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * Text Input Callback View — generic text input (OTP, nickname, etc.).
+ *
+ * INSTRUCTIONS:
+ *   1. Place in YourApp/Callbacks/TextInputCallbackView.swift
+ */
+
+import SwiftUI
+import PingJourney
+
+struct TextInputCallbackView: View {
+    let callback: TextInputCallback
+    let onNodeUpdated: () -> Void
+
+    @State private var text: String = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            TextField(callback.prompt, text: $text)
+                .textFieldStyle(.roundedBorder)
+                .autocapitalization(.none)
+                .disableAutocorrection(true)
+                .onChange(of: text) { newValue in
+                    callback.text = newValue
+                }
+                .onAppear {
+                    text = callback.defaultText ?? ""
+                }
+        }
+        .padding(.vertical, 4)
+    }
+}

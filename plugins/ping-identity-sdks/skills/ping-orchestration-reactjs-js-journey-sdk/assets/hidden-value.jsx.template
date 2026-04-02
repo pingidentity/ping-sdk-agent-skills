@@ -1,0 +1,39 @@
+/*
+ * 
+ *
+ * hidden-value.jsx.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * HiddenValue Callback Component
+ *
+ * INSTRUCTIONS:
+ *   Place in client/components/journey/hidden-value.jsx
+ *
+ * Handles: HiddenValueCallback
+ *
+ * Hidden callbacks carry data between the client and server without
+ * user interaction. They are not rendered visually. This component
+ * is included for completeness — typically the SDK handles these
+ * automatically, but custom logic can be added here if needed.
+ *
+ * SDK integration points:
+ *   - callback.getInputValue()     → current hidden value
+ *   - callback.setInputValue(val)  → set a hidden value
+ */
+
+/**
+ * @function HiddenValue — Non-visual component for hidden value callbacks
+ * @param {Object} props
+ * @param {Object} props.callback — The callback object from PingAM
+ */
+export default function HiddenValue({ callback }) {
+  // HiddenValueCallbacks are not rendered — they carry internal state.
+  // If you need to set a value, do so here:
+  // callback.setInputValue('some-value');
+  return null;
+}

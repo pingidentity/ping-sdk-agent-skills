@@ -1,0 +1,53 @@
+/*
+ * 
+ *
+ * text-input.jsx.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * TextInput Callback Component
+ *
+ * INSTRUCTIONS:
+ *   Place in client/components/journey/text-input.jsx
+ *
+ * Handles: TextInputCallback
+ *
+ * SDK integration points:
+ *   - callback.getPrompt()        → label text
+ *   - callback.getInputValue()    → current/default value
+ *   - callback.setInputValue(val) → set user input
+ */
+
+/**
+ * @function TextInput — Renders a generic text input for TextInputCallback
+ * @param {Object} props
+ * @param {Object} props.callback — The callback object from PingAM
+ * @param {string} props.inputName — Unique input name for the field
+ */
+export default function TextInput({ callback, inputName }) {
+  const prompt = callback.getPrompt();
+  const defaultValue = callback.getInputValue() || '';
+
+  function setValue(event) {
+    callback.setInputValue(event.target.value);
+  }
+
+  return (
+    <div style={{ marginBottom: '1rem' }}>
+      <label htmlFor={inputName}>{prompt}</label>
+      <input
+        id={inputName}
+        name={inputName}
+        type="text"
+        defaultValue={defaultValue}
+        onChange={setValue}
+        placeholder={prompt}
+        style={{ display: 'block', width: '100%', padding: '0.5rem' }}
+      />
+    </div>
+  );
+}
