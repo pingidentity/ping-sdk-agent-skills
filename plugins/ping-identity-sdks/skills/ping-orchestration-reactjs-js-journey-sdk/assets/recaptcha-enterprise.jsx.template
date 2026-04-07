@@ -1,0 +1,84 @@
+/*
+ * 
+ *
+ * recaptcha-enterprise.jsx.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * ReCaptcha Enterprise Callback Component
+ *
+ * INSTRUCTIONS:
+ *   Place in client/components/journey/recaptcha-enterprise.jsx
+ *
+ * Handles: ReCaptchaEnterpriseCallback
+ *
+ * Loads the Google reCAPTCHA Enterprise widget, executes it, and sets the
+ * response token on the callback. Auto-submits after successful verification.
+ *
+ * SDK integration points:
+ *   - callback.getOutputByName('recaptchaSiteKey') → site key
+ *   - callback.getOutputByName('captchaApiUri')    → reCAPTCHA enterprise script URL
+ *   - callback.setInputValue(token)                → set the reCAPTCHA response token
+ */
+
+import { useEffect, useRef } from 'react';
+
+/**
+ * @function ReCaptchaEnterprise — Renders and executes a reCAPTCHA Enterprise widget
+ * @param {Object} props
+ * @param {Object} props.callback — The callback object from PingAM
+ * @param {string} props.inputName — Unique input name for the field
+ * @param {Function} props.onSubmit — Submit handler to advance after verification
+ */
+export default function ReCaptchaEnterprise({ callback, inputName, onSubmit }) {
+  const containerRef = useRef(null);
+  const siteKey = callback.getOutputByName
+    ? callback.getOutputByName('recaptchaSiteKey', '')
+    : '';
+  const captchaApiUri = callback.getOutputByName
+    ? callback.getOutputByName('captchaApiUri', 'https://www.google.com/recaptcha/enterprise.js')
+    : 'https://www.google.com/recaptcha/enterprise.js';
+
+  useEffect(() => {
+    if (!siteKey || typeof window === 'undefined') return;
+
+    // Load the reCAPTCHA Enterprise script if not already present
+    if (!window.grecaptcha || !window.grecaptcha.enterprise) {
+      const script = document.createElement('script');
+      script.src = `${captchaApiUri}?render=${siteKey}`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => executeCaptcha();
+      document.head.appendChild(script);
+    } else {
+      executeCaptcha();
+    }
+
+    function executeCaptcha() {
+      if (window.grecaptcha && window.grecaptcha.enterprise) {
+        window.grecaptcha.enterprise.ready(() => {
+          window.grecaptcha.enterprise
+            .execute(siteKey, { action: 'login' })
+            .then((token) => {
+              callback.setInputValue(token);
+              if (onSubmit) onSubmit();
+            })
+            .catch((error) => {
+              console.error('reCAPTCHA Enterprise execution failed:', error);
+            });
+        });
+      }
+    }
+  }, [siteKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div style={{ textAlign: 'center', padding: '1rem' }}>
+      <p>Verifying with reCAPTCHA...</p>
+      <div ref={containerRef} id={inputName}></div>
+    </div>
+  );
+}

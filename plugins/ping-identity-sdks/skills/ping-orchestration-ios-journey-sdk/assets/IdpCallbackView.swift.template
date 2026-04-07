@@ -1,0 +1,63 @@
+/*
+ * 
+ *
+ * IdpCallbackView.swift.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * IdP Callback View — external IdP OAuth flow.
+ * Requires: PingExternalIdP module.
+ *
+ * INSTRUCTIONS:
+ *   1. Place in YourApp/Callbacks/IdpCallbackView.swift
+ *   2. Ensure the external IdP SDK (Google, Facebook, Apple) is configured.
+ */
+
+import SwiftUI
+import PingExternalIdP
+
+struct IdpCallbackView: View {
+    let callback: IdpCallback
+    let onNext: () -> Void
+
+    @State private var isProcessing: Bool = false
+    @State private var error: String?
+
+    var body: some View {
+        VStack(spacing: 12) {
+            if isProcessing {
+                ProgressView("Authenticating with \(callback.provider)...")
+            } else if let error = error {
+                ErrorMessageView(message: error)
+                Button("Retry") {
+                    startAuthorization()
+                }
+                .buttonStyle(.bordered)
+            } else {
+                ProgressView("Starting \(callback.provider) login...")
+            }
+        }
+        .padding()
+        .onAppear {
+            startAuthorization()
+        }
+    }
+
+    private func startAuthorization() {
+        isProcessing = true
+        error = nil
+        Task {
+            do {
+                try await callback.authorize()
+                onNext()
+            } catch {
+                self.error = error.localizedDescription
+                isProcessing = false
+            }
+        }
+    }
+}

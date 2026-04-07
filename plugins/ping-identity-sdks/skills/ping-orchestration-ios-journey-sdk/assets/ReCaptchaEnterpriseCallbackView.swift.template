@@ -1,0 +1,49 @@
+/*
+ * 
+ *
+ * ReCaptchaEnterpriseCallbackView.swift.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * reCAPTCHA Enterprise Callback View — performs reCAPTCHA verification.
+ * Requires: PingReCaptchaEnterprise module.
+ *
+ * INSTRUCTIONS:
+ *   1. Place in YourApp/Callbacks/ReCaptchaEnterpriseCallbackView.swift
+ *   2. Add PingReCaptchaEnterprise as an SPM dependency.
+ */
+
+import SwiftUI
+import PingReCaptchaEnterprise
+
+struct ReCaptchaEnterpriseCallbackView: View {
+    let callback: ReCaptchaEnterpriseCallback
+    let onNext: () -> Void
+
+    @State private var error: String?
+
+    var body: some View {
+        VStack(spacing: 12) {
+            if let error = error {
+                ErrorMessageView(message: "reCAPTCHA verification failed: \(error)")
+            } else {
+                ProgressView("Verifying reCAPTCHA...")
+            }
+        }
+        .padding()
+        .onAppear {
+            Task {
+                do {
+                    try await callback.execute()
+                    onNext()
+                } catch {
+                    self.error = error.localizedDescription
+                }
+            }
+        }
+    }
+}

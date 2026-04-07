@@ -1,0 +1,58 @@
+/*
+ * 
+ *
+ * choice.jsx.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * Choice Callback Component
+ *
+ * INSTRUCTIONS:
+ *   Place in client/components/journey/choice.jsx
+ *
+ * Handles: ChoiceCallback
+ *
+ * SDK integration points:
+ *   - callback.getPrompt()        → label text
+ *   - callback.getChoices()       → array of option strings
+ *   - callback.getDefaultChoice() → index of the default selection
+ *   - callback.setChoiceIndex(i)  → set the selected choice by index
+ */
+
+/**
+ * @function Choice — Renders a dropdown select for choice callbacks
+ * @param {Object} props
+ * @param {Object} props.callback — The callback object from PingAM
+ * @param {string} props.inputName — Unique input name for the field
+ */
+export default function Choice({ callback, inputName }) {
+  const prompt = callback.getPrompt();
+  const choices = callback.getChoices();
+  const defaultChoice = callback.getDefaultChoice();
+
+  function setValue(event) {
+    callback.setChoiceIndex(Number(event.target.value));
+  }
+
+  return (
+    <div style={{ marginBottom: '1rem' }}>
+      <label htmlFor={inputName}>{prompt}</label>
+      <select
+        id={inputName}
+        onChange={setValue}
+        defaultValue={defaultChoice}
+        style={{ display: 'block', width: '100%', padding: '0.5rem' }}
+      >
+        {choices.map((option, idx) => (
+          <option key={idx} value={idx}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}

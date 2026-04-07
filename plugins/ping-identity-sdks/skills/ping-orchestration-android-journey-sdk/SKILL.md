@@ -1,6 +1,6 @@
 ---
 name: ping-orchestration-android-journey-sdk
-description: Use when building Android authentication with Ping Identity with — scaffolds a complete Jetpack Compose + MVVM authentication flow using the Ping Orchestration Android SDK against PingOne Advanced Identity Cloud (AIC) or PingAM. Handles Journey configuration, OIDC token exchange, dynamic callback rendering, device binding, and logout.
+description: Use when building Android authentication with Ping Identity — scaffolds a complete Jetpack Compose + MVVM authentication flow using the Ping Orchestration Android SDK against PingOne Advanced Identity Cloud (AIC) or PingAM. Handles Journey configuration, OIDC token exchange, dynamic callback rendering, device binding, FIDO2, and logout.
 license: MIT
 metadata:
   author: Ping Identity
@@ -225,20 +225,57 @@ See [Callback Types Reference](references/callbacks.md) for the full list of sup
 
 Create `CallbackFields.kt` with individual Composables for each callback type. See [CallbackFields.kt template](assets/CallbackFields.kt.template).
 
-Supported core callbacks:
-- `NameCallback` / `ValidatedUsernameCallback` — Text input for username
-- `PasswordCallback` / `ValidatedPasswordCallback` — Password input with visibility toggle
-- `TextInputCallback` — Generic text input
-- `TextOutputCallback` — Display server messages
-- `ChoiceCallback` — Single-selection dropdown
-- `ConfirmationCallback` — Action buttons (replaces Next)
-- `BooleanAttributeInputCallback` — Checkbox / switch
-- `PollingWaitCallback` — Auto-advancing wait step
+All callback types supported by the Ping Android SDK:
 
-Optional module callbacks (require additional Gradle dependencies):
-- `DeviceBindingCallback` — See [DeviceBindingCallbackField template](assets/DeviceBindingCallbackField.kt.template)
-- `DeviceSigningVerifierCallback` — See [DeviceSigningVerifierCallbackField template](assets/DeviceSigningVerifierCallbackField.kt.template)
-- `DeviceProfileCallback`, `IdpCallback`, `FidoRegistrationCallback`, `PingOneProtectInitializeCallback`, etc.
+**Core Callbacks (Journey module):**
+
+| Callback Class | Composable | Description |
+|----------------|------------|-------------|
+| `NameCallback` | `NameCallbackField` | Text input for username |
+| `PasswordCallback` | `PasswordCallbackField` | Secure text input with visibility toggle |
+| `ValidatedUsernameCallback` | `ValidatedUsernameCallbackField` | Username with policy validation |
+| `ValidatedPasswordCallback` | `ValidatedPasswordCallbackField` | Password with policy validation |
+| `TextInputCallback` | `TextInputCallbackField` | Generic text input (e.g., OTP) |
+| `TextOutputCallback` | `TextOutputCallbackField` | Display messages (info, warning, error) |
+| `SuspendedTextOutputCallback` | `SuspendedTextOutputCallbackField` | Suspended journey (magic link) |
+| `BooleanAttributeInputCallback` | `BooleanCallbackField` | Switch/checkbox for boolean attributes |
+| `NumberAttributeInputCallback` | `NumberCallbackField` | Numeric input |
+| `StringAttributeInputCallback` | `StringAttributeCallbackField` | String attribute (email, name) |
+| `ChoiceCallback` | `ChoiceCallbackField` | Dropdown for multiple choice selection |
+| `ConfirmationCallback` | `ConfirmationCallbackField` | Action buttons (Yes/No, OK/Cancel) |
+| `KbaCreateCallback` | `KbaCreateCallbackField` | Security question and answer |
+| `TermsAndConditionsCallback` | `TermsCallbackField` | Terms acceptance checkbox |
+| `ConsentMappingCallback` | `ConsentCallbackField` | Consent to share profile data |
+| `PollingWaitCallback` | `PollingWaitCallbackField` | Auto-advancing wait step |
+| `HiddenValueCallback` | — | Non-visual — hidden form value |
+| `MetadataCallback` | — | Non-visual — specializes into FIDO2/Protect callbacks |
+
+**Optional Callbacks (additional modules):**
+
+| Callback Class | Module | Composable | Description |
+|----------------|--------|------------|-------------|
+| `SelectIdpCallback` | `external-idp` | `SelectIdpCallbackField` | Social/external IdP selection |
+| `IdpCallback` | `external-idp` | `IdpCallbackField` | External IdP OAuth flow |
+| `DeviceProfileCallback` | `device-profile` | `DeviceProfileCallbackField` | Auto-collects device metadata |
+| `DeviceBindingCallback` | `binding` | `DeviceBindingCallbackField` | Binds device to user account |
+| `DeviceSigningVerifierCallback` | `binding` | `DeviceSigningVerifierCallbackField` | Signs challenge with device key |
+| `FidoRegistrationCallback` | `fido` | `FidoRegistrationCallbackField` | FIDO2/Passkey registration |
+| `FidoAuthenticationCallback` | `fido` | `FidoAuthenticationCallbackField` | FIDO2/Passkey authentication |
+| `PingOneProtectInitializeCallback` | `protect` | `PingOneProtectInitializeCallbackField` | Initializes PingOne Protect |
+| `PingOneProtectEvaluationCallback` | `protect` | `PingOneProtectEvaluationCallbackField` | Evaluates threat signals |
+| `ReCaptchaEnterpriseCallback` | `recaptcha-enterprise` | `ReCaptchaEnterpriseCallbackField` | reCAPTCHA Enterprise verification |
+
+Each callback Composable follows this pattern:
+1. **Read** display values from the callback (e.g., `callback.prompt`)
+2. **Render** an appropriate Jetpack Compose control
+3. **Set** user input back on the callback (e.g., `callback.name = text`)
+4. **Call** `onNodeUpdated()` or `onNext()` as appropriate
+
+> **Note:** Auto-advancing callbacks (`PollingWaitCallback`, `DeviceProfileCallback`, `DeviceBindingCallback`, `DeviceSigningVerifierCallback`, `FidoRegistrationCallback`, `FidoAuthenticationCallback`, `PingOneProtectInitializeCallback`, `PingOneProtectEvaluationCallback`, `ReCaptchaEnterpriseCallback`) perform their operation in `LaunchedEffect` and call `onNext()` automatically when complete. Set `showNext = false` for these.
+
+See also:
+- [DeviceBindingCallbackField template](assets/DeviceBindingCallbackField.kt.template) and [DeviceBindingCallbackViewModel template](assets/DeviceBindingCallbackViewModel.kt.template)
+- [DeviceSigningVerifierCallbackField template](assets/DeviceSigningVerifierCallbackField.kt.template) and [DeviceSigningVerifierCallbackViewModel template](assets/DeviceSigningVerifierCallbackViewModel.kt.template)
 
 ---
 
@@ -314,7 +351,10 @@ See [scaffold_auth.sh](scripts/scaffold_auth.sh) for details.
 | Hardcoded credentials | Use `BuildConfig` fields or a config file — never commit secrets |
 | Forgetting `LaunchedEffect` for `SuccessNode` | Navigate away inside `LaunchedEffect(true)` to avoid recomposition loops |
 | Not setting `showNext = false` for `ConfirmationCallback` | `ConfirmationCallback` provides its own buttons — hide the default Next button |
+| Not setting `showNext = false` for auto-advancing callbacks | Auto-advancing callbacks (DeviceBinding, FIDO, Protect, reCAPTCHA, DeviceProfile, PollingWait) must set `showNext = false` |
 | Calling `node.next()` without populating callbacks | Always set callback values (e.g., `callback.name = "..."`) before advancing |
+| Forgetting to register optional callback modules | Import and add the relevant Gradle dependency (`binding`, `fido`, `protect`, `external-idp`, `device-profile`, `recaptcha-enterprise`) for optional callbacks |
+| Not calling `onNext()` after auto-advancing callbacks | Auto-advancing callbacks must call `onNext()` after their async operation completes (use `LaunchedEffect`) |
 
 ---
 

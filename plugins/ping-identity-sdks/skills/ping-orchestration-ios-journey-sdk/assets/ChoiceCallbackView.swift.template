@@ -1,0 +1,49 @@
+/*
+ * 
+ *
+ * ChoiceCallbackView.swift.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * Choice Callback View — picker for multiple choice selection.
+ *
+ * INSTRUCTIONS:
+ *   1. Place in YourApp/Callbacks/ChoiceCallbackView.swift
+ */
+
+import SwiftUI
+import PingJourney
+
+struct ChoiceCallbackView: View {
+    let callback: ChoiceCallback
+    let onNodeUpdated: () -> Void
+
+    @State private var selectedIndex: Int = 0
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(callback.prompt)
+                .font(.subheadline)
+                .fontWeight(.medium)
+
+            Picker(callback.prompt, selection: $selectedIndex) {
+                ForEach(Array(callback.choices.enumerated()), id: \.offset) { index, choice in
+                    Text(choice).tag(index)
+                }
+            }
+            .pickerStyle(.segmented)
+            .onChange(of: selectedIndex) { newValue in
+                callback.selectedIndex = newValue
+            }
+            .onAppear {
+                selectedIndex = callback.defaultChoice
+                callback.selectedIndex = callback.defaultChoice
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}

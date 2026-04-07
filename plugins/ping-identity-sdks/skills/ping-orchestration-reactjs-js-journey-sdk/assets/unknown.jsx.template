@@ -1,0 +1,48 @@
+/*
+ * 
+ *
+ * unknown.jsx.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * Unknown Callback Component — fallback for unsupported callback types.
+ *
+ * INSTRUCTIONS:
+ *   Place in client/components/journey/unknown.jsx
+ *
+ * This component is rendered when a callback type is not recognized.
+ * It displays the callback type name to help developers identify
+ * which callback handler they need to implement.
+ */
+
+/**
+ * @function Unknown — Renders a warning for unsupported callback types
+ * @param {Object} props
+ * @param {Object} props.callback — The unrecognized callback object
+ */
+export default function Unknown({ callback }) {
+  const callbackType = callback.getType ? callback.getType() : 'Unknown';
+
+  return (
+    <div
+      style={{
+        marginBottom: '1rem',
+        padding: '0.75rem',
+        backgroundColor: '#fff3cd',
+        border: '1px solid #ffc107',
+        borderRadius: '4px',
+      }}
+    >
+      <p style={{ margin: 0, color: '#856404' }}>
+        <strong>Unsupported callback:</strong> {callbackType}
+      </p>
+      <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: '#856404' }}>
+        Add a handler for this callback type in the Form component.
+      </p>
+    </div>
+  );
+}

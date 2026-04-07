@@ -1,4 +1,14 @@
 /*
+ * 
+ *
+ * build.gradle.kts.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
  * build.gradle.kts template for an Android app module using the Ping Identity Journey SDK.
  *
  * INSTRUCTIONS:
@@ -59,10 +69,14 @@ dependencies {
     // ── Ping Identity Journey SDK ─────────────────────────────────────────────
     // Option A: published artifact (replace <version> with the current release)
     implementation("com.pingidentity.sdks:journey:<version>")
-    implementation("com.pingidentity.sdks:binding:<version>")
-    implementation("com.pingidentity.sdks:recaptcha-enterprise:<version>")
-    implementation("com.pingidentity.sdks:device-profile:<version>")
-    implementation("com.pingidentity.sdks:external-idp:<version>")
+
+    // ── Optional modules — uncomment as needed ────────────────────────────────
+    implementation("com.pingidentity.sdks:binding:<version>")              // Device Binding & Signing Verifier
+    implementation("com.pingidentity.sdks:fido:<version>")                 // FIDO2 / WebAuthn / Passkeys
+    implementation("com.pingidentity.sdks:protect:<version>")              // PingOne Protect (threat signals)
+    implementation("com.pingidentity.sdks:recaptcha-enterprise:<version>") // reCAPTCHA Enterprise
+    implementation("com.pingidentity.sdks:device-profile:<version>")       // Device profile collection
+    implementation("com.pingidentity.sdks:external-idp:<version>")         // External IdP (Google, Facebook, Apple)
 
     // Option B: local project reference (monorepo / source build)
     // implementation(project(":journey"))

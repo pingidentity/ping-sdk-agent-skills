@@ -1,0 +1,67 @@
+/*
+ * 
+ *
+ * polling-wait.jsx.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * PollingWait Callback Component
+ *
+ * INSTRUCTIONS:
+ *   Place in client/components/journey/polling-wait.jsx
+ *
+ * Handles: PollingWaitCallback
+ *
+ * Displays a waiting message and automatically re-submits the step after
+ * the specified wait time. No user interaction required.
+ *
+ * SDK integration points:
+ *   - callback.getOutputByName('waitTime')  → ms to wait before auto-advancing
+ *   - callback.getOutputByName('message')   → message to display while waiting
+ */
+
+import { useEffect, useRef } from 'react';
+
+/**
+ * @function PollingWait — Renders a wait indicator and auto-submits
+ * @param {Object} props
+ * @param {Object} props.callback — The callback object from PingAM
+ * @param {Function} props.onSubmit — Submit handler to advance the step after the wait
+ */
+export default function PollingWait({ callback, onSubmit }) {
+  const timerRef = useRef(null);
+
+  const waitTime = callback.getOutputByName
+    ? callback.getOutputByName('waitTime', 5000)
+    : 5000;
+  const message = callback.getOutputByName
+    ? callback.getOutputByName('message', 'Please wait...')
+    : 'Please wait...';
+
+  useEffect(() => {
+    timerRef.current = setTimeout(() => {
+      if (onSubmit) {
+        onSubmit();
+      }
+    }, Number(waitTime));
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [callback]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div style={{ textAlign: 'center', padding: '1rem' }}>
+      <p>{message}</p>
+      <p style={{ fontSize: '0.875rem', color: '#666' }}>
+        Waiting {Math.round(Number(waitTime) / 1000)} seconds...
+      </p>
+    </div>
+  );
+}

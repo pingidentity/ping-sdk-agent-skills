@@ -1,0 +1,189 @@
+/*
+ * 
+ *
+ * CustomViews.swift.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * Shared utility views used across the Journey authentication flow.
+ *
+ * INSTRUCTIONS:
+ *   1. Place in YourApp/Views/CustomViews.swift
+ *   2. Customize colors and styles to match your app's theme.
+ */
+
+import SwiftUI
+
+// MARK: - NextButton
+
+/// Reusable styled button for form submission.
+struct NextButton: View {
+    let text: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(text)
+                .fontWeight(.semibold)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+        }
+        .buttonStyle(.borderedProminent)
+        .padding(.horizontal)
+    }
+}
+
+// MARK: - HeaderView
+
+/// Displays a Journey node header.
+struct HeaderView: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.title2)
+            .fontWeight(.bold)
+            .multilineTextAlignment(.center)
+            .padding(.bottom, 4)
+    }
+}
+
+// MARK: - DescriptionView
+
+/// Displays a Journey node description.
+struct DescriptionView: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.body)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
+            .padding(.bottom, 8)
+    }
+}
+
+// MARK: - SectionHeader
+
+/// Section header for grouped content.
+struct SectionHeader: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(.headline)
+            .fontWeight(.semibold)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 12)
+    }
+}
+
+// MARK: - Color Extensions
+
+extension Color {
+    /// Ping Identity brand color (blue).
+    static let pingBlue = Color(red: 0.13, green: 0.39, blue: 0.87)
+
+    /// Ping Identity secondary brand color.
+    static let pingDarkBlue = Color(red: 0.06, green: 0.20, blue: 0.56)
+
+    /// Background color for card-style containers.
+    static let cardBackground = Color(.systemBackground)
+
+    /// Secondary background for grouped content.
+    static let groupedBackground = Color(.secondarySystemBackground)
+}
+
+// MARK: - LoadingOverlay
+
+/// Full-screen loading overlay with a progress indicator.
+struct LoadingOverlay: View {
+    let message: String
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.3)
+                .ignoresSafeArea()
+            VStack(spacing: 16) {
+                ProgressView()
+                    .scaleEffect(1.2)
+                Text(message)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(24)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+    }
+}
+
+// MARK: - CopyableText
+
+/// Text that can be tapped to copy to clipboard.
+struct CopyableText: View {
+    let label: String
+    let value: String
+    @State private var copied = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.system(.body, design: .monospaced))
+                .lineLimit(3)
+                .truncationMode(.middle)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Color.groupedBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .onTapGesture {
+            UIPasteboard.general.string = value
+            copied = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                copied = false
+            }
+        }
+        .overlay(alignment: .topTrailing) {
+            if copied {
+                Text("Copied!")
+                    .font(.caption2)
+                    .padding(4)
+                    .background(.green.opacity(0.2))
+                    .clipShape(Capsule())
+                    .padding(4)
+            }
+        }
+    }
+}
+
+// MARK: - MenuSection / MenuItem
+
+/// Navigation menu item for ContentView.
+enum MenuItem: String, Hashable, CaseIterable {
+    case journey = "Journey"
+    case token = "Access Token"
+    case user = "User Info"
+    case logout = "Logout"
+}
+
+/// Section of navigation menu items.
+struct MenuSection: View {
+    let items: [MenuItem]
+    let icon: (MenuItem) -> String
+
+    var body: some View {
+        ForEach(items, id: \.self) { item in
+            NavigationLink(value: item) {
+                Label(item.rawValue, systemImage: icon(item))
+            }
+        }
+    }
+}

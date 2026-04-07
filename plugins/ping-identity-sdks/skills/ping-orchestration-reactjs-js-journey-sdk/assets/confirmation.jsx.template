@@ -1,0 +1,52 @@
+/*
+ * 
+ *
+ * confirmation.jsx.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * Confirmation Callback Component
+ *
+ * INSTRUCTIONS:
+ *   Place in client/components/journey/confirmation.jsx
+ *
+ * Handles: ConfirmationCallback
+ *
+ * SDK integration points:
+ *   - callback.getOptions()          → array of option labels
+ *   - callback.setOptionValue(val)   → set the selected option
+ */
+
+/**
+ * @function Confirmation — Renders action options (e.g., Submit / Cancel)
+ * @param {Object} props
+ * @param {Object} props.callback — The callback object from PingAM
+ * @param {string} props.inputName — Unique input name for the field
+ */
+export default function Confirmation({ callback, inputName }) {
+  const options = callback.getOptions();
+
+  function setOptionValue(event) {
+    callback.setOptionValue(event.target.value);
+  }
+
+  return (
+    <div style={{ marginBottom: '1rem' }}>
+      <select
+        id={inputName}
+        onChange={setOptionValue}
+        style={{ display: 'block', width: '100%', padding: '0.5rem' }}
+      >
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}

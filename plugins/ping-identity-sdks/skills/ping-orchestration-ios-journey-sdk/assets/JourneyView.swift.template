@@ -1,0 +1,305 @@
+/*
+ * 
+ *
+ * JourneyView.swift.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * Journey View — renders the current Journey node and dispatches callbacks.
+ *
+ * INSTRUCTIONS:
+ *   1. Place in YourApp/Views/JourneyView.swift
+ *   2. Add more `case let ... as ...` branches as your Journey trees require.
+ *   3. For optional module callbacks, add the relevant SPM dependency.
+ */
+
+import SwiftUI
+import PingOrchestrate
+import PingJourney
+import PingJourneyPlugin
+import PingBinding
+import PingFido
+import PingExternalIdP
+import PingProtect
+import PingDeviceProfile
+import PingReCaptchaEnterprise
+
+// MARK: - JourneyView
+
+struct JourneyView: View {
+    @StateObject private var journeyViewModel = JourneyViewModel()
+    @Binding var path: [MenuItem]
+
+    var body: some View {
+        ZStack {
+            if journeyViewModel.showJourneyNameInput {
+                journeyNameInputView
+            } else if journeyViewModel.isLoading && journeyViewModel.state.node == nil {
+                ProgressView("Starting Journey...")
+            } else {
+                journeyNodeView
+            }
+        }
+        .navigationTitle("Journey")
+    }
+
+    // MARK: Journey Name Input
+
+    private var journeyNameInputView: some View {
+        VStack(spacing: 20) {
+            Text("Enter Journey Name")
+                .font(.title2)
+                .fontWeight(.bold)
+
+            TextField("Journey Name", text: $journeyViewModel.journeyName)
+                .textFieldStyle(.roundedBorder)
+                .padding(.horizontal)
+
+            Button("Start Journey") {
+                Task {
+                    await journeyViewModel.startJourney(with: journeyViewModel.journeyName)
+                }
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding()
+    }
+
+    // MARK: Node Rendering
+
+    @ViewBuilder
+    private var journeyNodeView: some View {
+        switch journeyViewModel.state.node {
+        case let continueNode as ContinueNode:
+            JourneyNodeView(
+                continueNode: continueNode,
+                onNodeUpdated: { journeyViewModel.refresh() },
+                onNext: {
+                    Task {
+                        await journeyViewModel.next(node: continueNode)
+                    }
+                }
+            )
+
+        case let successNode as SuccessNode:
+            VStack(spacing: 16) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 60))
+                    .foregroundStyle(.green)
+                Text("Authentication Successful")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                if let session = successNode.session {
+                    Text("Session Token: \(session.value)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+            }
+            .padding()
+            .onAppear {
+                // Navigate to token/home view after success
+                path.append(.token)
+            }
+
+        case let failureNode as FailureNode:
+            ErrorNodeView(
+                title: "SDK Error",
+                message: failureNode.cause.localizedDescription,
+                onRetry: {
+                    Task {
+                        await journeyViewModel.startJourney(with: journeyViewModel.journeyName)
+                    }
+                }
+            )
+
+        case let errorNode as ErrorNode:
+            ErrorNodeView(
+                title: "Server Error",
+                message: errorNode.message,
+                onRetry: {
+                    Task {
+                        await journeyViewModel.startJourney(with: journeyViewModel.journeyName)
+                    }
+                }
+            )
+
+        default:
+            EmptyView()
+        }
+    }
+}
+
+// MARK: - JourneyNodeView (Callback Dispatch)
+
+struct JourneyNodeView: View {
+    let continueNode: ContinueNode
+    let onNodeUpdated: () -> Void
+    let onNext: () -> Void
+
+    @State private var showNext = true
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 12) {
+                // Node header
+                if let header = continueNode.header, !header.isEmpty {
+                    Text(header)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .multilineTextAlignment(.center)
+                        .padding(.bottom, 4)
+                }
+
+                // Node description
+                if let description = continueNode.description, !description.isEmpty {
+                    Text(description)
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.bottom, 8)
+                }
+
+                // Callback dispatch
+                ForEach(Array(continueNode.callbacks.enumerated()), id: \.offset) { _, callback in
+                    callbackView(for: callback)
+                }
+
+                // Footer
+                if let footer = continueNode.pageFooter, !footer.isEmpty {
+                    Text(footer)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 8)
+                }
+
+                // Next button (hidden for auto-advancing callbacks)
+                if showNext {
+                    NextButton(
+                        text: continueNode.submitButtonText ?? "Next",
+                        action: onNext
+                    )
+                    .padding(.top, 16)
+                }
+            }
+            .padding()
+        }
+    }
+
+    // MARK: Callback View Dispatch
+
+    @ViewBuilder
+    private func callbackView(for callback: Callback) -> some View {
+        switch callback {
+
+        // ── Core Callbacks ───────────────────────────────────────────────
+
+        case let nameCallback as NameCallback:
+            NameCallbackView(callback: nameCallback, onNodeUpdated: onNodeUpdated)
+
+        case let passwordCallback as PasswordCallback:
+            PasswordCallbackView(callback: passwordCallback, onNodeUpdated: onNodeUpdated)
+
+        case let validatedUsernameCallback as ValidatedUsernameCallback:
+            ValidatedUsernameCallbackView(callback: validatedUsernameCallback, onNodeUpdated: onNodeUpdated)
+
+        case let validatedPasswordCallback as ValidatedPasswordCallback:
+            ValidatedPasswordCallbackView(callback: validatedPasswordCallback, onNodeUpdated: onNodeUpdated)
+
+        case let textInputCallback as TextInputCallback:
+            TextInputCallbackView(callback: textInputCallback, onNodeUpdated: onNodeUpdated)
+
+        case let textOutputCallback as TextOutputCallback:
+            TextOutputCallbackView(callback: textOutputCallback)
+
+        case let suspendedTextCallback as SuspendedTextOutputCallback:
+            TextOutputCallbackView(callback: suspendedTextCallback)
+
+        case let booleanCallback as BooleanAttributeInputCallback:
+            BooleanAttributeInputCallbackView(callback: booleanCallback, onNodeUpdated: onNodeUpdated)
+
+        case let numberCallback as NumberAttributeInputCallback:
+            NumberAttributeInputCallbackView(callback: numberCallback, onNodeUpdated: onNodeUpdated)
+
+        case let stringCallback as StringAttributeInputCallback:
+            StringAttributeInputCallbackView(callback: stringCallback, onNodeUpdated: onNodeUpdated)
+
+        case let choiceCallback as ChoiceCallback:
+            ChoiceCallbackView(callback: choiceCallback, onNodeUpdated: onNodeUpdated)
+
+        case let confirmationCallback as ConfirmationCallback:
+            ConfirmationCallbackView(callback: confirmationCallback, onNext: onNext)
+                .onAppear { showNext = false }
+
+        case let kbaCallback as KbaCreateCallback:
+            KbaCreateCallbackView(callback: kbaCallback, onNodeUpdated: onNodeUpdated)
+
+        case let termsCallback as TermsAndConditionsCallback:
+            TermsAndConditionsCallbackView(callback: termsCallback, onNodeUpdated: onNodeUpdated)
+
+        case let consentCallback as ConsentMappingCallback:
+            ConsentMappingCallbackView(callback: consentCallback, onNodeUpdated: onNodeUpdated)
+
+        case let pollingCallback as PollingWaitCallback:
+            PollingWaitCallbackView(callback: pollingCallback, onNext: onNext)
+                .onAppear { showNext = false }
+
+        case _ as HiddenValueCallback:
+            EmptyView()
+
+        // ── Optional Callbacks ───────────────────────────────────────────
+
+        case let selectIdpCallback as SelectIdpCallback:
+            SelectIdpCallbackView(callback: selectIdpCallback, onNext: onNext)
+                .onAppear { showNext = false }
+
+        case let idpCallback as IdpCallback:
+            IdpCallbackView(callback: idpCallback, onNext: onNext)
+                .onAppear { showNext = false }
+
+        case let deviceProfileCallback as DeviceProfileCallback:
+            DeviceProfileCallbackView(callback: deviceProfileCallback, onNext: onNext)
+                .onAppear { showNext = false }
+
+        case let deviceBindingCallback as DeviceBindingCallback:
+            DeviceBindingCallbackView(callback: deviceBindingCallback, onNext: onNext)
+                .onAppear { showNext = false }
+
+        case let deviceSigningCallback as DeviceSigningVerifierCallback:
+            DeviceSigningVerifierCallbackView(callback: deviceSigningCallback, onNext: onNext)
+                .onAppear { showNext = false }
+
+        case let fidoRegCallback as FidoRegistrationCallback:
+            FidoRegistrationCallbackView(callback: fidoRegCallback, onNext: onNext)
+                .onAppear { showNext = false }
+
+        case let fidoAuthCallback as FidoAuthenticationCallback:
+            FidoAuthenticationCallbackView(callback: fidoAuthCallback, onNext: onNext)
+                .onAppear { showNext = false }
+
+        case let protectInitCallback as PingOneProtectInitializeCallback:
+            PingOneProtectInitializeCallbackView(callback: protectInitCallback, onNext: onNext)
+                .onAppear { showNext = false }
+
+        case let protectEvalCallback as PingOneProtectEvaluationCallback:
+            PingOneProtectEvaluationCallbackView(callback: protectEvalCallback, onNext: onNext)
+                .onAppear { showNext = false }
+
+        case let reCaptchaCallback as ReCaptchaEnterpriseCallback:
+            ReCaptchaEnterpriseCallbackView(callback: reCaptchaCallback, onNext: onNext)
+                .onAppear { showNext = false }
+
+        // ── Fallback ─────────────────────────────────────────────────────
+
+        default:
+            Text("Unsupported callback: \(type(of: callback))")
+                .foregroundStyle(.red)
+                .padding(8)
+        }
+    }
+}

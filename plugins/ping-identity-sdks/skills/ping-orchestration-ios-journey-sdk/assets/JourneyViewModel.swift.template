@@ -1,0 +1,89 @@
+/*
+ * 
+ *
+ * JourneyViewModel.swift.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * Journey ViewModel — orchestrates the Journey authentication flow.
+ *
+ * INSTRUCTIONS:
+ *   1. Place in YourApp/ViewModels/JourneyViewModel.swift
+ *   2. Configure the `journey` instance with your PingAM/AIC server details.
+ *   3. Pass the journey name (tree name configured in AIC) when starting a journey.
+ */
+
+import SwiftUI
+import PingJourney
+import PingOrchestrate
+import PingOidc
+
+// ── Journey Instance ─────────────────────────────────────────────────────────
+
+let journey = Journey.createJourney { config in
+    config.httpClient = HttpClient()
+    config.serverUrl = "https://your-tenant.forgeblocks.com/am"
+    config.realm = "alpha"
+    config.cookie = "iPlanetDirectoryPro"
+
+    // OIDC module — required for token exchange after SuccessNode
+    config.module(PingJourney.OidcModule.config) { oidcConfig in
+        oidcConfig.clientId = "your-client-id"
+        oidcConfig.scopes = ["openid", "profile", "email"]
+        oidcConfig.redirectUri = "myapp://callback"
+        oidcConfig.discoveryEndpoint = "https://your-tenant.forgeblocks.com/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration"
+    }
+}
+
+// ── Journey State ────────────────────────────────────────────────────────────
+
+struct JourneyState {
+    var node: Node? = nil
+    var counter: Int = 0
+}
+
+// ── ViewModel ────────────────────────────────────────────────────────────────
+
+@MainActor
+class JourneyViewModel: ObservableObject {
+
+    @Published var state: JourneyState = JourneyState()
+    @Published var isLoading: Bool = false
+    @Published var showJourneyNameInput: Bool = true
+    @Published var journeyName: String = "Login"
+
+    /// Starts a Journey by name (tree name configured in PingAM / AIC).
+    func startJourney(with journeyName: String) async {
+        self.journeyName = journeyName
+        self.showJourneyNameInput = false
+        self.isLoading = true
+        let node = await journey.start(journeyName)
+        self.state = JourneyState(node: node)
+        self.isLoading = false
+    }
+
+    /// Advances to the next node by submitting the current ContinueNode's callbacks.
+    /// Callbacks must have been populated before calling this.
+    func next(node: ContinueNode) async {
+        self.isLoading = true
+        let next = await node.next()
+        self.state = JourneyState(node: next, counter: state.counter + 1)
+        self.isLoading = false
+    }
+
+    /// Triggers a recomposition without advancing the journey.
+    /// Useful when a callback value changes but the node reference stays the same.
+    func refresh() {
+        state = JourneyState(node: state.node, counter: state.counter + 1)
+    }
+
+    /// Resets the ViewModel to show the journey name input.
+    func reset() {
+        self.state = JourneyState()
+        self.showJourneyNameInput = true
+    }
+}

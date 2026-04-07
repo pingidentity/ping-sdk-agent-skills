@@ -1,0 +1,77 @@
+/*
+ * 
+ *
+ * recaptcha.jsx.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * ReCaptcha Callback Component
+ *
+ * INSTRUCTIONS:
+ *   Place in client/components/journey/recaptcha.jsx
+ *
+ * Handles: ReCaptchaCallback (legacy v2)
+ *
+ * Loads the Google reCAPTCHA v2 widget, executes it, and sets the response
+ * token on the callback. Auto-submits after successful verification.
+ *
+ * SDK integration points:
+ *   - callback.getOutputByName('recaptchaSiteKey') → site key for reCAPTCHA
+ *   - callback.setInputValue(token)                → set the reCAPTCHA response token
+ */
+
+import { useEffect, useRef } from 'react';
+
+/**
+ * @function ReCaptcha — Renders and executes a reCAPTCHA v2 widget
+ * @param {Object} props
+ * @param {Object} props.callback — The callback object from PingAM
+ * @param {string} props.inputName — Unique input name for the field
+ * @param {Function} props.onSubmit — Submit handler to advance after verification
+ */
+export default function ReCaptcha({ callback, inputName, onSubmit }) {
+  const containerRef = useRef(null);
+  const siteKey = callback.getOutputByName
+    ? callback.getOutputByName('recaptchaSiteKey', '')
+    : '';
+
+  useEffect(() => {
+    if (!siteKey || typeof window === 'undefined') return;
+
+    // Load the reCAPTCHA script if not already present
+    if (!window.grecaptcha) {
+      const script = document.createElement('script');
+      script.src = 'https://www.google.com/recaptcha/api.js?render=explicit';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => renderCaptcha();
+      document.head.appendChild(script);
+    } else {
+      renderCaptcha();
+    }
+
+    function renderCaptcha() {
+      if (window.grecaptcha && containerRef.current) {
+        window.grecaptcha.ready(() => {
+          window.grecaptcha.render(containerRef.current, {
+            sitekey: siteKey,
+            callback: (token) => {
+              callback.setInputValue(token);
+              if (onSubmit) onSubmit();
+            },
+          });
+        });
+      }
+    }
+  }, [siteKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div style={{ marginBottom: '1rem' }}>
+      <div ref={containerRef} id={inputName}></div>
+    </div>
+  );
+}

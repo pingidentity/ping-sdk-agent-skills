@@ -1,0 +1,82 @@
+/*
+ * 
+ *
+ * webauthn.jsx.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * WebAuthn Callback Component
+ *
+ * INSTRUCTIONS:
+ *   Place in client/components/journey/webauthn.jsx
+ *
+ * Handles: WebAuthn (FIDO2/Passkey) registration and authentication steps.
+ *
+ * WebAuthn steps are detected using the WebAuthn utility from the SDK,
+ * not by callback type. When detected, this component calls the
+ * appropriate WebAuthn.register() or WebAuthn.authenticate() method
+ * and auto-submits the step.
+ *
+ * SDK integration points:
+ *   - WebAuthn.getWebAuthnStepType(step) → Registration | Authentication | None
+ *   - WebAuthn.register(step)            → executes WebAuthn registration
+ *   - WebAuthn.authenticate(step)        → executes WebAuthn authentication
+ */
+
+import { useEffect, useState } from 'react';
+import { WebAuthn, WebAuthnStepType } from '@forgerock/journey-client/webauthn';
+
+/**
+ * @function WebAuthnComponent — Handles FIDO2/WebAuthn registration & authentication
+ * @param {Object} props
+ * @param {Object} props.step — The full Journey step object
+ * @param {Function} props.onSubmit — Submit handler to advance the step after WebAuthn
+ */
+export default function WebAuthnComponent({ step, onSubmit }) {
+  const [error, setError] = useState(null);
+  const [processing, setProcessing] = useState(true);
+
+  useEffect(() => {
+    async function handleWebAuthn() {
+      try {
+        const webAuthnType = WebAuthn.getWebAuthnStepType(step);
+
+        if (webAuthnType === WebAuthnStepType.Registration) {
+          await WebAuthn.register(step);
+        } else if (webAuthnType === WebAuthnStepType.Authentication) {
+          await WebAuthn.authenticate(step);
+        }
+
+        setProcessing(false);
+
+        if (onSubmit) {
+          onSubmit();
+        }
+      } catch (err) {
+        console.error('WebAuthn error:', err);
+        setError(err.message || 'WebAuthn operation failed');
+        setProcessing(false);
+      }
+    }
+
+    handleWebAuthn();
+  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (error) {
+    return (
+      <div style={{ color: 'red', padding: '1rem' }}>
+        <p>WebAuthn error: {error}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ textAlign: 'center', padding: '1rem' }}>
+      <p>{processing ? 'Waiting for security key...' : 'Verified!'}</p>
+    </div>
+  );
+}

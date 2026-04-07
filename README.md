@@ -44,7 +44,9 @@ Depending on the skill your AI agent uses, you'll need the following:
     npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks
 
     # Install a particular skill
-    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-android-orchestration-sdk
+    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-android-journey-sdk
+    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-reactjs-js-journey-sdk
+    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-ios-journey-sdk
     ```
 
     *Option 2: Manual installation*
@@ -82,14 +84,14 @@ Depending on the skill your AI agent uses, you'll need the following:
 
 | Skill | Description |
 |-------|-------------|
-| [ping-orchestration-android-journey-sdk](./plugins/ping-identity-sdks/skills/ping-android-orchestration-sdk/SKILL.md) | Android authentication with the Ping Journey SDK — Jetpack Compose + MVVM, callback handling, OIDC token exchange |
+| [ping-orchestration-android-journey-sdk](./plugins/ping-identity-sdks/skills/ping-orchestration-android-journey-sdk/SKILL.md) | Android authentication with the Ping Journey SDK — Jetpack Compose + MVVM, callback handling, OIDC token exchange |
+| [ping-orchestration-reactjs-js-journey-sdk](./plugins/ping-identity-sdks/skills/ping-orchestration-reactjs-js-journey-sdk/SKILL.md) | ReactJS authentication with the Ping Orchestration JavaScript SDK — Vite + React 18, all Journey callbacks, OIDC token exchange |
+| [ping-orchestration-ios-journey-sdk](./plugins/ping-identity-sdks/skills/ping-orchestration-ios-journey-sdk/SKILL.md) | iOS authentication with the Ping Journey SDK — SwiftUI + MVVM, all Journey callbacks, OIDC token exchange, device binding, FIDO2 |
 
 ### Planned Skills
 
 | Skill | Platform | SDK Repository |
 |-------|----------|----------------|
-| `ping-orchestration-ios-journey-sdk` | iOS (Swift) | [ping-ios-sdk](https://github.com/ForgeRock/ping-ios-sdk/) |
-| `ping-orchestration-javascript-journey-sdk` | JavaScript / Web | [ping-javascript-sdk](https://github.com/ForgeRock/ping-javascript-sdk/) |
 | `ping-orchestration-android-davinci-sdk` | Android | [ping-javascript-sdk](https://github.com/ForgeRock/ping-javascript-sdk/) |
 | `ping-orchestration-ios-davinci-sdk` | iOS (Swift) | [ping-ios-sdk](https://github.com/ForgeRock/ping-ios-sdk/) |
 | `ping-orchestration-javascript-davinci-sdk` | JavaScript / Web | [ping-javascript-sdk](https://github.com/ForgeRock/ping-javascript-sdk/) |
@@ -107,7 +109,17 @@ plugins/
 │           └── references/
 └── ping-identity-sdks/                      # SDK Plugin
     └── skills/
-        └── ping-orchestration-android-journey-sdk/  # Android Journey SDK skill
+        ├── ping-orchestration-android-journey-sdk/  # Android Journey SDK skill
+        │   ├── SKILL.md
+        │   ├── references/
+        │   ├── assets/
+        │   └── scripts/
+        ├── ping-orchestration-reactjs-js-journey-sdk/  # ReactJS Journey SDK skill
+        │   ├── SKILL.md
+        │   ├── references/
+        │   ├── assets/
+        │   └── scripts/
+        └── ping-orchestration-ios-journey-sdk/  # iOS Journey SDK skill
             ├── SKILL.md
             ├── references/
             ├── assets/
