@@ -92,7 +92,7 @@ Depending on the skill your AI agent uses, you'll need the following:
 
 | Skill | Platform | SDK Repository |
 |-------|----------|----------------|
-| `ping-orchestration-android-davinci-sdk` | Android | [ping-android-sdk](https://github.com/ForgeRock/ping-android-sdk/) |
+| `ping-orchestration-android-davinci-sdk` | Android | [ping-javascript-sdk](https://github.com/ForgeRock/ping-javascript-sdk/) |
 | `ping-orchestration-ios-davinci-sdk` | iOS (Swift) | [ping-ios-sdk](https://github.com/ForgeRock/ping-ios-sdk/) |
 | `ping-orchestration-javascript-davinci-sdk` | JavaScript / Web | [ping-javascript-sdk](https://github.com/ForgeRock/ping-javascript-sdk/) |
 
