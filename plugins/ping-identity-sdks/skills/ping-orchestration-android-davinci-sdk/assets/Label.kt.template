@@ -1,0 +1,31 @@
+/*
+ *
+ *
+ * Label.kt.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+package com.example.myapp.auth.collector
+
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.pingidentity.davinci.collector.LabelCollector
+
+/**
+ * Renders a static text label for a [LabelCollector].
+ */
+@Composable
+fun Label(collector: LabelCollector) {
+    Text(
+        text = collector.content,
+        style = MaterialTheme.typography.bodyLarge,
+        modifier = Modifier.padding(vertical = 4.dp),
+    )
+}

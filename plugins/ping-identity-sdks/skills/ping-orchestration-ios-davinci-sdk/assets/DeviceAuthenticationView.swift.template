@@ -1,0 +1,36 @@
+/*
+ *
+ *
+ * DeviceAuthenticationView.swift.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+import SwiftUI
+import PingDavinci
+
+/// Renders device authentication options for a DeviceAuthenticationCollector.
+struct DeviceAuthenticationView: View {
+    let collector: DeviceAuthenticationCollector
+    let onNext: (Bool) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(collector.label)
+                .font(.headline)
+
+            ForEach(collector.devices, id: \.type) { device in
+                Button(action: {
+                    collector.value = device
+                    onNext(true)
+                }) {
+                    Text(device.type)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+    }
+}

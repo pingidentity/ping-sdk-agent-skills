@@ -9,7 +9,7 @@
  */
 
 /*
- * build.gradle.kts template for an Android app module using the Ping Identity Journey SDK.
+ * build.gradle.kts template for an Android app module using the Ping Orchestration Android SDK (Journey module).
  *
  * INSTRUCTIONS:
  *   1. Copy the `dependencies {}` block into your app-level build.gradle.kts.
@@ -66,7 +66,7 @@ android {
 
 dependencies {
 
-    // ── Ping Identity Journey SDK ─────────────────────────────────────────────
+    // ── Ping Orchestration SDK (Journey module) ─────────────────────────────
     // Option A: published artifact (replace <version> with the current release)
     implementation("com.pingidentity.sdks:journey:<version>")
 

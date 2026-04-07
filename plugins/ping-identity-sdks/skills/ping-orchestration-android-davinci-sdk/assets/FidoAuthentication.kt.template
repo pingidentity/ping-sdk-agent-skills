@@ -1,0 +1,101 @@
+/* ============================================================================
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ * ========================================================================== */
+
+package com.example.myapp.ui.davinci.collectors
+
+import android.util.Log
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.pingidentity.fido.davinci.FidoAuthenticationCollector
+import kotlinx.coroutines.launch
+
+/**
+ * Composable that handles FIDO2 passkey/security-key authentication.
+ *
+ * If `collector.trigger != "BUTTON"`, authentication starts automatically.
+ * Otherwise a button is shown.
+ *
+ * @param collector The [FidoAuthenticationCollector] from the DaVinci flow.
+ * @param onStart   Called when the flow needs to restart (e.g., after error).
+ * @param onNext    Called when authentication succeeds and the flow should advance.
+ */
+@Composable
+fun FidoAuthentication(
+    collector: FidoAuthenticationCollector,
+    onStart: () -> Unit,
+    onNext: () -> Unit,
+) {
+    val coroutineScope = rememberCoroutineScope()
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+
+    val performAuthentication: () -> Unit = {
+        coroutineScope.launch {
+            val result = collector.authenticate()
+            result.onSuccess {
+                onNext()
+            }
+            result.onFailure {
+                Log.e("FidoAuthentication", "FIDO2 authentication failed", it)
+                errorMessage = it.message ?: "Authentication failed"
+                showErrorDialog = true
+            }
+        }
+    }
+
+    // Auto-trigger when the trigger is not BUTTON.
+    LaunchedEffect(collector) {
+        if (collector.trigger != "BUTTON") {
+            performAuthentication()
+        }
+    }
+
+    if (showErrorDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showErrorDialog = false },
+            title = { Text("FIDO2 Authentication Error") },
+            text = { Text(errorMessage) },
+            confirmButton = {
+                Button(onClick = {
+                    showErrorDialog = false
+                    onStart()
+                }) { Text("Retry") }
+            },
+            dismissButton = {
+                Button(onClick = { showErrorDialog = false }) { Text("Cancel") }
+            },
+        )
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(4.dp),
+    ) {
+        Text(
+            text = collector.label.ifEmpty { "Authenticate with Passkey" },
+            modifier = Modifier.weight(1f).wrapContentWidth(Alignment.Start),
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        Button(onClick = { performAuthentication() }) {
+            Text("Authenticate")
+        }
+    }
+}

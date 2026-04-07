@@ -45,7 +45,7 @@ copy_template() {
     echo "Created: $dest"
 }
 
-echo "Scaffolding Ping Identity Journey auth..."
+echo "Scaffolding Ping Orchestration Android SDK (Journey module) auth..."
 echo "  Package: $PACKAGE | Src: $SRC_DIR | Journey: $JOURNEY_NAME"
 
 copy_template "$ASSETS_DIR/JourneyConfig.kt.template"  "$AUTH_DIR/JourneyConfig.kt"

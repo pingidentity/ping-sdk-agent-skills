@@ -9,7 +9,7 @@ metadata:
 
 # Android Authentication with Ping Orchestration Android SDK
 
-Scaffold a complete authentication flow in an Android app using Jetpack Compose, MVVM, and the Ping Identity Journey SDK.
+Scaffold a complete authentication flow in an Android app using Jetpack Compose, MVVM, and the Ping Orchestration Android SDK (Journey module).
 
 ---
 
@@ -19,7 +19,7 @@ Scaffold a complete authentication flow in an Android app using Jetpack Compose,
 |-------------|-------|
 | Language    | Kotlin |
 | Framework   | Android, Jetpack Compose, AndroidX ViewModel |
-| SDK         | Ping Identity Journey SDK (`com.pingidentity.sdks:journey`) |
+| SDK         | Ping Orchestration Android SDK (Journey module, `com.pingidentity.sdks:journey`) |
 | Pattern     | MVVM (Model-View-ViewModel) |
 | Min SDK     | 29 |
 | Compile SDK | 36 |
@@ -28,7 +28,7 @@ Scaffold a complete authentication flow in an Android app using Jetpack Compose,
 
 ## Overview
 
-This skill adds a complete **authentication flow** to an Android application using Jetpack Compose and the MVVM pattern. It uses the **Ping Identity Journey SDK** to authenticate users against **PingOne AIC (Advanced Identity Cloud)**.
+This skill adds a complete **authentication flow** to an Android application using Jetpack Compose and the MVVM pattern. It uses the **Ping Orchestration Android SDK (Journey module)** to authenticate users against **PingOne AIC (Advanced Identity Cloud)**.
 
 The implementation covers:
 - Journey instance configuration (server URL, realm, OIDC module)
@@ -49,7 +49,7 @@ Add the following to the **app-level** `build.gradle.kts`. See [build.gradle.kts
 
 ```kotlin
 dependencies {
-    // Ping Identity Journey SDK
+    // Ping Orchestration Android SDK (Journey module)
     implementation("com.pingidentity.sdks:journey:<version>")
 
     // Jetpack Compose BOM

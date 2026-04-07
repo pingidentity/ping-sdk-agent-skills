@@ -1,0 +1,64 @@
+/* ============================================================================
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ * ========================================================================== */
+
+import React from 'react';
+import { useDavinci } from '../hooks/use-davinci.hook';
+import DaVinciForm from '../components/form';
+
+/**
+ * Login page — renders the DaVinci authentication flow.
+ */
+export default function Login() {
+  const {
+    node,
+    error,
+    loading,
+    collectors,
+    clientRef,
+    next,
+    navigateFlow,
+  } = useDavinci();
+
+  if (loading && !node) {
+    return (
+      <div className="login-container">
+        <p>Loading…</p>
+      </div>
+    );
+  }
+
+  // Flow completed successfully.
+  if (node?.status === 'success') {
+    return (
+      <div className="login-container">
+        <h2>Authentication Successful</h2>
+        <p>You are now signed in.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="login-container">
+      <h1>Sign In</h1>
+
+      {error && (
+        <div className="error-banner" role="alert">
+          <p>{error.message || 'An error occurred.'}</p>
+        </div>
+      )}
+
+      <DaVinciForm
+        collectors={collectors}
+        davinciClient={clientRef.current}
+        onNext={next}
+        onFlow={navigateFlow}
+      />
+
+      {loading && <p className="loading-indicator">Processing…</p>}
+    </div>
+  );
+}

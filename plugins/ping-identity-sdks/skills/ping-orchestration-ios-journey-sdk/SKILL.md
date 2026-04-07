@@ -9,7 +9,7 @@ metadata:
 
 # iOS Authentication with Ping Orchestration iOS SDK
 
-Scaffold a complete authentication flow in an iOS app using SwiftUI, MVVM, and the Ping Identity Journey SDK.
+Scaffold a complete authentication flow in an iOS app using SwiftUI, MVVM, and the Ping Orchestration iOS SDK (Journey module).
 
 ---
 
@@ -19,7 +19,7 @@ Scaffold a complete authentication flow in an iOS app using SwiftUI, MVVM, and t
 |-------------|-------|
 | Language    | Swift |
 | Framework   | SwiftUI, Combine |
-| SDK         | Ping Identity Orchestration iOS SDK (`PingJourney`, `PingOidc`, `PingOrchestrate`) |
+| SDK         | Ping Orchestration iOS SDK (Journey module: `PingJourney`, `PingOidc`, `PingOrchestrate`) |
 | Pattern     | MVVM (Model-View-ViewModel) with `@StateObject` / `@ObservedObject` |
 | Min iOS     | 16.0 |
 | Xcode       | Latest recommended |

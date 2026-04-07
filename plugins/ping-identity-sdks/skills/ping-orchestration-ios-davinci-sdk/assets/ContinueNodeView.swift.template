@@ -1,0 +1,120 @@
+/*
+ *
+ *
+ * ContinueNodeView.swift.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * ContinueNode View — dispatches each collector to its dedicated SwiftUI view.
+ *
+ * INSTRUCTIONS:
+ *   1. Place in YourApp/Views/ContinueNodeView.swift
+ *   2. Add new `case` branches as you add support for more collector types.
+ */
+
+import SwiftUI
+import PingDavinci
+import PingFido
+import PingOrchestrate
+
+struct ContinueNodeView: View {
+    let node: ContinueNode
+    let onNext: (Bool) -> Void
+    let onStart: () -> Void
+    @EnvironmentObject var validationVM: ValidationViewModel
+
+    // Determine if any Submittable collector is present
+    private var hasAction: Bool {
+        node.collectors.contains { collector in
+            collector is FlowCollector ||
+            collector is SubmitCollector ||
+            collector is DeviceRegistrationCollector ||
+            collector is DeviceAuthenticationCollector ||
+            collector is FidoRegistrationCollector ||
+            collector is FidoAuthenticationCollector
+        }
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                // Connector name and description
+                Text(node.name)
+                    .font(.title)
+                    .bold()
+
+                if !node.description.isEmpty {
+                    Text(node.description)
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                }
+
+                Divider()
+
+                // Render each collector
+                ForEach(Array(node.collectors.enumerated()), id: \.offset) { _, collector in
+                    collectorView(for: collector)
+                }
+
+                // Fallback Next button when no Submittable collector is present
+                if !hasAction {
+                    Button(action: { onNext(true) }) {
+                        Text("Next")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .padding(.top, 8)
+                }
+            }
+            .padding()
+        }
+    }
+
+    @ViewBuilder
+    private func collectorView(for collector: any Collector) -> some View {
+        switch collector {
+        case let c as TextCollector:
+            TextView(collector: c)
+        case let c as PasswordCollector:
+            PasswordView(collector: c)
+        case let c as SubmitCollector:
+            SubmitButtonView(collector: c, onNext: onNext)
+        case let c as FlowCollector:
+            FlowButtonView(collector: c, onNext: onNext)
+        case let c as LabelCollector:
+            LabelView(collector: c)
+        case let c as SingleSelectCollector:
+            if c.type == "DROPDOWN" {
+                DropdownView(collector: c)
+            } else {
+                RadioButtonView(collector: c)
+            }
+        case let c as MultiSelectCollector:
+            if c.type == "COMBOBOX" {
+                ComboBoxView(collector: c)
+            } else {
+                CheckBoxView(collector: c)
+            }
+        case let c as PhoneNumberCollector:
+            PhoneNumberView(collector: c)
+        case let c as DeviceRegistrationCollector:
+            DeviceRegistrationView(collector: c, onNext: onNext)
+        case let c as DeviceAuthenticationCollector:
+            DeviceAuthenticationView(collector: c, onNext: onNext)
+        case let c as IdpCollector:
+            SocialButtonView(collector: c, onStart: onStart, onNext: onNext)
+        case let c as ProtectCollector:
+            PingProtectView(collector: c, onNext: onNext)
+        case let c as FidoRegistrationCollector:
+            FidoRegistrationView(collector: c, onNext: onNext)
+        case let c as FidoAuthenticationCollector:
+            FidoAuthenticationView(collector: c, onNext: onNext)
+        default:
+            EmptyView()
+        }
+    }
+}

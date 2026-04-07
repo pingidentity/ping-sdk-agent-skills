@@ -9,7 +9,7 @@ metadata:
 
 # ReactJS Authentication with Ping Orchestration JavaScript SDK
 
-Scaffold a complete authentication flow in a ReactJS single-page application using the Ping Identity Journey SDK.
+Scaffold a complete authentication flow in a ReactJS single-page application using the Ping Orchestration JavaScript SDK (Journey).
 
 ---
 
@@ -19,7 +19,7 @@ Scaffold a complete authentication flow in a ReactJS single-page application usi
 |-------------|-------|
 | Language    | JavaScript (JSX) |
 | Framework   | React 18+, React Router 6+, Vite |
-| SDK         | Ping Identity Orchestration JavaScript SDK (`@forgerock/journey-client`, `@forgerock/oidc-client`) |
+| SDK         | Ping Orchestration JavaScript SDK (`@forgerock/journey-client`, `@forgerock/oidc-client`) |
 | Pattern     | Functional Components, Custom Hooks, Context API |
 | Node.js     | >= 18.12.0 |
 

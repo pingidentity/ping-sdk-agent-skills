@@ -8,7 +8,7 @@
 # This software may be modified and distributed under the terms
 # of the MIT license. See the LICENSE file for details.
 #
-# Scaffolds the Ping Identity Journey SDK authentication files into an iOS project.
+# Scaffolds the Ping Orchestration iOS SDK (Journey module) authentication files into an iOS project.
 #
 # Usage:
 #   ./scaffold_auth.sh --target MyApp [--journey Login]
@@ -54,7 +54,7 @@ copy_template() {
     echo "Created: $dest"
 }
 
-echo "Scaffolding Ping Identity Journey SDK auth for iOS..."
+echo "Scaffolding Ping Orchestration iOS SDK (Journey module) auth..."
 echo "  Target: $TARGET | Journey: $JOURNEY_NAME"
 echo ""
 
