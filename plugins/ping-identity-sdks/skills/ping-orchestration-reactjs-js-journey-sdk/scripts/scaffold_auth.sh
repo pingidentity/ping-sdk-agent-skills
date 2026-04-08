@@ -98,7 +98,7 @@ copy_template() {
     echo "Created: $dest"
 }
 
-echo "Scaffolding Ping Identity Journey auth for ReactJS..."
+echo "Scaffolding Ping Orchestration JavaScript SDK (Journey) auth for ReactJS..."
 echo "  Project: $PROJECT_DIR | Journey: $JOURNEY_NAME"
 echo ""
 

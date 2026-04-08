@@ -1,0 +1,71 @@
+/* ============================================================================
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ * ========================================================================== */
+
+// FidoAuthenticationView.swift
+// Handles FIDO2 passkey / security-key authentication in a DaVinci flow.
+
+import SwiftUI
+import PingFido
+
+struct FidoAuthenticationView: View {
+    var collector: FidoAuthenticationCollector
+    let onNext: () -> Void
+
+    @State private var errorMessage: String?
+    @State private var showError = false
+
+    var body: some View {
+        VStack {
+            Text(collector.label.isEmpty ? "Authenticate with Passkey" : collector.label)
+                .font(.headline)
+
+            Button(action: {
+                Task {
+                    guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                          let window = windowScene.windows.first else {
+                        errorMessage = "Could not find active window."
+                        showError = true
+                        return
+                    }
+
+                    let result = await collector.authenticate(window: window)
+                    switch result {
+                    case .success:
+                        onNext()
+                    case .failure(let error):
+                        errorMessage = error.localizedDescription
+                        showError = true
+                    }
+                }
+            }) {
+                Text("Authenticate")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .task {
+            // Auto-trigger if the trigger type is not BUTTON.
+            guard collector.type != "BUTTON" else { return }
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let window = windowScene.windows.first else { return }
+
+            let result = await collector.authenticate(window: window)
+            switch result {
+            case .success:
+                onNext()
+            case .failure(let error):
+                errorMessage = error.localizedDescription
+                showError = true
+            }
+        }
+        .alert("FIDO2 Authentication Error", isPresented: $showError, actions: {
+            Button("OK") { showError = false }
+        }, message: {
+            Text(errorMessage ?? "Authentication failed.")
+        })
+    }
+}

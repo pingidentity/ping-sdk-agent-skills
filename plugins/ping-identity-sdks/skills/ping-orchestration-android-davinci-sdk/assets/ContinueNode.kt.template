@@ -1,0 +1,137 @@
+/*
+ *
+ *
+ * ContinueNode.kt.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * ContinueNode Composable — dispatches each collector to its dedicated Composable.
+ *
+ * INSTRUCTIONS:
+ *   1. Place in com/example/myapp/auth/collector/ContinueNode.kt
+ *   2. Add new `when` branches as you add support for more collector types.
+ */
+
+package com.example.myapp.auth.collector
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.pingidentity.davinci.collector.FlowCollector
+import com.pingidentity.davinci.collector.LabelCollector
+import com.pingidentity.davinci.collector.MultiSelectCollector
+import com.pingidentity.davinci.collector.PasswordCollector
+import com.pingidentity.davinci.collector.PhoneNumberCollector
+import com.pingidentity.davinci.collector.SingleSelectCollector
+import com.pingidentity.davinci.collector.SubmitCollector
+import com.pingidentity.davinci.collector.TextCollector
+import com.pingidentity.davinci.collector.DeviceRegistrationCollector
+import com.pingidentity.davinci.collector.DeviceAuthenticationCollector
+import com.pingidentity.davinci.module.description
+import com.pingidentity.davinci.module.name
+import com.pingidentity.davinci.plugin.Submittable
+import com.pingidentity.davinci.plugin.collectors
+import com.pingidentity.fido.davinci.FidoAuthenticationCollector
+import com.pingidentity.fido.davinci.FidoRegistrationCollector
+import com.pingidentity.idp.davinci.IdpCollector
+import com.pingidentity.orchestrate.ContinueNode
+import com.pingidentity.protect.davinci.ProtectCollector
+
+/**
+ * Renders all collectors within a [ContinueNode].
+ *
+ * @param continueNode  The current node containing collectors to render.
+ * @param onNodeUpdated Called when a collector value changes (triggers recomposition).
+ * @param onNext        Called to advance to the next node.
+ * @param onStart       Called to restart the flow (used by social login).
+ */
+@Composable
+fun ContinueNode(
+    continueNode: ContinueNode,
+    onNodeUpdated: () -> Unit,
+    onNext: (ContinueNode) -> Unit,
+    onStart: () -> Unit,
+) {
+    // Track whether any Submittable collector is present
+    val hasAction = continueNode.collectors.any { it is Submittable }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+    ) {
+        // Display connector name and description
+        Text(
+            text = continueNode.name,
+            style = MaterialTheme.typography.headlineMedium,
+        )
+        if (continueNode.description.isNotBlank()) {
+            Text(
+                text = continueNode.description,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Render each collector
+        continueNode.collectors.forEach { collector ->
+            when (collector) {
+                is FlowCollector -> FlowButton(collector, onNext)
+                is PasswordCollector -> Password(collector, onNodeUpdated)
+                is SubmitCollector -> SubmitButton(collector, onNext)
+                is TextCollector -> Text(collector, onNodeUpdated)
+                is LabelCollector -> Label(collector)
+                is MultiSelectCollector -> {
+                    if (collector.type == "COMBOBOX") {
+                        ComboBox(collector, onNodeUpdated)
+                    } else {
+                        CheckBox(collector, onNodeUpdated)
+                    }
+                }
+                is SingleSelectCollector -> {
+                    if (collector.type == "DROPDOWN") {
+                        Dropdown(collector, onNodeUpdated)
+                    } else {
+                        Radio(collector, onNodeUpdated)
+                    }
+                }
+                is PhoneNumberCollector -> PhoneNumber(collector, onNodeUpdated)
+                is DeviceRegistrationCollector -> DeviceRegistration(collector, onNext)
+                is DeviceAuthenticationCollector -> DeviceAuthentication(collector, onNext)
+                is IdpCollector -> SocialLoginButton(collector, onStart, onNext)
+                is ProtectCollector -> Protect(collector, onNext)
+                is FidoRegistrationCollector -> FidoRegistration(collector, onStart, onNext)
+                is FidoAuthenticationCollector -> FidoAuthentication(collector, onStart, onNext)
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
+        // Fallback "Next" button when no Submittable collector is present
+        if (!hasAction) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = { onNext(continueNode) },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Next")
+            }
+        }
+    }
+}

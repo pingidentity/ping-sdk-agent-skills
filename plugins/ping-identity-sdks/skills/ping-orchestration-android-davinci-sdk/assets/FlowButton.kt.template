@@ -1,0 +1,54 @@
+/*
+ *
+ *
+ * FlowButton.kt.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+package com.example.myapp.auth.collector
+
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.pingidentity.davinci.collector.FlowCollector
+import com.pingidentity.orchestrate.ContinueNode
+
+/**
+ * Renders a flow navigation button or link for a [FlowCollector].
+ * Renders as an OutlinedButton for FLOW_LINK, or a filled Button for FLOW_BUTTON.
+ */
+@Composable
+fun FlowButton(collector: FlowCollector, onNext: (ContinueNode) -> Unit) {
+    val onClick = {
+        collector.value = collector.key
+        onNext(collector.continueNode)
+    }
+
+    if (collector.type == "FLOW_LINK") {
+        OutlinedButton(
+            onClick = onClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp),
+        ) {
+            Text(collector.label)
+        }
+    } else {
+        Button(
+            onClick = onClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp),
+        ) {
+            Text(collector.label)
+        }
+    }
+}

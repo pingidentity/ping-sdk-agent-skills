@@ -30,11 +30,11 @@ cat package.json 2>/dev/null | grep -E "react|next|vue|angular|express"
 
 **Platform Detection Table:**
 
-| Platform | Detection | Skill to Use |
-|----------|-----------|--------------|
-| Android (Kotlin) | `build.gradle.kts` or `settings.gradle.kts` present | `ping-android-orchestration-sdk` |
-| iOS (Swift) | `.xcodeproj`, `.xcworkspace`, or `Package.swift` present | `ping-ios-orchestration-sdk` (planned) |
-| JavaScript / Web | `package.json` with web framework dependencies | `ping-js-orchestration-sdk` (planned) |
+| Platform | Detection | Journey Skill | DaVinci Skill |
+|----------|-----------|---------------|---------------|
+| Android (Kotlin) | `build.gradle.kts` or `settings.gradle.kts` present | `ping-orchestration-android-journey-sdk` | `ping-orchestration-android-davinci-sdk` |
+| iOS (Swift) | `.xcodeproj`, `.xcworkspace`, or `Package.swift` present | `ping-orchestration-ios-journey-sdk` | `ping-orchestration-ios-davinci-sdk` |
+| JavaScript / Web | `package.json` with web framework dependencies | `ping-orchestration-reactjs-js-journey-sdk` | `ping-orchestration-reactjs-js-davinci-sdk` |
 
 ---
 
@@ -47,6 +47,16 @@ PingOne AIC is Ping Identity's cloud-hosted identity platform (formerly ForgeRoc
 - **Journeys (Trees)** — Visual, node-based authentication flows configured in the AIC console.
 - **OAuth 2.0 / OIDC** — Standards-based token issuance and validation
 - **User Management** — Directory services for identity storage
+
+### What is PingOne DaVinci?
+
+PingOne DaVinci is Ping Identity's cloud-based visual identity orchestration engine. It provides:
+
+- **Flows** — Visual, drag-and-drop authentication and identity workflows
+- **Connectors** — Pre-built integrations with PingOne services, third-party IdPs, and custom APIs
+- **Collectors** — UI components (text fields, buttons, dropdowns) sent to the client SDK for dynamic rendering
+
+> **Journey vs DaVinci:** Journeys use PingOne AIC / PingAM with *callbacks*. DaVinci uses PingOne with *collectors*. The SDKs are platform-specific but the orchestration server differs.
 
 ### Orchestration SDKs
 
@@ -64,6 +74,9 @@ The Ping Orchestration SDKs are client-side libraries that interact with PingOne
 | Orchestration Android SDK | Android (Kotlin) | [ping-android-sdk](https://github.com/ForgeRock/ping-android-sdk/) | `com.pingidentity.sdks:journey` |
 | Orchestration iOS SDK | iOS (Swift) | [ping-ios-sdk](https://github.com/ForgeRock/ping-ios-sdk/) | `PingJourney` (SPM / CocoaPods) |
 | Orchestration JavaScript SDK | Web (JS/TS) | [ping-javascript-sdk](https://github.com/ForgeRock/ping-javascript-sdk/) | `@forgerock/javascript-sdk` |
+| DaVinci Android SDK | Android (Kotlin) | [ping-android-sdk](https://github.com/ForgeRock/ping-android-sdk/) | `com.pingidentity.sdks:davinci` |
+| DaVinci iOS SDK | iOS (Swift) | [ping-ios-sdk](https://github.com/ForgeRock/ping-ios-sdk/) | `PingDavinci` (SPM) |
+| DaVinci JavaScript SDK | Web (JS/TS) | [ping-javascript-sdk](https://github.com/ForgeRock/ping-javascript-sdk/) | `@forgerock/davinci-client` |
 
 ### Key Terms
 
@@ -80,6 +93,9 @@ See [Concepts Reference](references/concepts.md) for full details.
 | **Realm** | A logical partition within a PingOne AIC tenant (commonly `alpha` or `bravo`) |
 | **Tenant** | Your PingOne AIC environment instance |
 | **OIDC Module** | SDK component that handles OAuth 2.0 / OpenID Connect token exchange after authentication |
+| **DaVinci Flow** | A server-side orchestration flow built in the PingOne DaVinci visual editor |
+| **Connector** | A DaVinci node representing a step in the flow — contains collectors to render |
+| **Collector** | Data sent from a DaVinci connector to the client SDK — represents a UI element (text field, button, etc.) |
 
 ---
 
@@ -111,27 +127,39 @@ Before using any Ping Orchestration SDK, you need:
 
 ## Step 4: Use the Platform-Specific Skill
 
-Based on your platform detection, use the appropriate skill:
+Based on your platform detection **and** your orchestration server, use the appropriate skill:
 
-### Tier 1 Platforms (Dedicated Skills)
+### Journey Skills (PingOne AIC / PingAM)
 
 - **`ping-orchestration-android-journey-sdk`** — Android apps with Jetpack Compose + MVVM using the Journey SDK
+- **`ping-orchestration-ios-journey-sdk`** — iOS apps with SwiftUI + MVVM using the Journey SDK
+- **`ping-orchestration-reactjs-js-journey-sdk`** — ReactJS SPAs with Vite + React 18 using the Journey JavaScript SDK
 
-### Planned Skills
+### DaVinci Skills (PingOne DaVinci)
 
-- `ping-orchestration-ios-journey-sdk` — iOS apps (Swift/SwiftUI) using the Journey SDK
-- `ping-orchestration-javascript-journey-sdk` — Web apps (React,   Vue, Angular) using the Journey SDK
-- `ping-orchestration-android-davinci-sdk` — Android apps using the DaVinci SDK
-- `ping-orchestration-ios-davinci-sdk` — iOS apps using the DaVinci SDK
-- `ping-orchestration-javascript-davinci-sdk` — Web apps using the DaVinci SDK
+- **`ping-orchestration-android-davinci-sdk`** — Android apps with Jetpack Compose + MVVM using the DaVinci SDK
+- **`ping-orchestration-ios-davinci-sdk`** — iOS apps with SwiftUI + MVVM using the DaVinci SDK
+- **`ping-orchestration-reactjs-js-davinci-sdk`** — ReactJS SPAs with Vite + React 18 using the DaVinci JavaScript SDK
 
-### Not sure which SDK to use?
+### Not sure which orchestration server?
 
-| Scenario | Recommended SDK |
-|----------|----------------|
-| Native Android app (Kotlin) needing to integrate with Ping's orchestration offerings, such as PingOne DaVinci, AIC, or PingAM | `ping-android-sdk` |
-| Native iOS app (Swift/SwiftUI) needing to integrate with Ping's orchestration offerings, such as PingOne DaVinci, AIC, or PingAM  | `ping-ios-sdk` |
-| Single-page web app (React, Vue, Angular) needing to integrate with Ping's orchestration offerings, such as PingOne DaVinci, AIC, or PingAM  | `ping-javascript-sdk` |
+| Question | Journey (AIC/PingAM) | DaVinci (PingOne) |
+|----------|---------------------|-------------------|
+| Where do you build flows? | PingOne AIC or PingAM admin console ("Trees") | PingOne DaVinci visual editor |
+| What is the server URL format? | `https://<tenant>.forgeblocks.com/am` | `https://auth.pingone.com/<env-id>/as` |
+| What does the SDK receive? | **Callbacks** (NameCallback, PasswordCallback, etc.) | **Collectors** (TextCollector, PasswordCollector, etc.) |
+| SDK entry point? | `Journey` / `journey()` | `DaVinci` / `davinci()` |
+
+### Not sure which platform skill to use?
+
+| Scenario | Recommended Skill |
+|----------|------------------|
+| Native Android app (Kotlin) + PingOne AIC / PingAM | `ping-orchestration-android-journey-sdk` |
+| Native Android app (Kotlin) + PingOne DaVinci | `ping-orchestration-android-davinci-sdk` |
+| Native iOS app (Swift/SwiftUI) + PingOne AIC / PingAM | `ping-orchestration-ios-journey-sdk` |
+| Native iOS app (Swift/SwiftUI) + PingOne DaVinci | `ping-orchestration-ios-davinci-sdk` |
+| Web SPA (React) + PingOne AIC / PingAM | `ping-orchestration-reactjs-js-journey-sdk` |
+| Web SPA (React) + PingOne DaVinci | `ping-orchestration-reactjs-js-davinci-sdk` |
 
 ---
 
@@ -150,8 +178,15 @@ Based on your platform detection, use the appropriate skill:
 
 ## Related Skills
 
-### SDK Skills
-- `ping-orchestration-android-journey-sdk` — Orchestration Android SDK with PingOne AIC or PingAM journeys
+### Journey SDK Skills (PingOne AIC / PingAM)
+- `ping-orchestration-android-journey-sdk` — Android Journey SDK with Jetpack Compose + MVVM
+- `ping-orchestration-ios-journey-sdk` — iOS Journey SDK with SwiftUI + MVVM
+- `ping-orchestration-reactjs-js-journey-sdk` — ReactJS Journey SDK with Vite + React 18
+
+### DaVinci SDK Skills (PingOne DaVinci)
+- `ping-orchestration-android-davinci-sdk` — Android DaVinci SDK with Jetpack Compose + MVVM
+- `ping-orchestration-ios-davinci-sdk` — iOS DaVinci SDK with SwiftUI + MVVM
+- `ping-orchestration-reactjs-js-davinci-sdk` — ReactJS DaVinci SDK with Vite + React 18
 
 ### References
 - [Ping Orchestration SDK Documentation](https://docs.pingidentity.com/sdks/latest/sdks/index.html)

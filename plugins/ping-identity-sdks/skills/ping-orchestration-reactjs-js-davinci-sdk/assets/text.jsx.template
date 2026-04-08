@@ -1,0 +1,55 @@
+/* ============================================================================
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ * ========================================================================== */
+
+import React, { useState } from 'react';
+
+/**
+ * Renders a text input for a TextCollector or ValidatedTextCollector.
+ *
+ * @param {object} props
+ * @param {object} props.collector - The TextCollector from DaVinci.
+ * @param {object} props.client    - The DaVinci client instance.
+ */
+export default function TextCollectorField({ collector, client }) {
+  const [value, setValue] = useState(collector.input?.value || '');
+  const [validationError, setValidationError] = useState('');
+
+  const handleChange = (e) => {
+    const newValue = e.target.value;
+    setValue(newValue);
+
+    const updater = client.update(collector);
+    updater(newValue);
+
+    // Run client-side validation if the collector supports it.
+    if (collector.category === 'ValidatedSingleValueCollector') {
+      const validator = client.validate(collector);
+      const errors = validator(newValue);
+      setValidationError(errors?.length ? errors[0] : '');
+    }
+  };
+
+  return (
+    <div className="collector-field">
+      <label htmlFor={collector.id}>
+        {collector.output?.label || 'Text'}
+      </label>
+      <input
+        id={collector.id}
+        type="text"
+        value={value}
+        onChange={handleChange}
+        aria-describedby={validationError ? `${collector.id}-error` : undefined}
+      />
+      {(validationError || collector.error) && (
+        <p id={`${collector.id}-error`} className="field-error" role="alert">
+          {validationError || collector.error}
+        </p>
+      )}
+    </div>
+  );
+}

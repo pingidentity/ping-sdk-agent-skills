@@ -1,0 +1,33 @@
+/*
+ *
+ *
+ * DaVinciState.kt.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * DaVinci State — holds the current DaVinci node and a recomposition counter.
+ *
+ * INSTRUCTIONS:
+ *   Place this file alongside DaVinciViewModel.kt, e.g.:
+ *     com/example/myapp/auth/DaVinciState.kt
+ */
+
+package com.example.myapp.auth
+
+import com.pingidentity.orchestrate.Node
+
+/**
+ * Represents the current state of the authentication UI.
+ *
+ * @param node     The current DaVinci node (null before the first start() call)
+ * @param counter  Incremented on [DaVinciViewModel.refresh] to force recomposition
+ *                 when the node reference itself has not changed.
+ */
+data class DaVinciState(
+    val node: Node? = null,
+    val counter: Int = 0,
+)

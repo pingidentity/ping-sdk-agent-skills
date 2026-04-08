@@ -1,0 +1,48 @@
+/* ============================================================================
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ * ========================================================================== */
+
+import React, { useState } from 'react';
+
+/**
+ * Renders a phone number input for a PhoneNumberCollector.
+ *
+ * @param {object} props
+ * @param {object} props.collector - The PhoneNumberCollector from DaVinci.
+ * @param {object} props.client    - The DaVinci client instance.
+ */
+export default function PhoneNumber({ collector, client }) {
+  const [value, setValue] = useState(collector.input?.value?.phoneNumber || '');
+
+  const handleChange = (e) => {
+    const newValue = e.target.value;
+    setValue(newValue);
+
+    const updater = client.update(collector);
+    updater({ phoneNumber: newValue });
+  };
+
+  return (
+    <div className="collector-field">
+      <label htmlFor={collector.id}>
+        {collector.output?.label || 'Phone Number'}
+      </label>
+      <input
+        id={collector.id}
+        type="tel"
+        inputMode="tel"
+        value={value}
+        onChange={handleChange}
+        placeholder="+1 (555) 123-4567"
+      />
+      {collector.error && (
+        <p className="field-error" role="alert">
+          {collector.error}
+        </p>
+      )}
+    </div>
+  );
+}

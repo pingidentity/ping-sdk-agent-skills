@@ -1,8 +1,8 @@
-# Journey SDK API Reference
+# Journey Module API Reference
 
 ## Overview
 
-`Journey` is the primary entry point of the Ping Identity Journey SDK. It manages the full
+`Journey` is the primary entry point of the Journey module in the Ping Orchestration Android SDK. It manages the full
 authentication flow against **PingOne Advanced Identity Cloud (AIC)**.
 
 ---

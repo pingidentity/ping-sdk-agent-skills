@@ -1,0 +1,65 @@
+/* ============================================================================
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ * ========================================================================== */
+
+import React, { useEffect, useState } from 'react';
+
+/**
+ * OAuth 2.0 callback page.
+ *
+ * After PingOne redirects back with an authorization code, this component
+ * extracts the code from the URL and exchanges it for tokens.
+ */
+export default function Callback() {
+  const [status, setStatus] = useState('processing');
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const errorParam = params.get('error');
+
+    if (errorParam) {
+      setStatus('error');
+      setError(params.get('error_description') || errorParam);
+      return;
+    }
+
+    if (!code) {
+      setStatus('error');
+      setError('No authorization code found in the URL.');
+      return;
+    }
+
+    // Token exchange is handled by the DaVinci client or your back-end.
+    // If the DaVinci flow completed with status === 'success', the tokens
+    // are already available via the client's getClient() method.
+    setStatus('success');
+
+    // Clean the URL so the code is not visible.
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }, []);
+
+  if (status === 'processing') {
+    return <p>Processing authentication…</p>;
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="error-banner" role="alert">
+        <h2>Authentication Error</h2>
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h2>Authentication Complete</h2>
+      <p>You may now close this page or navigate to the application.</p>
+    </div>
+  );
+}

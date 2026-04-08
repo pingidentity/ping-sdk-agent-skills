@@ -1,0 +1,50 @@
+/*
+ *
+ *
+ * SocialButtonView.swift.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+import SwiftUI
+import PingDavinci
+
+/// Renders a social login button for an IdpCollector.
+struct SocialButtonView: View {
+    let collector: IdpCollector
+    let onStart: () -> Void
+    let onNext: (Bool) -> Void
+
+    var body: some View {
+        Button(action: {
+            Task {
+                await collector.authorize()
+                onNext(false)
+            }
+        }) {
+            HStack {
+                socialIcon(for: collector.idpType)
+                Text(collector.label)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
+        .padding(.vertical, 2)
+    }
+
+    @ViewBuilder
+    private func socialIcon(for idpType: String) -> some View {
+        switch idpType.uppercased() {
+        case "GOOGLE":
+            Image(systemName: "globe")
+        case "APPLE":
+            Image(systemName: "applelogo")
+        case "FACEBOOK":
+            Image(systemName: "person.crop.circle")
+        default:
+            Image(systemName: "arrow.right.circle")
+        }
+    }
+}

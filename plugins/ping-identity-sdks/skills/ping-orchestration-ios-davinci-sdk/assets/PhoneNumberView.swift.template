@@ -1,0 +1,30 @@
+/*
+ *
+ *
+ * PhoneNumberView.swift.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+import SwiftUI
+import PingDavinci
+
+/// Renders a phone number input for a PhoneNumberCollector.
+struct PhoneNumberView: View {
+    let collector: PhoneNumberCollector
+    @State private var phone: String = ""
+
+    var body: some View {
+        TextField(collector.label, text: $phone)
+            .textFieldStyle(.roundedBorder)
+            .keyboardType(.phonePad)
+            .onChange(of: phone) { newValue in
+                collector.value = newValue
+            }
+            .onAppear {
+                phone = collector.value
+            }
+    }
+}

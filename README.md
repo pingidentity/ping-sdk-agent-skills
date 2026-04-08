@@ -47,6 +47,9 @@ Depending on the skill your AI agent uses, you'll need the following:
     npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-android-journey-sdk
     npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-reactjs-js-journey-sdk
     npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-ios-journey-sdk
+    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-android-davinci-sdk
+    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-ios-davinci-sdk
+    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-reactjs-js-davinci-sdk
     ```
 
     *Option 2: Manual installation*
@@ -87,14 +90,9 @@ Depending on the skill your AI agent uses, you'll need the following:
 | [ping-orchestration-android-journey-sdk](./plugins/ping-identity-sdks/skills/ping-orchestration-android-journey-sdk/SKILL.md) | Android authentication with the Ping Journey SDK — Jetpack Compose + MVVM, callback handling, OIDC token exchange |
 | [ping-orchestration-reactjs-js-journey-sdk](./plugins/ping-identity-sdks/skills/ping-orchestration-reactjs-js-journey-sdk/SKILL.md) | ReactJS authentication with the Ping Orchestration JavaScript SDK — Vite + React 18, all Journey callbacks, OIDC token exchange |
 | [ping-orchestration-ios-journey-sdk](./plugins/ping-identity-sdks/skills/ping-orchestration-ios-journey-sdk/SKILL.md) | iOS authentication with the Ping Journey SDK — SwiftUI + MVVM, all Journey callbacks, OIDC token exchange, device binding, FIDO2 |
-
-### Planned Skills
-
-| Skill | Platform | SDK Repository |
-|-------|----------|----------------|
-| `ping-orchestration-android-davinci-sdk` | Android | [ping-javascript-sdk](https://github.com/ForgeRock/ping-javascript-sdk/) |
-| `ping-orchestration-ios-davinci-sdk` | iOS (Swift) | [ping-ios-sdk](https://github.com/ForgeRock/ping-ios-sdk/) |
-| `ping-orchestration-javascript-davinci-sdk` | JavaScript / Web | [ping-javascript-sdk](https://github.com/ForgeRock/ping-javascript-sdk/) |
+| [ping-orchestration-android-davinci-sdk](./plugins/ping-identity-sdks/skills/ping-orchestration-android-davinci-sdk/SKILL.md) | Android authentication with the Ping Orchestration Android SDK (DaVinci module) — Jetpack Compose + MVVM, all DaVinci collectors including FIDO2, OIDC token exchange |
+| [ping-orchestration-ios-davinci-sdk](./plugins/ping-identity-sdks/skills/ping-orchestration-ios-davinci-sdk/SKILL.md) | iOS authentication with the Ping Orchestration iOS SDK (DaVinci module) — SwiftUI + MVVM, all DaVinci collectors including FIDO2, OIDC token exchange |
+| [ping-orchestration-reactjs-js-davinci-sdk](./plugins/ping-identity-sdks/skills/ping-orchestration-reactjs-js-davinci-sdk/SKILL.md) | ReactJS authentication with the Ping Orchestration JavaScript SDK (DaVinci) — Vite + React 18, all DaVinci collectors including FIDO2, OIDC token exchange |
 
 ---
 
@@ -109,17 +107,32 @@ plugins/
 │           └── references/
 └── ping-identity-sdks/                      # SDK Plugin
     └── skills/
-        ├── ping-orchestration-android-journey-sdk/  # Android Journey SDK skill
+        ├── ping-orchestration-android-journey-sdk/  # Orchestration Android SDK Journey skill
         │   ├── SKILL.md
         │   ├── references/
         │   ├── assets/
         │   └── scripts/
-        ├── ping-orchestration-reactjs-js-journey-sdk/  # ReactJS Journey SDK skill
+        ├── ping-orchestration-reactjs-js-journey-sdk/  # Orchestration JS SDK - ReactJS Journey SDK skill
         │   ├── SKILL.md
         │   ├── references/
         │   ├── assets/
         │   └── scripts/
-        └── ping-orchestration-ios-journey-sdk/  # iOS Journey SDK skill
+        ├── ping-orchestration-ios-journey-sdk/  # Orchestration iOS SDK Journey skill
+        │   ├── SKILL.md
+        │   ├── references/
+        │   ├── assets/
+        │   └── scripts/
+        ├── ping-orchestration-android-davinci-sdk/  # Orchestration Android SDK DaVinci skill
+        │   ├── SKILL.md
+        │   ├── references/
+        │   ├── assets/
+        │   └── scripts/
+        ├── ping-orchestration-ios-davinci-sdk/  # Orchestration iOS SDK DaVinci skill
+        │   ├── SKILL.md
+        │   ├── references/
+        │   ├── assets/
+        │   └── scripts/
+        └── ping-orchestration-reactjs-js-davinci-sdk/  # Orchestration JS SDK - ReactJS Davinci Skill
             ├── SKILL.md
             ├── references/
             ├── assets/

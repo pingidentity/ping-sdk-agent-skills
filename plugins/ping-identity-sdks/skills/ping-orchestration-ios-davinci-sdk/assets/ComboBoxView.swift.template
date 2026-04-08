@@ -1,0 +1,48 @@
+/*
+ *
+ *
+ * ComboBoxView.swift.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+import SwiftUI
+import PingDavinci
+
+/// Renders a combo box (multi-select with checkboxes) for a MultiSelectCollector with type "COMBOBOX".
+struct ComboBoxView: View {
+    let collector: MultiSelectCollector
+    @State private var selected: Set<String> = []
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(collector.label)
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            ForEach(collector.options, id: \.value) { option in
+                Button(action: {
+                    if selected.contains(option.value) {
+                        selected.remove(option.value)
+                    } else {
+                        selected.insert(option.value)
+                    }
+                    collector.value = Array(selected)
+                }) {
+                    HStack {
+                        Image(systemName: selected.contains(option.value) ? "checkmark.square.fill" : "square")
+                            .foregroundColor(selected.contains(option.value) ? .accentColor : .secondary)
+                        Text(option.label)
+                            .foregroundColor(.primary)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .onAppear {
+            selected = Set(collector.value)
+        }
+    }
+}

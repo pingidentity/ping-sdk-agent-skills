@@ -1,4 +1,4 @@
-# Journey SDK Reference — iOS SDK
+# Journey Module Reference — iOS SDK
 
 API reference for the `PingJourney` module of the Ping Orchestration iOS SDK.
 
