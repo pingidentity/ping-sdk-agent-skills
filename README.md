@@ -29,51 +29,61 @@ Depending on the skill your AI agent uses, you'll need the following:
 - If using PingOne related skills, a PingOne environment. Don't have a tenant? [Sign up for a free trial here](https://www.pingidentity.com/en/try-ping.html).
 - Access to an AI coding assistant (GitHub Copilot, Claude Code, Cursor, etc.)
 
-### Steps
+### Installation Guide
 
-1. **Install Ping's skills** (choose one method):
+#### GitHub Copilot
 
-    *Option 1: Via Skills CLI (recommended)*
+1. **Via Skills CLI (recommended)**
+   ```bash
+   npx skills add pingidentity/agent-skills
+   ```
+   Or install specific plugins:
+   ```bash
+   npx skills add pingidentity/agent-skills/plugins/ping-identity
+   npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks
+   ```
 
-    ```bash
-    # Install all skills from all plugins
-    npx skills add pingidentity/agent-skills
+2. **Manual Installation**
+   ```bash
+   git clone https://github.com/pingidentity/agent-skills.git
+   cp -r agent-skills/plugins/*/skills/* ~/.copilot/skills/
+   ```
 
-    # Install skills from a specific plugin
-    npx skills add pingidentity/agent-skills/plugins/ping-identity
-    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks
+#### Claude Code
 
-    # Install a particular skill
-    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-android-journey-sdk
-    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-reactjs-js-journey-sdk
-    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-ios-journey-sdk
-    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-android-davinci-sdk
-    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-ios-davinci-sdk
-    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-reactjs-js-davinci-sdk
-    ```
+1. **Via Skills CLI**
+   ```bash
+   npx skills add pingidentity/agent-skills
+   ```
 
-    *Option 2: Manual installation*
+2. **Local Testing**
+   ```bash
+   npx skills add /path/to/agent-skills
+   ```
+   Then reference skills in Claude Code chat prompts.
 
-    Clone the repository and copy skills to your project or user-level skills directory:
+#### Cursor
 
-    ```bash
-    # Clone the repository
-    git clone https://github.com/pingidentity/agent-skills.git
+Cursor automatically discovers skills from `.cursor-plugin/` configurations in this repository.
 
-    # Copy all skills to your project's skills directory
-    cp -r agent-skills/plugins/ping-identity/skills/* .github/skills/
-    cp -r agent-skills/plugins/ping-identity-sdks/skills/* .github/skills/
+1. **Install via Skills CLI**
+   ```bash
+   npx skills add pingidentity/agent-skills
+   ```
 
-    # Or copy to your user-level skills directory
-    cp -r agent-skills/plugins/*/skills/* ~/.copilot/skills/
-    ```
+2. **Reference in Cursor**
+   Open Cursor and mention the Ping Identity skills in your prompts (e.g., "Use the ping-orchestration-android-journey-sdk skill to help me build an Android app")
 
-2. **Start using the skills!**
+### Using the Skills
 
-    ```
-    "I want to understand how to integrate my mobile apps with Ping.
-     Start by helping me build a sample app with the Android Orchestration SDK."
-    ```
+Once installed, use the skills by referencing them in your AI coding assistant:
+
+```
+"I want to understand how to integrate my mobile apps with Ping Identity.
+Start by helping me build a sample app with the Android Orchestration SDK."
+```
+
+The AI will load the appropriate skill and provide guidance based on the SKILL.md documentation.
 
 ## Available Skills
 

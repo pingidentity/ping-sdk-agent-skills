@@ -1,0 +1,48 @@
+{
+  "name": "ping-identity-agent-skills",
+  "owner": {
+    "name": "Ping Identity"
+  },
+  "metadata": {
+    "description": "Ping Identity agent skills for authentication, SDK integration, and orchestration.",
+    "version": "1.0.0",
+    "pluginRoot": "plugins"
+  },
+  "plugins": [
+    {
+      "name": "ping-identity",
+      "source": "ping-identity",
+      "description": "Essential Ping Identity skills including quickstart guidance, platform detection, and core concepts.",
+      "version": "1.0.0",
+      "repository": "https://github.com/pingidentity/agent-skills.git",
+      "license": "Apache-2.0",
+      "author": {
+        "name": "Ping Identity"
+      },
+      "keywords": ["ping-identity", "quickstart", "authentication", "orchestration"],
+      "category": "authentication"
+    },
+    {
+      "name": "ping-identity-sdks",
+      "source": "ping-identity-sdks",
+      "description": "Platform-specific Ping Identity Orchestration SDK skills for Android, iOS, and ReactJS with complete implementation guides.",
+      "version": "1.0.0",
+      "repository": "https://github.com/pingidentity/agent-skills.git",
+      "license": "Apache-2.0",
+      "author": {
+        "name": "Ping Identity"
+      },
+      "keywords": [
+        "ping-identity",
+        "sdk",
+        "android",
+        "ios",
+        "reactjs",
+        "journey-sdk",
+        "davinci-sdk",
+        "orchestration"
+      ],
+      "category": "sdk"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "ping-identity-sdks",
+  "version": "1.0.0",
+  "description": "Ping Identity Orchestration SDK Skills for Android, iOS, and ReactJS",
+  "publisher": "Ping Identity",
+  "author": {
+    "name": "Ping Identity"
+  }
+}
