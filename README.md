@@ -54,7 +54,15 @@ Depending on the skill your AI agent uses, you'll need the following:
 1. **Via Skills CLI**
    ```bash
    npx skills add pingidentity/agent-skills
-   ```
+   
+    # Install a particular skill
+    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-android-journey-sdk
+    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-reactjs-js-journey-sdk
+    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-ios-journey-sdk
+    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-android-davinci-sdk
+    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-ios-davinci-sdk
+    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-reactjs-js-davinci-sdk
+    ```
 
 2. **Local Testing**
    ```bash
