@@ -1,0 +1,18 @@
+{
+  "name": "ping-identity-agent-skills",
+  "owner": {
+    "name": "Ping Identity"
+  },
+  "plugins": [
+    {
+      "name": "ping-identity",
+      "source": "./plugins/ping-identity",
+      "description": "Ping Identity Agent Skills for quickstart guidance"
+    },
+    {
+      "name": "ping-identity-sdks",
+      "source": "./plugins/ping-identity-sdks",
+      "description": "Ping Identity Orchestration SDK Skills for Android, iOS, and ReactJS"
+    }
+  ]
+}

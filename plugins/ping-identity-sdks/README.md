@@ -4,17 +4,43 @@ Platform-specific Ping Identity Orchestration SDK skills with complete implement
 
 ## Installation
 
-**Via Skills CLI:**
-
+### GitHub Copilot
 ```bash
 npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks
 ```
 
-**Manual:**
-
+### Claude Code
 ```bash
-cp -r plugins/ping-identity-sdks/skills/* .github/skills/
+npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks
 ```
+
+### Cursor
+```bash
+npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks
+```
+
+### Manual Installation
+```bash
+git clone https://github.com/pingidentity/agent-skills.git
+cp -r agent-skills/plugins/ping-identity-sdks/skills/* .github/skills/
+```
+
+## Usage in Your AI Assistant
+
+Once installed, reference the SDK you're working with in your prompt:
+
+**GitHub Copilot/Claude Code/Cursor:**
+```
+"Help me implement authentication in my Android app using the Ping Orchestration Journey SDK"
+```
+
+Or specify a particular SDK skill:
+- `ping-orchestration-android-journey-sdk` - Android Journey SDK
+- `ping-orchestration-ios-journey-sdk` - iOS Journey SDK
+- `ping-orchestration-reactjs-js-journey-sdk` - ReactJS Journey SDK
+- `ping-orchestration-android-davinci-sdk` - Android DaVinci SDK
+- `ping-orchestration-ios-davinci-sdk` - iOS DaVinci SDK
+- `ping-orchestration-reactjs-js-davinci-sdk` - ReactJS DaVinci SDK
 
 ## Skills
 

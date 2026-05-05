@@ -4,17 +4,37 @@ Core Ping Identity skills for platform orientation, onboarding, and understandin
 
 ## Installation
 
-**Via Skills CLI:**
-
+### GitHub Copilot
 ```bash
 npx skills add pingidentity/agent-skills/plugins/ping-identity
 ```
 
-**Manual:**
-
+### Claude Code
 ```bash
-cp -r plugins/ping-identity/skills/* .github/skills/
+npx skills add pingidentity/agent-skills/plugins/ping-identity
 ```
+
+### Cursor
+```bash
+npx skills add pingidentity/agent-skills/plugins/ping-identity
+```
+
+### Manual Installation
+```bash
+git clone https://github.com/pingidentity/agent-skills.git
+cp -r agent-skills/plugins/ping-identity/skills/* .github/skills/
+```
+
+## Usage in Your AI Assistant
+
+Once installed, reference the skill in your prompt:
+
+**GitHub Copilot/Claude Code/Cursor:**
+```
+"Help me understand how to integrate Ping Identity into my application"
+```
+
+The `ping-quickstart` skill will automatically detect your platform and route you to the appropriate SDK.
 
 ## Skills
 
