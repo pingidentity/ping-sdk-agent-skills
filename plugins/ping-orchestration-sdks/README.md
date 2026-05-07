@@ -8,23 +8,33 @@ Platform-specific Ping Identity Orchestration SDK skills with complete implement
 
 ### GitHub Copilot
 ```bash
-npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks
+npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks
 ```
 
 ### Claude Code
 ```bash
-npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks
+# Install the full plugin
+npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks
+
+# Or install a particular skill
+npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-android-journey-sdk
+npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-ios-journey-sdk
+npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-reactjs-js-journey-sdk
+npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-android-davinci-sdk
+npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-ios-davinci-sdk
+npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-reactjs-js-davinci-sdk
+npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/forgerock-to-ping-journey-migration
 ```
 
 ### Cursor
 ```bash
-npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks
+npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks
 ```
 
 ### Manual Installation
 ```bash
-git clone https://github.com/pingidentity/agent-skills.git
-cp -r agent-skills/plugins/ping-identity-sdks/skills/* .github/skills/
+git clone https://github.com/pingidentity/ping-sdk-agent-skills.git
+cp -r agent-skills/plugins/ping-orchestration-sdks/skills/* .github/skills/
 ```
 
 ## Usage in Your AI Assistant
@@ -36,7 +46,9 @@ Once installed, reference the SDK you're working with in your prompt:
 "Help me implement authentication in my Android app using the Ping Orchestration Journey SDK"
 ```
 
-Or specify a particular SDK skill:
+Or specify a particular skill:
+
+**SDK Integration:**
 - `ping-orchestration-android-journey-sdk` - Android Journey SDK
 - `ping-orchestration-ios-journey-sdk` - iOS Journey SDK
 - `ping-orchestration-reactjs-js-journey-sdk` - ReactJS Journey SDK
@@ -44,7 +56,12 @@ Or specify a particular SDK skill:
 - `ping-orchestration-ios-davinci-sdk` - iOS DaVinci SDK
 - `ping-orchestration-reactjs-js-davinci-sdk` - ReactJS DaVinci SDK
 
+**Migration:**
+- `forgerock-to-ping-journey-migration` - Migrate from ForgeRock SDK to Ping Journey SDK
+
 ## Skills
+
+### SDK Integration Skills
 
 | Skill | Description | Documentation |
 |-------|-------------|---------------|
@@ -54,7 +71,12 @@ Or specify a particular SDK skill:
 | [ping-orchestration-android-davinci-sdk](skills/ping-orchestration-android-davinci-sdk) | Implements authentication in Android apps using the Ping Orchestration Android SDK (DaVinci module) with Jetpack Compose and MVVM. Covers DaVinci configuration, OIDC module setup, collector handling (text, password, social login, MFA, FIDO2, PingOne Protect), and full scaffold generation. | [SKILL.md](skills/ping-orchestration-android-davinci-sdk/SKILL.md) |
 | [ping-orchestration-ios-davinci-sdk](skills/ping-orchestration-ios-davinci-sdk) | Implements authentication in iOS apps using the Ping Orchestration iOS SDK (DaVinci module) with SwiftUI and MVVM. Covers DaVinci configuration, OIDC module setup, collector handling (text, password, social login, MFA, FIDO2, PingOne Protect), and full scaffold generation. | [SKILL.md](skills/ping-orchestration-ios-davinci-sdk/SKILL.md) |
 | [ping-orchestration-reactjs-js-davinci-sdk](skills/ping-orchestration-reactjs-js-davinci-sdk) | Implements authentication in ReactJS SPAs using the Ping Orchestration JavaScript SDK (DaVinci). Covers DaVinci client configuration, OIDC setup, collector handling (text, password, social login, MFA, FIDO2, PingOne Protect), and full scaffold generation. | [SKILL.md](skills/ping-orchestration-reactjs-js-davinci-sdk/SKILL.md) |
-| [forgerock-to-ping-journey-migration](skills/forgerock-to-ping-journey-migration) | Migrates an existing app from the legacy ForgeRock SDK (`forgerock-android-sdk`, `forgerock-ios-sdk`, `forgerock-javascript-sdk`) to the new Ping Identity Journey SDK. Detects Android/iOS/JavaScript, scans for legacy usage, comments-out-and-replaces (for easy rollback), verifies the build, and generates a line-numbered migration report. | [SKILL.md](skills/forgerock-to-ping-journey-migration/SKILL.md) |
+
+### Migration Skills
+
+| Skill | Description | Documentation |
+|-------|-------------|---------------|
+| [forgerock-to-ping-journey-migration](skills/forgerock-to-ping-journey-migration) | Migrates an existing app from the legacy ForgeRock SDK (`forgerock-android-sdk`, `forgerock-ios-sdk`, `forgerock-javascript-sdk`) to the Ping Orchestration Journey SDK. Detects Android/iOS/JavaScript, scans for legacy usage, comments-out-and-replaces (for easy rollback), verifies the build, and generates a line-numbered migration report. | [SKILL.md](skills/forgerock-to-ping-journey-migration/SKILL.md) |
 
 # Disclaimer
 

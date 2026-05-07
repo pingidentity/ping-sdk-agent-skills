@@ -4,6 +4,33 @@ All callback types supported by the Ping Orchestration iOS SDK for Journey-based
 
 ---
 
+## ContinueNode Properties
+
+Before dispatching callbacks, the `ContinueNode` exposes the following page-level metadata:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `pageHeader` | `String` | Node page header — **non-optional**, check `.isEmpty` |
+| `pageDescription` | `String` | Node page description — **non-optional**, check `.isEmpty` |
+| `callbacks` | `[Callback]` | Array of callbacks to render |
+| `submitButtonText` | `String?` | Optional custom submit button label (use `"Next"` as fallback) |
+
+```swift
+// Correct — pageHeader and pageDescription are non-optional Strings
+if !continueNode.pageHeader.isEmpty {
+    Text(continueNode.pageHeader)
+}
+
+// WRONG — these properties do not exist
+continueNode.header          // compile error
+continueNode.nodeDescription // compile error
+```
+
+> **Note:** The `JourneyView.swift.template` previously referenced `continueNode.header` and
+> `continueNode.description` — those are incorrect. Always use `pageHeader` and `pageDescription`.
+
+---
+
 ## Core Callbacks (PingJourney)
 
 These callbacks are registered automatically by `Journey.createJourney`.

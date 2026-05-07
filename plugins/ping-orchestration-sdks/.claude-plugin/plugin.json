@@ -1,0 +1,9 @@
+{
+  "name": "ping-orchestration-sdks",
+  "version": "1.0.0",
+  "description": "Ping Orchestration SDK Skills for Android, iOS, and ReactJS",
+  "publisher": "Ping Identity",
+  "author": {
+    "name": "Ping Identity"
+  }
+}
