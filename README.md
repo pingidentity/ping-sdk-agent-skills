@@ -1,10 +1,6 @@
-![Ping Identity Agent Skills](https://www.pingidentity.com/content/dam/picr/nav/Ping-Logo-2.svg)
+![Ping SDK Agent Skills](https://www.pingidentity.com/content/dam/picr/nav/Ping-Logo-2.svg)
 
-# Ping Identity Agent Skills
-
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-
- :robot: [Try it out](#try-it-out) · :pencil: [Feedback](#feedback) · :thumbsup: [Contributing](CONTRIBUTING.md)
+# Ping SDK Agent Skills
 
 Ping Agent Skills help AI-powered coding assistants (such as GitHub Copilot, Claude Code, Gemini CLI, Cursor) build your solutions with Ping Identity products.
 
@@ -173,10 +169,6 @@ If you have feedback, questions, or want to request a new skill:
 - [Open an issue](https://github.com/pingidentity/agent-skills/issues/new) with the appropriate label (`enhancement`, `bug`, `question`, or `skill-request`)
 - Vote on existing issues with 👍 to help us prioritize
 
-## License
-
-This project is licensed under the Apache 2.0 License — see the [LICENSE](LICENSE) file for details.
-
 ## Related Resources
 
 - [Ping Developer Portal](https://developer.pingidentity.com/)
@@ -186,3 +178,25 @@ This project is licensed under the Apache 2.0 License — see the [LICENSE](LICE
 - [Skills CLI](https://skills.sh)
 - [VS Code Agent Skills](https://code.visualstudio.com/docs/copilot/customization/agent-skills)
 
+# Disclaimer
+
+> **This code is provided by Ping Identity Corporation ("Ping") on an "as is" basis, without
+warranty of any kind, to the fullest extent permitted by law.
+> Ping Identity Corporation does not represent or warrant or make any guarantee regarding the use of
+this code or the accuracy, timeliness or completeness of any data or information relating to this
+code, and Ping Identity Corporation hereby disclaims all warranties whether express, or implied or
+statutory, including without limitation the implied warranties of merchantability, fitness for a
+particular purpose, and any warranty of non-infringement.
+> Ping Identity Corporation shall not have any liability arising out of or related to any use,
+implementation or configuration of this code, including but not limited to use for any commercial
+purpose.
+> Any action or suit relating to the use of the code may be brought only in the courts of a
+jurisdiction wherein Ping Identity Corporation resides or in which Ping Identity Corporation
+conducts its primary business, and under the laws of that jurisdiction excluding its conflict-of-law
+provisions.**
+
+# License
+
+This software may be modified and distributed under the terms of the MIT license. See the [LICENSE](./LICENSE) file for details
+
+© Copyright 2026 Ping Identity Corporation. All rights reserved.
