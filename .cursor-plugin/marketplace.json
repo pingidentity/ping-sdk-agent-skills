@@ -10,22 +10,9 @@
   },
   "plugins": [
     {
-      "name": "ping-identity",
-      "source": "ping-identity",
-      "description": "Essential Ping Identity skills including quickstart guidance, platform detection, and core concepts.",
-      "version": "1.0.0",
-      "repository": "https://github.com/pingidentity/agent-skills.git",
-      "license": "Apache-2.0",
-      "author": {
-        "name": "Ping Identity"
-      },
-      "keywords": ["ping-identity", "quickstart", "authentication", "orchestration"],
-      "category": "authentication"
-    },
-    {
-      "name": "ping-identity-sdks",
-      "source": "ping-identity-sdks",
-      "description": "Platform-specific Ping Identity Orchestration SDK skills for Android, iOS, and ReactJS with complete implementation guides.",
+      "name": "ping-orchestration-sdks",
+      "source": "ping-orchestration-sdks",
+      "description": "Platform-specific Ping Orchestration SDK skills for Android, iOS, and ReactJS with complete implementation guides.",
       "version": "1.0.0",
       "repository": "https://github.com/pingidentity/agent-skills.git",
       "license": "Apache-2.0",

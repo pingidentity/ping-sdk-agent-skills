@@ -77,14 +77,18 @@ if let continueNode = node as? ContinueNode {
     // Access callbacks
     let callbacks = continueNode.callbacks
 
-    // Access page node metadata (if available)
-    let header = continueNode.header       // Page header text
-    let description = continueNode.nodeDescription  // Page description text
+    // Access page metadata — non-optional Strings, check .isEmpty
+    let header = continueNode.pageHeader        // Page header text
+    let description = continueNode.pageDescription  // Page description text
 
     // Fill in callback values, then advance
     let nextNode = await continueNode.next()
 }
 ```
+
+> **Important:** `pageHeader` and `pageDescription` are non-optional `String` values — use
+> `.isEmpty` checks, not optional binding. Do **not** use `continueNode.header` or
+> `continueNode.nodeDescription`; those property names do not exist and will cause compile errors.
 
 ### SuccessNode
 
@@ -163,6 +167,55 @@ if let oidcClient = await journey.module(OidcModule.config)?.client {
 ```
 
 See [OIDC Configuration Reference](oidc-config.md) for full OIDC API documentation.
+
+---
+
+## Session State Pattern (Home / Root View)
+
+After a successful Journey, the app pops back to a root view that checks session state via
+`journey.user()`. The `onChange(of: path)` observer is what makes `path = []` from `JourneyView`'s
+`SuccessNode` handler immediately re-trigger the session check.
+
+```swift
+struct HomeView: View {
+    @Binding var path: [MenuItem]
+    @State private var isLoggedIn = false
+    @State private var isCheckingSession = true
+
+    var body: some View {
+        // ... render based on isLoggedIn / isCheckingSession ...
+        .task { await checkSession() }
+        .onChange(of: path) { _ in
+            // Fires when JourneyView sets path = [] on SuccessNode
+            Task { await checkSession() }
+        }
+    }
+
+    private func checkSession() async {
+        isCheckingSession = true
+        guard let user = await journey.user() else {
+            isLoggedIn = false
+            isCheckingSession = false
+            return
+        }
+        switch await user.token() {
+        case .success:
+            isLoggedIn = true
+        case .failure:
+            isLoggedIn = false
+        }
+        isCheckingSession = false
+    }
+}
+```
+
+> **Why `path = []` and not `path.append(.home)` or `path = [.home]`:**
+> - `path.append(.home)` pushes a *new* `HomeView` as a navigation destination — it never pops
+>   to the existing root.
+> - `path = [.home]` also creates a new instance which re-runs `checkSession()`. If `journey.user()`
+>   returns nil due to timing (token exchange still in flight), it shows logged-out state.
+> - `path = []` pops to the *existing* root `HomeView`. Its `onChange(of: path)` fires,
+>   re-runs `checkSession()`, and the already-stored token is found immediately.
 
 ---
 

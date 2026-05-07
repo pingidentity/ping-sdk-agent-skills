@@ -21,12 +21,16 @@ import SwiftUI
 import PingOrchestrate
 import PingJourney
 import PingJourneyPlugin
-import PingBinding
-import PingFido
-import PingExternalIdP
-import PingProtect
-import PingDeviceProfile
-import PingReCaptchaEnterprise
+
+// IMPORTANT: Only import modules you've added as SPM products under File > Add Package Dependencies.
+// Importing a module not in your target produces "No such module" build errors.
+// Remove any line below that you are NOT using:
+import PingBinding           // DeviceBindingCallback, DeviceSigningVerifierCallback
+// import PingFido              // FidoRegistrationCallback, FidoAuthenticationCallback
+// import PingExternalIdP       // SelectIdpCallback, IdpCallback
+// import PingProtect           // PingOneProtectInitializeCallback, PingOneProtectEvaluationCallback
+// import PingDeviceProfile     // DeviceProfileCallback
+// import PingReCaptchaEnterprise // ReCaptchaEnterpriseCallback
 
 // MARK: - JourneyView
 
@@ -102,8 +106,14 @@ struct JourneyView: View {
             }
             .padding()
             .onAppear {
-                // Navigate to token/home view after success
-                path.append(.token)
+                // Pop to root — do NOT use path.append(...) or path = [.someView].
+                // path.append skips the root home view; path = [.someView] creates a new
+                // instance that re-runs checkSession() and may see no user yet (timing),
+                // reverting to logged-out state. path = [] pops to the existing root so
+                // its onChange(of: path) calls checkSession() and shows the logged-in state.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                    path = []
+                }
             }
 
         case let failureNode as FailureNode:
@@ -146,18 +156,18 @@ struct JourneyNodeView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 12) {
-                // Node header
-                if let header = continueNode.header, !header.isEmpty {
-                    Text(header)
+                // Node header — pageHeader is a non-optional String, use .isEmpty check
+                if !continueNode.pageHeader.isEmpty {
+                    Text(continueNode.pageHeader)
                         .font(.title2)
                         .fontWeight(.bold)
                         .multilineTextAlignment(.center)
                         .padding(.bottom, 4)
                 }
 
-                // Node description
-                if let description = continueNode.description, !description.isEmpty {
-                    Text(description)
+                // Node description — pageDescription is a non-optional String, use .isEmpty check
+                if !continueNode.pageDescription.isEmpty {
+                    Text(continueNode.pageDescription)
                         .font(.body)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)

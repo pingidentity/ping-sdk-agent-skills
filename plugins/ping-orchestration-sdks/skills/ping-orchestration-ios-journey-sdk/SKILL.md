@@ -454,6 +454,8 @@ struct MyApp: App {
 | Missing URL scheme in Info.plist | The custom URL scheme for OAuth redirect must be registered in `Info.plist` `CFBundleURLTypes` |
 | Not configuring OIDC module | The `PingJourney.OidcModule.config` block is required for token exchange to work after `SuccessNode` |
 | Using `ObservableObject` without `@StateObject` or `@ObservedObject` | Use `@StateObject` for ownership, `@ObservedObject` for injection |
+| `SuccessNode`: using `path.append(...)` or `path = [.someView]` instead of `path = []` | `path.append` skips the root home view entirely; `path = [.someView]` creates a *new* view instance that re-runs `checkSession()` and may see no user yet (timing), reverting to logged-out state. The correct pattern is `path = []` — pop to root so the existing root view's `onChange(of: path)` triggers `checkSession()` against `journey.user()` and transitions to the logged-in state. |
+| Importing optional modules not added as SPM products | Only `import` a module if it has been added as an SPM product in Xcode. Each optional import (`PingBinding`, `PingFido`, `PingProtect`, etc.) requires the corresponding product added under File > Add Package Dependencies. Importing a module not in the target produces "No such module" build errors. |
 
 ---
 
