@@ -1,9 +1,0 @@
-{
-  "name": "ping-identity",
-  "version": "1.0.0",
-  "description": "Ping Identity Agent Skills for quickstart guidance",
-  "publisher": "Ping Identity",
-  "author": {
-    "name": "Ping Identity"
-  }
-}

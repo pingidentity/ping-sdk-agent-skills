@@ -12,7 +12,7 @@ Ping Agent Skills help AI-powered coding assistants (such as GitHub Copilot, Cla
 
 [Agent Skills](https://agentskills.io/home) are an [open standard](https://agentskills.io/specification) for giving AI agents new capabilities and domain expertise. Each skill is a folder containing a `SKILL.md` file with structured instructions, code patterns, and best practices that AI agents can load on demand.
 
-This repository is the central place for all of Ping Identity's agent skills — from client-side SDK integration to platform configuration.
+This repository contains Ping Identity's Ping Orchestration SDK agent skills for client-side SDK integration across Android, iOS, and ReactJS.
 
 Learn more at [agentskills.io](https://agentskills.io) and [skills.sh](https://skills.sh)
 
@@ -31,33 +31,33 @@ Depending on the skill your AI agent uses, you'll need the following:
 
 1. **Via Skills CLI (recommended)**
    ```bash
-   npx skills add pingidentity/agent-skills
+   npx skills add pingidentity/ping-sdk-agent-skills
    ```
-   Or install specific plugins:
+   Or install the plugin directly:
    ```bash
-   npx skills add pingidentity/agent-skills/plugins/ping-identity
-   npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks
+   npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks
    ```
 
 2. **Manual Installation**
    ```bash
-   git clone https://github.com/pingidentity/agent-skills.git
-   cp -r agent-skills/plugins/*/skills/* ~/.copilot/skills/
+   git clone https://github.com/pingidentity/ping-sdk-agent-skills.git
+   cp -r agent-skills/plugins/ping-orchestration-sdks/skills/* ~/.copilot/skills/
    ```
 
 #### Claude Code
 
 1. **Via Skills CLI**
    ```bash
-   npx skills add pingidentity/agent-skills
+   npx skills add pingidentity/ping-sdk-agent-skills
    
     # Install a particular skill
-    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-android-journey-sdk
-    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-reactjs-js-journey-sdk
-    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-ios-journey-sdk
-    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-android-davinci-sdk
-    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-ios-davinci-sdk
-    npx skills add pingidentity/agent-skills/plugins/ping-identity-sdks/skills/ping-orchestration-reactjs-js-davinci-sdk
+    npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-android-journey-sdk
+    npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-reactjs-js-journey-sdk
+    npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-ios-journey-sdk
+    npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-android-davinci-sdk
+    npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-ios-davinci-sdk
+    npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-reactjs-js-davinci-sdk
+    npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/forgerock-to-ping-journey-migration
     ```
 
 2. **Local Testing**
@@ -72,11 +72,11 @@ Cursor automatically discovers skills from `.cursor-plugin/` configurations in t
 
 1. **Install via Skills CLI**
    ```bash
-   npx skills add pingidentity/agent-skills
+   npx skills add pingidentity/ping-sdk-agent-skills
    ```
 
 2. **Reference in Cursor**
-   Open Cursor and mention the Ping Identity skills in your prompts (e.g., "Use the ping-orchestration-android-journey-sdk skill to help me build an Android app")
+   Open Cursor and mention the Ping Orchestration SDK skills in your prompts (e.g., "Use the ping-orchestration-android-journey-sdk skill to help me build an Android app")
 
 ### Using the Skills
 
@@ -91,22 +91,22 @@ The AI will load the appropriate skill and provide guidance based on the SKILL.m
 
 ## Available Skills
 
-### Core Skills ([ping-identity](./plugins/ping-identity/) plugin)
+### SDK Integration Skills ([ping-orchestration-sdks](./plugins/ping-orchestration-sdks/) plugin)
 
 | Skill | Description |
 |-------|-------------|
-| [ping-quickstart](./plugins/ping-identity/skills/ping-quickstart/SKILL.md) | Detects your platform (Android, iOS, Web), explains Ping Identity concepts, and routes to the correct SDK skill |
+| [ping-orchestration-android-journey-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-android-journey-sdk/SKILL.md) | Android authentication with the Ping Journey SDK — Jetpack Compose + MVVM, callback handling, OIDC token exchange |
+| [ping-orchestration-reactjs-js-journey-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-reactjs-js-journey-sdk/SKILL.md) | ReactJS authentication with the Ping Orchestration JavaScript SDK — Vite + React 18, all Journey callbacks, OIDC token exchange |
+| [ping-orchestration-ios-journey-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-ios-journey-sdk/SKILL.md) | iOS authentication with the Ping Journey SDK — SwiftUI + MVVM, all Journey callbacks, OIDC token exchange, device binding, FIDO2 |
+| [ping-orchestration-android-davinci-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-android-davinci-sdk/SKILL.md) | Android authentication with the Ping Orchestration Android SDK (DaVinci module) — Jetpack Compose + MVVM, all DaVinci collectors including FIDO2, OIDC token exchange |
+| [ping-orchestration-ios-davinci-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-ios-davinci-sdk/SKILL.md) | iOS authentication with the Ping Orchestration iOS SDK (DaVinci module) — SwiftUI + MVVM, all DaVinci collectors including FIDO2, OIDC token exchange |
+| [ping-orchestration-reactjs-js-davinci-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-reactjs-js-davinci-sdk/SKILL.md) | ReactJS authentication with the Ping Orchestration JavaScript SDK (DaVinci) — Vite + React 18, all DaVinci collectors including FIDO2, OIDC token exchange |
 
-### SDK Skills ([ping-identity-sdks](./plugins/ping-identity-sdks/) plugin)
+### Migration Skills ([ping-orchestration-sdks](./plugins/ping-orchestration-sdks/) plugin)
 
 | Skill | Description |
 |-------|-------------|
-| [ping-orchestration-android-journey-sdk](./plugins/ping-identity-sdks/skills/ping-orchestration-android-journey-sdk/SKILL.md) | Android authentication with the Ping Journey SDK — Jetpack Compose + MVVM, callback handling, OIDC token exchange |
-| [ping-orchestration-reactjs-js-journey-sdk](./plugins/ping-identity-sdks/skills/ping-orchestration-reactjs-js-journey-sdk/SKILL.md) | ReactJS authentication with the Ping Orchestration JavaScript SDK — Vite + React 18, all Journey callbacks, OIDC token exchange |
-| [ping-orchestration-ios-journey-sdk](./plugins/ping-identity-sdks/skills/ping-orchestration-ios-journey-sdk/SKILL.md) | iOS authentication with the Ping Journey SDK — SwiftUI + MVVM, all Journey callbacks, OIDC token exchange, device binding, FIDO2 |
-| [ping-orchestration-android-davinci-sdk](./plugins/ping-identity-sdks/skills/ping-orchestration-android-davinci-sdk/SKILL.md) | Android authentication with the Ping Orchestration Android SDK (DaVinci module) — Jetpack Compose + MVVM, all DaVinci collectors including FIDO2, OIDC token exchange |
-| [ping-orchestration-ios-davinci-sdk](./plugins/ping-identity-sdks/skills/ping-orchestration-ios-davinci-sdk/SKILL.md) | iOS authentication with the Ping Orchestration iOS SDK (DaVinci module) — SwiftUI + MVVM, all DaVinci collectors including FIDO2, OIDC token exchange |
-| [ping-orchestration-reactjs-js-davinci-sdk](./plugins/ping-identity-sdks/skills/ping-orchestration-reactjs-js-davinci-sdk/SKILL.md) | ReactJS authentication with the Ping Orchestration JavaScript SDK (DaVinci) — Vite + React 18, all DaVinci collectors including FIDO2, OIDC token exchange |
+| [forgerock-to-ping-journey-migration](./plugins/ping-orchestration-sdks/skills/forgerock-to-ping-journey-migration/SKILL.md) | Migrates an existing app from the legacy ForgeRock SDK to the Ping Orchestration Journey SDK — detects Android/iOS/JavaScript, scans for legacy usage, comments-out-and-replaces for easy rollback, and generates a line-numbered migration report |
 
 ---
 
@@ -114,12 +114,7 @@ The AI will load the appropriate skill and provide guidance based on the SKILL.m
 
 ```
 plugins/
-├── ping-identity/                           # Core Plugin
-│   └── skills/
-│       └── ping-quickstart/                 # Platform detection & orientation
-│           ├── SKILL.md
-│           └── references/
-└── ping-identity-sdks/                      # SDK Plugin
+└── ping-orchestration-sdks/                 # SDK Plugin
     └── skills/
         ├── ping-orchestration-android-journey-sdk/  # Orchestration Android SDK Journey skill
         │   ├── SKILL.md
@@ -146,11 +141,14 @@ plugins/
         │   ├── references/
         │   ├── assets/
         │   └── scripts/
-        └── ping-orchestration-reactjs-js-davinci-sdk/  # Orchestration JS SDK - ReactJS Davinci Skill
+        ├── ping-orchestration-reactjs-js-davinci-sdk/  # Orchestration JS SDK - ReactJS DaVinci skill
+        │   ├── SKILL.md
+        │   ├── references/
+        │   ├── assets/
+        │   └── scripts/
+        └── forgerock-to-ping-journey-migration/     # ForgeRock SDK to Orchestration SDK Skill Migration
             ├── SKILL.md
-            ├── references/
-            ├── assets/
-            └── scripts/
+            └── references/
 ```
 
 ## Contributing
@@ -166,7 +164,7 @@ We welcome contributions! Whether it's a new skill, an improvement to an existin
 
 If you have feedback, questions, or want to request a new skill:
 
-- [Open an issue](https://github.com/pingidentity/agent-skills/issues/new) with the appropriate label (`enhancement`, `bug`, `question`, or `skill-request`)
+- [Open an issue](https://github.com/pingidentity/ping-sdk-agent-skills/issues/new) with the appropriate label (`enhancement`, `bug`, `question`, or `skill-request`)
 - Vote on existing issues with 👍 to help us prioritize
 
 ## Related Resources
