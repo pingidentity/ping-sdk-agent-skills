@@ -1,8 +1,10 @@
-![Ping SDK Agent Skills](https://www.pingidentity.com/content/dam/picr/nav/Ping-Logo-2.svg)
+<p align="center">
+  <img src="assets/banner-ping-sdk-agent-skills.png" alt="A banner representing Orchestration SDK Agent Skills for Ping Identity.">
+</p>
 
-# Ping SDK Agent Skills
+# Ping _Orchestration_ SDK Agent Skills
 
-Ping Agent Skills help AI-powered coding assistants (such as GitHub Copilot, Claude Code, Gemini CLI, Cursor) build your solutions with Ping Identity products.
+These skills help AI-powered coding assistants (such as GitHub Copilot, Claude Code, Gemini CLI, Cursor) integrate your mobile and web applications with Ping's orchestration platforms (PingOne DaVinci, PingOne Advanced Identity Cloud, and Software PingAM).
 
 > [!NOTE]
 >
