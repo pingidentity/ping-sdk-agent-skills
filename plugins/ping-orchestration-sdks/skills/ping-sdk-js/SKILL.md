@@ -17,7 +17,7 @@ metadata:
 
 # Ping JavaScript SDK
 
-First point of contact for building web apps with the Ping Orchestration JavaScript SDK (`@forgerock/*` packages). Handles three authentication flows:
+First point of contact for building web apps with the Ping Orchestration JavaScript SDK (`@forgerock/journey-client`, `@forgerock/davinci-client`, `@forgerock/oidc-client`). Handles three authentication flows:
 
 - **Journey** — callback-based auth against PingAM or PingOne AIC → delegates to `ping-orchestration-reactjs-js-journey-sdk`
 - **DaVinci** — collector-based auth against PingOne DaVinci → delegates to `ping-orchestration-reactjs-js-davinci-sdk`
