@@ -148,3 +148,71 @@ Examples:
 - `Detected Vite/React project, no umbrella skill yet → suggesting ping-orchestration-reactjs-js-journey-sdk as a stopgap.`
 
 After the announcement, invoke the chosen skill via the Skill tool. Do not start doing the work yourself.
+
+## Fallback Prompts
+
+Use these literal prompts when classification calls for a question. Adapt only the bracketed `<…>` placeholders.
+
+### ForgeRock fork prompt
+
+> I see ForgeRock SDK references in this `<platform>` project. Two paths:
+>
+> 1. **Migrate** the existing ForgeRock code to the Ping Identity Journey SDK (preserves old code as comments, generates a migration report).
+> 2. **Build new** Ping SDK functionality alongside the existing code (no migration).
+>
+> Which would you like to do?
+
+If migrate → route to `forgerock-to-ping-journey-migration`.
+If build new → route to the platform's umbrella skill (`ping-sdk-android` or `ping-sdk-ios`).
+
+### Multi-platform prompt
+
+> I detected more than one platform in this directory (`<list of detected platforms>`). Which one would you like to work on?
+
+Route to the umbrella skill for the chosen platform.
+
+### Placeholder-detected prompt (JavaScript)
+
+> This looks like a `<framework>` project. The umbrella skill `ping-sdk-js` is on the way but isn't ready yet. In the meantime you can use one of the existing ReactJS specialized skills:
+>
+> - `ping-orchestration-reactjs-js-journey-sdk` — Journey-based authentication
+> - `ping-orchestration-reactjs-js-davinci-sdk` — DaVinci-based authentication
+>
+> Want me to route to one of those?
+
+### Placeholder-detected prompt (React Native)
+
+> This looks like a React Native project. The umbrella skill `ping-sdk-react-native` is on the way but isn't ready yet, and there is no specialized React Native skill in this repo today. Would you like to wait, or shall I help you with something else?
+
+### No-detection prompt
+
+> I couldn't detect a supported project type in this directory. Which platform are you building for?
+>
+> - **Android** (`ping-sdk-android`)
+> - **iOS** (`ping-sdk-ios`)
+> - **JavaScript / Web** — coming soon (`ping-sdk-js`)
+> - **React Native** — coming soon (`ping-sdk-react-native`)
+
+Route to the chosen umbrella skill (or apply the placeholder prompt for JS / RN).
+
+## Adding a New Platform
+
+When a new umbrella skill ships (e.g., `ping-sdk-js`), a single contributor edit enables routing for it. Steps:
+
+1. **Update the registry row** in the **Platform Registry** table: change `Status` from `placeholder` to `active`. If the target skill name changed, update that too.
+2. **Add or fill in the probe block** in the **Probe Blocks** section. Provide either file markers (a `find` command) or content markers (a `grep` command) that uniquely identify projects of this type. Apply the common ignore globs.
+3. **(Optional) Update fallback prompts** if the platform's user-visible name should change.
+
+The decision tree, routing matrix, and handoff template do **not** need to be edited. They reference the registry by `Status`, so they pick up the new platform automatically.
+
+To **remove** a platform: change its row's `Status` to `placeholder` (keeps the row visible but disables routing).
+
+## Non-Goals
+
+This skill does NOT do any of the following — those are the responsibility of the target skills:
+
+- Scaffold projects, generate code, or write SDK configuration.
+- Cache detection results between runs.
+- Detect framework variants beyond what's in the registry (KMP, Flutter, Tauri, Electron, etc.).
+- Modify any file in the user's project.
+- Route to the 6 platform×SDK skills (`ping-orchestration-{android,ios,reactjs-js}-{journey,davinci}-sdk`) — they are reachable as stopgaps for the JavaScript placeholder, but the router treats them as out-of-scope routing targets otherwise.
