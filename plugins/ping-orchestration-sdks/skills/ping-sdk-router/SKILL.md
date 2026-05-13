@@ -194,7 +194,7 @@ JavaScript is now an active platform. When the JavaScript probe hits, print the 
 > - **JavaScript / Web** (`ping-sdk-js`)
 > - **React Native** — coming soon (`ping-sdk-react-native`)
 
-Route to the chosen umbrella skill (or apply the placeholder prompt for JS / RN).
+Route to the chosen umbrella skill (or apply the placeholder prompt for React Native).
 
 ## Adding a New Platform
 
