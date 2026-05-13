@@ -1,0 +1,55 @@
+import { createContext, useContext, useEffect, useState } from 'react';
+import { oidc } from '@forgerock/oidc-client';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import Callback from './pages/Callback';
+import Home from './pages/Home';
+
+const OidcContext = createContext(null);
+
+export function useOidc() {
+  return useContext(OidcContext);
+}
+
+let clientInstance = null;
+async function getClient() {
+  if (!clientInstance) {
+    clientInstance = await oidc({
+      serverConfig: { wellknown: import.meta.env.VITE_PING_WELLKNOWN },
+      clientId: import.meta.env.VITE_PING_CLIENT_ID,
+      redirectUri: import.meta.env.VITE_PING_REDIRECT_URI,
+      scope: import.meta.env.VITE_PING_SCOPE,
+    });
+  }
+  return clientInstance;
+}
+
+function ProtectedRoute({ children }) {
+  const { isAuthenticated } = useOidc();
+  if (isAuthenticated === null) return <div>Loading…</div>;
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
+}
+
+export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [client, setClient] = useState(null);
+
+  useEffect(() => {
+    getClient().then((c) => {
+      setClient(c);
+      c.token.get().then((tokens) => setIsAuthenticated(!!tokens)).catch(() => setIsAuthenticated(false));
+    });
+  }, []);
+
+  return (
+    <OidcContext.Provider value={{ client, isAuthenticated, setIsAuthenticated }}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/callback" element={<Callback />} />
+          <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+        </Routes>
+      </BrowserRouter>
+    </OidcContext.Provider>
+  );
+}
