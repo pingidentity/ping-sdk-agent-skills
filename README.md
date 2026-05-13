@@ -103,6 +103,8 @@ The AI will load the appropriate skill and provide guidance based on the SKILL.m
 | [ping-orchestration-android-davinci-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-android-davinci-sdk/SKILL.md) | Android authentication with the Ping Orchestration Android SDK (DaVinci module) — Jetpack Compose + MVVM, all DaVinci collectors including FIDO2, OIDC token exchange |
 | [ping-orchestration-ios-davinci-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-ios-davinci-sdk/SKILL.md) | iOS authentication with the Ping Orchestration iOS SDK (DaVinci module) — SwiftUI + MVVM, all DaVinci collectors including FIDO2, OIDC token exchange |
 | [ping-orchestration-reactjs-js-davinci-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-reactjs-js-davinci-sdk/SKILL.md) | ReactJS authentication with the Ping Orchestration JavaScript SDK (DaVinci) — Vite + React 18, all DaVinci collectors including FIDO2, OIDC token exchange |
+| [ping-sdk-ios](./plugins/ping-orchestration-sdks/skills/ping-sdk-ios/SKILL.md) | iOS apps with the Ping Identity SDK — SwiftUI + MVVM, Journey callbacks, DaVinci collectors, OIDC centralized login, FIDO, Protect, device binding, and Xcode project scaffolding |
+| [ping-sdk-android](./plugins/ping-orchestration-sdks/skills/ping-sdk-android/SKILL.md) | Android apps with the Ping Orchestration Android SDK — Jetpack Compose + MVVM, Journey callbacks, DaVinci collectors, OIDC centralized login, FIDO, Protect, and project scaffolding |
 
 ### Migration Skills ([ping-orchestration-sdks](./plugins/ping-orchestration-sdks/) plugin)
 
