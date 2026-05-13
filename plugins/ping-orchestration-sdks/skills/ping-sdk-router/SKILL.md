@@ -151,7 +151,7 @@ Detected <signals> → routing to <skill-name>.
 Examples:
 - `Detected Android (build.gradle.kts), no ForgeRock refs → routing to ping-sdk-android.`
 - `Detected iOS (Package.swift) + ForgeRock refs (forgerock-ios-sdk in Podfile) → routing to forgerock-to-ping-journey-migration.`
-- `Detected Vite/React project, no umbrella skill yet → suggesting ping-orchestration-reactjs-js-journey-sdk as a stopgap.`
+- `Detected React/Vite project (package.json), no ForgeRock refs → routing to ping-sdk-js.`
 
 After the announcement, invoke the chosen skill via the Skill tool. Do not start doing the work yourself.
 
