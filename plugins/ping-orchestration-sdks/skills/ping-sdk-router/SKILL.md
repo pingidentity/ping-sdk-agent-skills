@@ -82,3 +82,69 @@ test -f package.json && grep -E '"(react|vue|@angular/core|vite)"' package.json
 ```bash
 test -f package.json && grep -E '"react-native"' package.json
 ```
+
+## Decision Tree
+
+Run these phases in order when this skill is invoked.
+
+### Phase 1: Probe
+
+1. Run the **ForgeRock probe** (always — it's cross-cutting).
+2. For each row in the **Platform Registry** with `Status: active` (excluding ForgeRock migration), run that platform's probe.
+3. Run the **placeholder probes** for any platform with `Status: placeholder`.
+4. Record which probes hit (non-empty output) and which did not.
+
+### Phase 2: Classify
+
+Apply rules in order. **First match wins.**
+
+1. **ForgeRock present + a platform detected** — ForgeRock probe hit AND at least one active platform probe hit. Ask the user the **ForgeRock fork prompt** (see Fallback Prompts). Route to `forgerock-to-ping-journey-migration` if they choose migrate; otherwise route to that platform's umbrella skill. Takes precedence over multi-platform detection because migration is almost always the intent when ForgeRock refs exist.
+2. **Multi-platform monorepo** — two or more active platform probes hit (and rule 1 did not fire). Ask the **multi-platform prompt**. Route to the chosen platform's umbrella skill.
+3. **Single active platform detected** — exactly one active platform probe hit. Route to that platform's umbrella skill.
+4. **Placeholder platform detected** — no active probe hit, but a placeholder probe hit:
+   - **JavaScript (web):** announce that `ping-sdk-js` is on the way. Offer the existing ReactJS specialized skills (`ping-orchestration-reactjs-js-journey-sdk`, `ping-orchestration-reactjs-js-davinci-sdk`) as a stopgap.
+   - **React Native:** announce that `ping-sdk-react-native` is on the way. No stopgap exists; ask the user how they would like to proceed.
+5. **Nothing detected** — no probes hit. Ask the **no-detection prompt**, listing only platforms with `Status: active`. Mention placeholder platforms as "coming soon".
+
+### Phase 3: Handoff
+
+Print a **single-line summary** in this exact format:
+```
+Detected <signals> → routing to <skill-name>.
+```
+
+Where:
+- `<signals>` is a short comma-separated list of what the probes found, e.g. `Android (build.gradle.kts), no ForgeRock refs`.
+- `<skill-name>` is the target skill's `name` field exactly as it appears in its frontmatter.
+
+Then **invoke the target skill via the Skill tool**. Do not inline the target skill's content. Do not paraphrase its instructions. Hand off cleanly.
+
+## Routing Matrix
+
+A compact lookup the agent can match against after Phase 2 classification.
+
+| Probe outcome | Route to |
+|---------------|----------|
+| ForgeRock + Android | Ask fork prompt → `forgerock-to-ping-journey-migration` OR `ping-sdk-android` |
+| ForgeRock + iOS | Ask fork prompt → `forgerock-to-ping-journey-migration` OR `ping-sdk-ios` |
+| Android only | `ping-sdk-android` |
+| iOS only | `ping-sdk-ios` |
+| Android + iOS (no ForgeRock) | Ask multi-platform prompt → chosen umbrella |
+| JavaScript placeholder hit | Stopgap suggestion (ReactJS specialized skills) |
+| React Native placeholder hit | Inform user; no route |
+| No probes hit | Ask no-detection prompt → chosen umbrella |
+
+## Handoff Template
+
+Use this exact format for the announcement before invoking the target skill:
+
+```
+Detected <signals> → routing to <skill-name>.
+```
+
+Examples:
+- `Detected Android (build.gradle.kts), no ForgeRock refs → routing to ping-sdk-android.`
+- `Detected iOS (Package.swift) + ForgeRock refs (forgerock-ios-sdk in Podfile) → routing to forgerock-to-ping-journey-migration.`
+- `Detected Vite/React project, no umbrella skill yet → suggesting ping-orchestration-reactjs-js-journey-sdk as a stopgap.`
+
+After the announcement, invoke the chosen skill via the Skill tool. Do not start doing the work yourself.
