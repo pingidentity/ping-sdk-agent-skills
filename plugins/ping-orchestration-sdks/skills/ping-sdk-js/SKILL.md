@@ -181,3 +181,87 @@ Reference: `assets/.env.template`
 | `PLACEHOLDER_REDIRECT_URI` | `redirectUri` |
 | `PLACEHOLDER_SCOPE` | `scope` |
 | `PLACEHOLDER_ACR_VALUES` | `acrValues` — omit the line if not provided |
+
+## OIDC Centralized Login
+
+Handled inline — no delegation. Uses `@forgerock/oidc-client` directly. Full API reference: `assets/oidc-centralized-reference.md`.
+
+### Flow
+
+1. User lands on login page → call `client.authorize.url()` to generate the authorization URL → redirect the browser.
+2. User authenticates on PingOne/AIC → browser redirected back to `redirectUri`.
+3. Callback page reads `code` and `state` from the URL → calls `client.token.exchange(code, state)` → tokens stored.
+4. App calls `client.token.get()` to read tokens → user is authenticated, render protected content.
+5. Background renewal: call `client.token.get({ backgroundRenew: true })` to keep the session alive via a hidden iframe.
+6. Logout: call `client.user.logout()` → revokes the access token and ends the session on the server.
+
+### Client initialisation
+
+```js
+import { oidc } from '@forgerock/oidc-client';
+
+const client = await oidc({
+  serverConfig: {
+    wellknown: import.meta.env.VITE_PING_WELLKNOWN,
+  },
+  clientId: import.meta.env.VITE_PING_CLIENT_ID,
+  redirectUri: import.meta.env.VITE_PING_REDIRECT_URI,
+  scope: import.meta.env.VITE_PING_SCOPE,
+  // acrValues: import.meta.env.VITE_PING_ACR_VALUES, // uncomment if needed
+});
+```
+
+### Token exchange (callback page)
+
+```js
+const params = new URLSearchParams(window.location.search);
+const code = params.get('code');
+const state = params.get('state');
+
+if (code && state) {
+  await client.token.exchange(code, state);
+  window.location.replace('/');  // redirect to home after successful exchange
+}
+```
+
+### Protected route pattern (React)
+
+```jsx
+import { useEffect, useState } from 'react';
+
+export function ProtectedRoute({ children }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
+
+  useEffect(() => {
+    client.token.get().then((tokens) => {
+      setIsAuthenticated(!!tokens);
+    });
+  }, []);
+
+  if (isAuthenticated === null) return <div>Loading…</div>;
+  if (!isAuthenticated) {
+    client.authorize.url().then((url) => { window.location.href = url; });
+    return null;
+  }
+  return children;
+}
+```
+
+### Templates
+
+Generate these 5 files when flow type is `oidc-centralized`. Read the templates from `assets/`, substitute placeholders, and write to the user's project directory.
+
+| Template file | Output path | Purpose |
+|--------------|------------|---------|
+| `assets/.env.template` | `.env` | Environment variables |
+| `assets/callback.html.template` | `public/callback.html` | Static OAuth callback page |
+| `assets/oidc-app.jsx.template` | `src/App.jsx` | App shell with OIDC context + protected route |
+| `assets/oidc-login.jsx.template` | `src/pages/Login.jsx` | Login trigger (`authorize.url()` → redirect) |
+| `assets/oidc-callback.jsx.template` | `src/pages/Callback.jsx` | Code exchange handler |
+
+### Common pitfalls (OIDC)
+
+- **`state` mismatch**: never construct the authorization URL manually. Always use `client.authorize.url()` — it generates and stores the `state` and `code_verifier` (PKCE) automatically. Calling `token.exchange` with a `state` that doesn't match stored state throws `state_mismatch`.
+- **Callback page as SPA route vs static HTML**: for Vite SPAs without SSR, the callback route must be a real file (`public/callback.html`) or the dev server will return `index.html` which re-triggers routing before the exchange runs. Use `assets/callback.html.template` as a standalone page.
+- **Background renewal requires iframe allowance**: `backgroundRenew: true` opens a hidden iframe to the authorization endpoint. If your CSP blocks `frame-src`, renewal will silently fail. Add your PingOne/AIC domain to `frame-src`.
+- **PKCE is always on**: `@forgerock/oidc-client` uses PKCE by default and does not expose a toggle. Your OAuth client registration must have PKCE enabled (or set to optional).
