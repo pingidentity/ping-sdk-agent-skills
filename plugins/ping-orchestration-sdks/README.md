@@ -74,6 +74,12 @@ Or specify a particular skill:
 | [ping-sdk-ios](skills/ping-sdk-ios) | Implements authentication in iOS apps using the Ping Identity SDK — SwiftUI + MVVM, Journey callbacks, DaVinci collectors, OIDC centralized login (ASWebAuthenticationSession/SFSafariViewController), FIDO, Protect, device binding, KeychainStorage, and full Xcode project scaffolding. | [SKILL.md](skills/ping-sdk-ios/SKILL.md) |
 | [ping-sdk-android](skills/ping-sdk-android) | Implements authentication in Android apps using the Ping Orchestration Android SDK — Jetpack Compose + MVVM, Journey callbacks, DaVinci collectors, OIDC centralized login, FIDO, Protect, EncryptedDataStore, and full project scaffolding. Covers both new project creation and existing app integration. | [SKILL.md](skills/ping-sdk-android/SKILL.md) |
 
+### Routing Skills
+
+| Skill | Description | Documentation |
+|-------|-------------|---------------|
+| [ping-sdk-router](skills/ping-sdk-router) | First point of contact for vague Ping SDK requests. Probes the user's working directory for Android, iOS, JavaScript, or React Native projects (and ForgeRock SDK references), asks if ambiguous, and routes to the matching umbrella skill (`ping-sdk-android`, `ping-sdk-ios`; `ping-sdk-js` and `ping-sdk-react-native` on the roadmap) or to `forgerock-to-ping-journey-migration`. Designed for easy expansion via a platform registry. | [SKILL.md](skills/ping-sdk-router/SKILL.md) |
+
 ### Migration Skills
 
 | Skill | Description | Documentation |
