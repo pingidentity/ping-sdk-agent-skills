@@ -5,9 +5,9 @@ description: >-
   specifying a platform — phrases like "help me add Ping auth", "I want to use
   PingOne", "get started with the Ping SDK". Probes the project to detect
   Android, iOS, JavaScript, or React Native, asks if ambiguous, and routes to
-  the matching umbrella skill (ping-sdk-android, ping-sdk-ios, planned: ping-sdk-js,
-  ping-sdk-react-native) or to forgerock-to-ping-journey-migration when ForgeRock
-  SDK references are present.
+  the matching umbrella skill (ping-sdk-android, ping-sdk-ios, ping-sdk-js;
+  ping-sdk-react-native on the roadmap) or to forgerock-to-ping-journey-migration
+  when ForgeRock SDK references are present.
 license: MIT
 metadata:
   author: Ping Identity
@@ -26,7 +26,7 @@ This table is the single source of truth for routing. The decision tree below re
 |----------|--------------|--------|-------|
 | Android | `ping-sdk-android` | active | — |
 | iOS | `ping-sdk-ios` | active | — |
-| JavaScript (web) | `ping-sdk-js` | placeholder | Stopgap: `ping-orchestration-reactjs-js-journey-sdk`, `ping-orchestration-reactjs-js-davinci-sdk` |
+| JavaScript (web) | `ping-sdk-js` | active | — |
 | React Native | `ping-sdk-react-native` | placeholder | No stopgap available |
 | ForgeRock migration | `forgerock-to-ping-journey-migration` | active | Cross-cutting; takes precedence over platform routing when ForgeRock refs are present |
 
@@ -69,14 +69,20 @@ grep -RIl --max-count=1 \
 
 A non-empty result means ForgeRock SDK references exist and the migration path applies.
 
+### JavaScript (web) probe
+
+File/content markers (any one is sufficient):
+```bash
+find . -maxdepth 4 \
+  \( -name node_modules -o -name .git -o -name build -o -name dist -o -name .next -o -name out \) -prune -o \
+  -name "package.json" -print | head -5 | xargs grep -l '"react"\|"vue"\|"@angular/core"\|"vite"' 2>/dev/null
+```
+
+A non-empty result means a JavaScript (web) project is detected.
+
 ### Placeholder probes (informational only — do NOT route to these targets)
 
-These probes exist so the router can recognize a JavaScript or React Native project and tell the user that an umbrella skill is on the way. They do not currently route.
-
-**JavaScript (web):** detect a `package.json` with a `react`, `vue`, `angular`, or `vite` dependency.
-```bash
-test -f package.json && grep -E '"(react|vue|@angular/core|vite)"' package.json
-```
+These probes exist so the router can recognize a React Native project and tell the user that an umbrella skill is on the way. They do not currently route.
 
 **React Native:** detect a `package.json` with `react-native`.
 ```bash
@@ -102,7 +108,6 @@ Apply rules in order. **First match wins.**
 2. **Multi-platform monorepo** — two or more active platform probes hit (and rule 1 did not fire). Ask the **multi-platform prompt**. Route to the chosen platform's umbrella skill.
 3. **Single active platform detected** — exactly one active platform probe hit. Route to that platform's umbrella skill.
 4. **Placeholder platform detected** — no active probe hit, but a placeholder probe hit:
-   - **JavaScript (web):** announce that `ping-sdk-js` is on the way. Offer the existing ReactJS specialized skills (`ping-orchestration-reactjs-js-journey-sdk`, `ping-orchestration-reactjs-js-davinci-sdk`) as a stopgap.
    - **React Native:** announce that `ping-sdk-react-native` is on the way. No stopgap exists; ask the user how they would like to proceed.
 5. **Nothing detected** — no probes hit. Ask the **no-detection prompt**, listing only platforms with `Status: active`. Mention placeholder platforms as "coming soon".
 
@@ -130,7 +135,8 @@ A compact lookup the agent can match against after Phase 2 classification.
 | Android only | `ping-sdk-android` |
 | iOS only | `ping-sdk-ios` |
 | Android + iOS (no ForgeRock) | Ask multi-platform prompt → chosen umbrella |
-| JavaScript placeholder hit | Stopgap suggestion (ReactJS specialized skills) |
+| JavaScript (web) only | `ping-sdk-js` |
+| ForgeRock + JavaScript | Ask fork prompt → `forgerock-to-ping-journey-migration` OR `ping-sdk-js` |
 | React Native placeholder hit | Inform user; no route |
 | No probes hit | Ask no-detection prompt → chosen umbrella |
 
@@ -163,7 +169,7 @@ Use these literal prompts when classification calls for a question. Adapt only t
 > Which would you like to do?
 
 If migrate → route to `forgerock-to-ping-journey-migration`.
-If build new → route to the platform's umbrella skill (`ping-sdk-android` or `ping-sdk-ios`).
+If build new → route to the platform's umbrella skill (`ping-sdk-android`, `ping-sdk-ios`, or `ping-sdk-js`).
 
 ### Multi-platform prompt
 
@@ -171,14 +177,9 @@ If build new → route to the platform's umbrella skill (`ping-sdk-android` or `
 
 Route to the umbrella skill for the chosen platform.
 
-### Placeholder-detected prompt (JavaScript)
+### Active route for JavaScript
 
-> This looks like a `<framework>` project. The umbrella skill `ping-sdk-js` is on the way but isn't ready yet. In the meantime you can use one of the existing ReactJS specialized skills:
->
-> - `ping-orchestration-reactjs-js-journey-sdk` — Journey-based authentication
-> - `ping-orchestration-reactjs-js-davinci-sdk` — DaVinci-based authentication
->
-> Want me to route to one of those?
+JavaScript is now an active platform. When the JavaScript probe hits, print the handoff line and invoke `ping-sdk-js` via the Skill tool — no prompt needed unless ambiguity requires it (e.g., ForgeRock refs also present).
 
 ### Placeholder-detected prompt (React Native)
 
@@ -190,14 +191,14 @@ Route to the umbrella skill for the chosen platform.
 >
 > - **Android** (`ping-sdk-android`)
 > - **iOS** (`ping-sdk-ios`)
-> - **JavaScript / Web** — coming soon (`ping-sdk-js`)
+> - **JavaScript / Web** (`ping-sdk-js`)
 > - **React Native** — coming soon (`ping-sdk-react-native`)
 
 Route to the chosen umbrella skill (or apply the placeholder prompt for JS / RN).
 
 ## Adding a New Platform
 
-When a new umbrella skill ships (e.g., `ping-sdk-js`), a single contributor edit enables routing for it. Steps:
+When a new umbrella skill ships (e.g., `ping-sdk-react-native`), a single contributor edit enables routing for it. Steps:
 
 1. **Update the registry row** in the **Platform Registry** table: change `Status` from `placeholder` to `active`. If the target skill name changed, update that too.
 2. **Add or fill in the probe block** in the **Probe Blocks** section. Provide either file markers (a `find` command) or content markers (a `grep` command) that uniquely identify projects of this type. Apply the common ignore globs.
