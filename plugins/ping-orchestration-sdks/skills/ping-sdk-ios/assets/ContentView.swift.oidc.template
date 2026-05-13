@@ -1,0 +1,32 @@
+/*
+ * ContentView.swift
+ *
+ * Root navigation coordinator for the OIDC centralized login flow.
+ */
+
+import SwiftUI
+
+struct ContentView: View {
+    @State private var oidcLoginViewModel = OidcLoginViewModel()
+
+    var body: some View {
+        NavigationStack {
+            switch oidcLoginViewModel.authState {
+            case .success:
+                AuthenticatedView(oidcLoginViewModel: oidcLoginViewModel)
+            case .failure(let oidcError):
+                LoginView(
+                    isLoading: oidcLoginViewModel.isLoading,
+                    errorMessage: oidcError.localizedDescription,
+                    onAuthorize: { Task { await oidcLoginViewModel.authorize() } }
+                )
+            case .none:
+                LoginView(
+                    isLoading: oidcLoginViewModel.isLoading,
+                    errorMessage: nil,
+                    onAuthorize: { Task { await oidcLoginViewModel.authorize() } }
+                )
+            }
+        }
+    }
+}

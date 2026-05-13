@@ -1,0 +1,279 @@
+/*
+ * Theme.kt
+ *
+ * Ping Identity design system for Android — color tokens, branded composables.
+ * Drop this file into any Ping sample app under ui/theme/.
+ * Requires: res/drawable/ping_logo.png (copy from skill assets/ping_logo.png)
+ */
+
+package PLACEHOLDER_PACKAGE_NAME.ui.theme
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import PLACEHOLDER_PACKAGE_NAME.R
+
+// ---------------------------------------------------------------------------
+// Color tokens
+// ---------------------------------------------------------------------------
+
+val PingRed      = Color(0xFFA31300)   // RGB 163, 19, 0
+val PingRedDark  = Color(0xFF991A1A)   // gradient end
+val PingTextField = Color(0xFFDCE6E6)  // input field stroke
+
+// ---------------------------------------------------------------------------
+// Primary action button
+// ---------------------------------------------------------------------------
+
+@Composable
+fun PingPrimaryButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        shape = RoundedCornerShape(15.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = PingRed),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(50.dp)
+            .shadow(elevation = 4.dp, shape = RoundedCornerShape(15.dp))
+    ) {
+        Text(text, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color.White)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Branded header (gradient + logo + title + subtitle)
+// ---------------------------------------------------------------------------
+
+@Composable
+fun PingHeaderView(title: String, subtitle: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                Brush.linearGradient(listOf(PingRed, PingRedDark))
+            )
+            .padding(vertical = 32.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Image(
+                painter = painterResource(id = R.drawable.ping_logo),
+                contentDescription = "Ping Identity Logo",
+                modifier = Modifier.size(80.dp),
+                contentScale = ContentScale.Fit
+            )
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = title,
+                color = Color.White,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = subtitle,
+                color = Color.White.copy(alpha = 0.85f),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Branded text field
+// ---------------------------------------------------------------------------
+
+@Composable
+fun PingTextFieldBranded(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        singleLine = true,
+        keyboardOptions = keyboardOptions,
+        shape = RoundedCornerShape(8.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            unfocusedBorderColor = PingTextField,
+            focusedBorderColor = PingRed
+        ),
+        modifier = modifier.fillMaxWidth()
+    )
+}
+
+// ---------------------------------------------------------------------------
+// Branded secure field (password toggle)
+// ---------------------------------------------------------------------------
+
+@Composable
+fun PingSecureField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier
+) {
+    var visible by remember { mutableStateOf(false) }
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        singleLine = true,
+        visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
+        trailingIcon = {
+            IconButton(onClick = { visible = !visible }) {
+                Icon(
+                    imageVector = if (visible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                    contentDescription = if (visible) "Hide password" else "Show password",
+                    tint = PingRed
+                )
+            }
+        },
+        shape = RoundedCornerShape(8.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            unfocusedBorderColor = PingTextField,
+            focusedBorderColor = PingRed
+        ),
+        modifier = modifier.fillMaxWidth()
+    )
+}
+
+// ---------------------------------------------------------------------------
+// Inline error message
+// ---------------------------------------------------------------------------
+
+@Composable
+fun PingErrorMessage(message: String, modifier: Modifier = Modifier) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Icon(
+            imageVector = Icons.Default.Warning,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.error,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(
+            text = message,
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.labelSmall
+        )
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Full-screen error card (unrecoverable / failure state)
+// ---------------------------------------------------------------------------
+
+@Composable
+fun PingErrorCard(message: String, onRetry: (() -> Unit)? = null) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.padding(32.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.Warning,
+            contentDescription = null,
+            tint = PingRed,
+            modifier = Modifier.size(56.dp)
+        )
+        Text(
+            text = "Something went wrong",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        if (onRetry != null) {
+            PingPrimaryButton(text = "Try Again", onClick = onRetry, modifier = Modifier.padding(horizontal = 40.dp))
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Loading overlay (full-screen blocking spinner)
+// ---------------------------------------------------------------------------
+
+@Composable
+fun PingLoadingOverlay(message: String = "Loading…") {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.35f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier
+                .background(
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .padding(24.dp)
+        ) {
+            CircularProgressIndicator(color = PingRed)
+            Text(text = message, style = MaterialTheme.typography.bodyMedium)
+        }
+    }
+}

@@ -1,0 +1,53 @@
+/*
+ * OidcLoginViewModel.swift
+ *
+ * @Observable ViewModel that drives the OIDC centralized login flow.
+ */
+
+import Foundation
+import Observation
+import PingOidc
+
+@Observable
+@MainActor
+final class OidcLoginViewModel {
+    var authState: Result<User, OidcError>?
+    var isLoading = false
+    var userInfo: [String: Any] = [:]
+    var isLoadingUserInfo = false
+    var userInfoError: String?
+
+    func authorize() async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            authState = try await AppOidc.shared.oidcWebClient.authorize()
+        } catch {
+            authState = .failure(.unknown(cause: error, message: error.localizedDescription))
+        }
+    }
+
+    func loadUserInfo() async {
+        guard case .success(let user) = authState else { return }
+        isLoadingUserInfo = true
+        userInfoError = nil
+        defer { isLoadingUserInfo = false }
+        let result = await user.userinfo(cache: false)
+        switch result {
+        case .success(let info):
+            userInfo = info
+        case .failure(let error):
+            userInfoError = error.localizedDescription
+        }
+    }
+
+    func signOut() async {
+        if let user = await AppOidc.shared.oidcWebClient.user() {
+            await user.revoke()
+        }
+        _ = await AppOidc.shared.oidcWebClient.signOff()
+        authState = nil
+        userInfo = [:]
+        userInfoError = nil
+    }
+}

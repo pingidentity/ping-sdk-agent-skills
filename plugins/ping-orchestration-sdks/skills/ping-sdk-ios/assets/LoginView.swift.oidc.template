@@ -1,0 +1,49 @@
+/*
+ * LoginView.swift
+ *
+ * Centralized login screen — launches the system browser for OIDC authorization.
+ */
+
+import SwiftUI
+
+struct LoginView: View {
+    let isLoading: Bool
+    let errorMessage: String?
+    let onAuthorize: () -> Void
+
+    var body: some View {
+        ZStack {
+            ScrollView {
+                VStack(spacing: 0) {
+                    PingHeaderView(title: "PLACEHOLDER_APP_NAME", subtitle: "Centralized Login")
+
+                    VStack(spacing: 24) {
+                        if let errorMessage {
+                            ErrorView(
+                                message: errorMessage,
+                                onRetry: onAuthorize
+                            )
+                        } else {
+                            VStack(spacing: 12) {
+                                Text("Sign in with your Ping Identity account using a secure browser session.")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 8)
+
+                                Button("Sign In with Browser", action: onAuthorize)
+                                    .buttonStyle(PingPrimaryButtonStyle())
+                            }
+                        }
+                    }
+                    .padding(24)
+                }
+            }
+
+            if isLoading {
+                LoadingOverlay("Opening browser…")
+            }
+        }
+        .navigationBarBackButtonHidden(isLoading)
+    }
+}

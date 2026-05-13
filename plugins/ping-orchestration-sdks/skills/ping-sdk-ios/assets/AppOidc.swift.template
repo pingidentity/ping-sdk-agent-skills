@@ -1,0 +1,34 @@
+/*
+ * AppOidc.swift
+ *
+ * Singleton that holds the configured OidcWebClient instance.
+ * Replace all PLACEHOLDER_ values with your PingOne / PingAM tenant details.
+ */
+
+import PingOidc
+import PingBrowser
+import PingStorage
+import PingLogger
+
+@MainActor
+class AppOidc {
+    static let shared = AppOidc()
+
+    let oidcWebClient: OidcWebClient
+
+    private init() {
+        oidcWebClient = OidcWebClient.createOidcWebClient { webConfig in
+            webConfig.browserType = .authSession
+            webConfig.browserMode = .login
+            webConfig.logger      = LogManager.standard
+            webConfig.module(PingOidc.OidcModule.config) { oidcValue in
+                oidcValue.clientId          = "PLACEHOLDER_CLIENT_ID"
+                oidcValue.scopes            = [PLACEHOLDER_SCOPES]
+                oidcValue.redirectUri       = "PLACEHOLDER_REDIRECT_URI"
+                oidcValue.discoveryEndpoint = "PLACEHOLDER_DISCOVERY_ENDPOINT"
+                oidcValue.storage           = KeychainStorage<Token>(account: "ACCESS_TOKEN_STORAGE_PLACEHOLDER_APP_NAME_UPPER")
+                oidcValue.logger            = LogManager.standard
+            }
+        }
+    }
+}

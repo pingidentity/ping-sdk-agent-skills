@@ -1,0 +1,30 @@
+/*
+ * PLACEHOLDER_APP_NAMEApp.swift
+ *
+ * App entry point — wires the OIDC browser redirect flow.
+ * .onOpenURL forwards the redirect URI back to the SDK.
+ * .onChange(of: scenePhase) resumes a browser session when the app returns to the foreground.
+ */
+
+import SwiftUI
+import PingBrowser
+
+@main
+struct PLACEHOLDER_APP_NAMEApp: App {
+    @Environment(\.scenePhase) private var scenePhase
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .onOpenURL { url in
+                    OpenURLMonitor.shared.handleOpenURL(url)
+                }
+                .onChange(of: scenePhase) { _, phase in
+                    if phase == .active,
+                       BrowserLauncher.currentBrowser.isInProgress {
+                        BrowserLauncher.currentBrowser.handleAppActivation()
+                    }
+                }
+        }
+    }
+}
