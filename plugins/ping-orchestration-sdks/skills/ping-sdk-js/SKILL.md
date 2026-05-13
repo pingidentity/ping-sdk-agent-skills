@@ -113,6 +113,8 @@ This section applies regardless of flow type. Provide this guidance before deleg
 
 ### Package selection
 
+Full package reference: [references/sdk-packages.md](references/sdk-packages.md)
+
 Install only the packages your flow needs:
 
 ```bash
