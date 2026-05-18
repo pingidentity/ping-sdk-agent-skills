@@ -19,6 +19,7 @@ async function getClient() {
       clientId: import.meta.env.VITE_PING_CLIENT_ID,
       redirectUri: import.meta.env.VITE_PING_REDIRECT_URI,
       scope: import.meta.env.VITE_PING_SCOPE,
+      // acrValues: import.meta.env.VITE_PING_ACR_VALUES, // uncomment if needed
     });
   }
   return clientInstance;

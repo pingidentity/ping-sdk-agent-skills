@@ -27,14 +27,14 @@ Runs a three-step wizard (W1 → W2 → W3) to determine flow type, detect frame
 
 ## Framework Registry
 
-This table is the single source of truth for framework routing. The decision tree references it by `Status`. To add a new framework, change its status from `placeholder` to `active`, add delegate skill names, and fill in probe instructions — no other changes needed.
+This table is the single source of truth for framework routing. The decision tree references it by `Status`. To add a new framework: change its status from `placeholder` to `active`, add delegate skill names, fill in the OIDC templates directory, and add any build-tool-specific guidance to the "Build Tool Configuration" subsection.
 
-| Framework | Journey Delegate | DaVinci Delegate | Status |
-|-----------|-----------------|-----------------|--------|
-| React | `ping-orchestration-reactjs-js-journey-sdk` | `ping-orchestration-reactjs-js-davinci-sdk` | active |
-| Angular | — | — | placeholder |
-| Vue | — | — | placeholder |
-| Vanilla JS | — | — | placeholder |
+| Framework | Journey Delegate | DaVinci Delegate | OIDC Templates | Status |
+|-----------|-----------------|-----------------|----------------|--------|
+| React | `ping-orchestration-reactjs-js-journey-sdk` | `ping-orchestration-reactjs-js-davinci-sdk` | `assets/react/` | active |
+| Angular | — | — | `assets/angular/` | placeholder |
+| Vue | — | — | `assets/vue/` | placeholder |
+| Vanilla JS | — | — | `assets/vanilla/` | placeholder |
 
 ## Wizard
 
@@ -60,10 +60,16 @@ grep -E '"(react|vue|@angular/core|vite)"' package.json
 ```
 
 - `react` found → React detected → proceed to W2.
-- `vue` or `@angular/core` found → announce placeholder:
-  > "A dedicated `ping-sdk-vue` / `ping-sdk-angular` skill is on the way. The closest available skills today are `ping-orchestration-reactjs-js-journey-sdk` / `ping-orchestration-reactjs-js-davinci-sdk` (React + Vite). Want me to route to one of those instead?"
+- `vue` or `@angular/core` found → announce placeholder and offer choices:
+  > "A dedicated `ping-sdk-vue` / `ping-sdk-angular` skill is on the way. I can:
+  > 1. **Generate framework-neutral SDK wiring** — client init, token exchange, and route guard pseudocode you can adapt to your framework's patterns.
+  > 2. **Route to the React skill** (`ping-orchestration-reactjs-js-journey-sdk` / `ping-orchestration-reactjs-js-davinci-sdk`) as a reference implementation you can port.
+  >
+  > Which would you prefer?"
+  - If the user chooses option 1 → proceed to W2 and then use the **Generic (Placeholder Framework) Path** below.
+  - If the user chooses option 2 → proceed to W2 and delegate to the React skill.
 - `react-native` found (check separately) → announce that `ping-sdk-react-native` is on the way; no stopgap exists.
-- Nothing found, or no `package.json` → ask: "Which JavaScript framework are you using?" List only active frameworks from the Framework Registry.
+- Nothing found, or no `package.json` → ask: "Which JavaScript framework are you using?" List active frameworks from the Framework Registry. If the user names a placeholder framework, offer the same two options above.
 
 ### W2 — Shared configuration
 
@@ -103,15 +109,130 @@ Display a summary table:
 Ask: "Does this look right? Shall I proceed?"
 
 On confirmation:
-- **Journey** → invoke `ping-orchestration-reactjs-js-journey-sdk` via the Skill tool. Pass the collected config in your invocation context. Do not inline that skill's content.
-- **DaVinci** → invoke `ping-orchestration-reactjs-js-davinci-sdk` via the Skill tool. Pass the collected config. Do not inline that skill's content.
-- **OIDC centralized** → read `assets/oidc-centralized-reference.md` and continue to the OIDC Centralized Login section below.
+- **Journey (active framework)** → invoke the Journey delegate from the Framework Registry via the Skill tool. Pass the collected config in your invocation context. Do not inline that skill's content. Note: the Journey delegate uses its own env var naming (`VITE_WELLKNOWN_URL`, `VITE_WEB_OAUTH_CLIENT`, etc.) — the delegate will handle this; pass the logical values from W2.
+- **DaVinci (active framework)** → invoke the DaVinci delegate from the Framework Registry via the Skill tool. Pass the collected config. Do not inline that skill's content. Note: the DaVinci delegate uses its own env var naming (`VITE_CLIENT_ID`, `VITE_DISCOVERY_ENDPOINT`, etc.) — pass the logical values from W2.
+- **OIDC centralized (active framework)** → read `assets/oidc-centralized-reference.md` and continue to the OIDC Centralized Login section below. Use templates from the framework's `OIDC Templates` directory.
+- **Any flow (placeholder framework, generic path)** → continue to the Generic (Placeholder Framework) Path section below.
+
+## Generic (Placeholder Framework) Path
+
+Use this path when the user's framework is `placeholder` in the Framework Registry and they chose framework-neutral SDK wiring in W1b. The SDK packages are pure JavaScript with no framework dependency — this path provides the integration wiring without framework-specific component rendering.
+
+### What to generate
+
+For each flow type, produce a single integration module the user can adapt to their framework:
+
+**Journey:**
+```js
+import { journey, callbackType } from '@forgerock/journey-client';
+import { oidc } from '@forgerock/oidc-client';
+
+// 1. Initialise OIDC client (for token management after Journey completes)
+const oidcClient = await oidc({
+  serverConfig: { wellknown: '<wellknown>' },
+  clientId: '<clientId>',
+  redirectUri: '<redirectUri>',
+  scope: '<scope>',
+});
+
+// 2. Start Journey
+const client = await journey({
+  serverConfig: { wellknown: '<wellknown>' },
+  journeyName: '<journeyName>',
+});
+
+let step = await client.start();
+
+// 3. Loop: render callbacks, collect input, submit
+while (step.type === 'Step') {
+  for (const cb of step.callbacks) {
+    // Inspect cb.type (callbackType.NameCallback, callbackType.PasswordCallback, etc.)
+    // Collect user input and call cb.setInput(value) or equivalent setter
+  }
+  step = await client.next(step);
+}
+
+// 4. Handle outcome
+if (step.type === 'SuccessStep') {
+  // Journey complete — tokens available via oidcClient.token.get()
+} else {
+  // step.type === 'FailureStep' — display error
+}
+```
+
+**DaVinci:**
+```js
+import { davinci } from '@forgerock/davinci-client';
+
+const client = await davinci({
+  serverConfig: { wellknown: '<wellknown>' },
+  clientId: '<clientId>',
+  redirectUri: '<redirectUri>',
+  scope: '<scope>',
+});
+
+let node = await client.start();
+
+// Loop: render collectors, collect input, submit
+while (node.status === 'continue') {
+  const collectors = node.client.collectors;
+  for (const collector of collectors) {
+    // Inspect collector.type (TextCollector, PasswordCollector, SubmitCollector, etc.)
+    // Set value: collector.value = userInput;
+  }
+  node = await client.next();
+}
+
+if (node.status === 'success') {
+  // Auth complete — session established
+} else {
+  // node.status === 'error' — display node.error
+}
+```
+
+**OIDC centralized:**
+```js
+import { oidc } from '@forgerock/oidc-client';
+
+const client = await oidc({
+  serverConfig: { wellknown: '<wellknown>' },
+  clientId: '<clientId>',
+  redirectUri: '<redirectUri>',
+  scope: '<scope>',
+});
+
+// Login: redirect to authorization endpoint
+const url = await client.authorize.url();
+window.location.href = url;
+
+// Callback page: exchange code for tokens
+const params = new URLSearchParams(window.location.search);
+const code = params.get('code');
+const state = params.get('state');
+if (code && state) {
+  await client.token.exchange(code, state);
+  window.location.replace('/');
+}
+
+// Check auth state
+const tokens = await client.token.get();
+
+// Logout
+await client.user.logout();
+```
+
+### Guidance to include
+
+After generating the integration module:
+1. Explain which parts map to framework concerns (the render loop → component tree; the auth check → route guard; the callback page → dedicated route).
+2. Point to the React delegate skill as a full reference implementation they can study.
+3. Offer to help wire the module into their specific framework's patterns if they share their app structure.
 
 ## Shared Setup Guidance
 
-This section applies regardless of flow type. Provide this guidance before delegating or generating code.
+This section applies regardless of flow type or framework. Provide this guidance before delegating or generating code.
 
-### Package selection
+### SDK setup (all frameworks)
 
 Full package reference: [references/sdk-packages.md](references/sdk-packages.md)
 
@@ -133,9 +254,22 @@ npm install @forgerock/protect       # PingOne Protect / behavioral signals
 npm install @forgerock/device-client # Device profile, OATH, Push, WebAuthn management
 ```
 
-### Environment variables
+### Common pitfalls (SDK-level)
 
-All env vars use the `VITE_` prefix (required by Vite for client-side exposure):
+- **`redirectUri` mismatch**: the value must match what's registered in PingOne/AIC exactly — trailing slash, port number, and path all matter.
+- **Missing `openid` scope**: `@forgerock/oidc-client` requires `openid` in scope or token exchange will fail.
+- **CORS**: the well-known endpoint must include your app's origin in the server's CORS policy. Check PingOne/AIC CORS settings if you see preflight failures.
+- **`wellknown` vs `serverConfig`**: the new SDK (`@forgerock/journey-client` v2+) uses `wellknown` only. The legacy `serverConfig.baseUrl` is not supported.
+
+### Build tool configuration
+
+Apply the section below that matches the detected framework. Only one applies per project.
+
+> **Note for placeholder frameworks (Angular, Vue, Vanilla JS):** Full skill support for these frameworks is not yet active. The sections below document the correct build tool conventions so you can configure your environment correctly when using the [Generic Placeholder Framework Path](#generic-placeholder-framework-path). No OIDC templates are generated for placeholder frameworks — adapt the patterns manually.
+
+#### React + Vite
+
+Env vars use the `VITE_` prefix (required by Vite for client-side exposure):
 
 ```env
 VITE_PING_WELLKNOWN=https://auth.example.com/am/oauth2/alpha/.well-known/openid-configuration
@@ -148,15 +282,52 @@ VITE_PING_JOURNEY_NAME=Login
 VITE_PING_ACR_VALUES=
 ```
 
-Reference: `assets/.env.template`
+Reference: `assets/react/.env.template`
 
-### Common pitfalls
+Vite-specific pitfalls:
+- Only vars prefixed `VITE_` are exposed to the browser bundle. Server-only secrets must stay unprefixed.
+- For SPAs without SSR, the OAuth callback route must be a real file (`public/callback.html`) or the dev server returns `index.html` which re-triggers routing before the exchange runs.
 
-- **`redirectUri` mismatch**: the value must match what's registered in PingOne/AIC exactly — trailing slash, port number, and path all matter.
-- **Missing `openid` scope**: `@forgerock/oidc-client` requires `openid` in scope or token exchange will fail.
-- **CORS**: the well-known endpoint must include your app's origin in the server's CORS policy. Check PingOne/AIC CORS settings if you see preflight failures.
-- **`wellknown` vs `serverConfig`**: the new SDK (`@forgerock/journey-client` v2+) uses `wellknown` only. The legacy `serverConfig.baseUrl` is not supported.
-- **Vite env vars not available at runtime**: only vars prefixed `VITE_` are exposed to the browser bundle. Server-only secrets must stay unprefixed.
+#### Angular CLI
+
+Env vars go in `src/environments/environment.ts`:
+
+```ts
+export const environment = {
+  pingWellknown: 'https://auth.example.com/am/oauth2/alpha/.well-known/openid-configuration',
+  pingClientId: 'my-app',
+  pingRedirectUri: 'http://localhost:4200/callback',
+  pingScope: 'openid profile',
+  // Journey only:
+  pingJourneyName: 'Login',
+};
+```
+
+Angular-specific notes:
+- Use `environment.ts` / `environment.prod.ts` for config — Angular does not expose `process.env` to the browser.
+- The callback route is a normal Angular route component — no static HTML workaround needed since Angular's router handles it.
+
+#### Vue CLI / Vite
+
+Env vars use the prefix matching your build tool:
+- **Vite** → `VITE_` prefix (same as React + Vite above)
+- **Vue CLI (webpack)** → `VUE_APP_` prefix
+
+```env
+VUE_APP_PING_WELLKNOWN=https://auth.example.com/am/oauth2/alpha/.well-known/openid-configuration
+VUE_APP_PING_CLIENT_ID=my-app
+VUE_APP_PING_REDIRECT_URI=http://localhost:8080/callback
+VUE_APP_PING_SCOPE=openid profile
+```
+
+Access with `process.env.VUE_APP_*` (Vue CLI) or `import.meta.env.VITE_*` (Vite).
+
+#### Vanilla JS / Other
+
+No framework-specific env conventions. Use any approach that suits the project:
+- A `config.js` file exporting constants
+- `.env` loaded via `dotenv` at build time
+- Inline `<script>` variables for zero-build setups
 
 ## `create-sample` command
 
@@ -169,9 +340,11 @@ Reference: `assets/.env.template`
 2. If flow type is ambiguous, ask one clarifying question.
 3. If framework is not React and is not detectable from the project, ask.
 4. Collect any missing required parameters from W2 that are not inferable from the description.
-5. **Journey** → invoke `ping-orchestration-reactjs-js-journey-sdk` via Skill tool with pre-filled config.
-6. **DaVinci** → invoke `ping-orchestration-reactjs-js-davinci-sdk` via Skill tool with pre-filled config.
-7. **OIDC centralized** → read `assets/oidc-centralized-reference.md` and generate the 5 OIDC templates with substituted placeholders. See the OIDC Centralized Login section.
+5. If framework is `active` in the Framework Registry:
+   - **Journey** → invoke the Journey delegate via Skill tool with pre-filled config.
+   - **DaVinci** → invoke the DaVinci delegate via Skill tool with pre-filled config.
+   - **OIDC centralized** → read `assets/oidc-centralized-reference.md` and generate templates from the framework's `OIDC Templates` directory with substituted placeholders.
+6. If framework is `placeholder` → use the Generic (Placeholder Framework) Path.
 
 **Template placeholders** (OIDC centralized only):
 
@@ -226,8 +399,24 @@ if (code && state) {
 }
 ```
 
-### Protected route pattern (React)
+### Route guard pattern
 
+The route guard logic is the same for all frameworks — only the component wrapper changes.
+
+**Core logic (framework-agnostic):**
+```js
+async function checkAuth(client) {
+  const tokens = await client.token.get();
+  if (!tokens) {
+    const url = await client.authorize.url();
+    window.location.href = url;
+    return null;
+  }
+  return tokens;
+}
+```
+
+**React wrapper:**
 ```jsx
 import { useEffect, useState } from 'react';
 
@@ -249,21 +438,27 @@ export function ProtectedRoute({ children }) {
 }
 ```
 
+For other frameworks, adapt the wrapper to the framework's guard mechanism (Angular `CanActivate`, Vue `beforeEach` navigation guard, etc.) using the same `checkAuth` logic.
+
 ### Templates
 
-Generate these 5 files when flow type is `oidc-centralized`. Read the templates from `assets/`, substitute placeholders, and write to the user's project directory.
+Generate these files when flow type is `oidc-centralized`. Read templates from the active framework's subdirectory in the Framework Registry's `OIDC Templates` column (e.g., `assets/react/` for React). Substitute placeholders and write to the user's project directory.
+
+**React (`assets/react/`):**
 
 | Template file | Output path | Purpose |
 |--------------|------------|---------|
-| `assets/.env.template` | `.env` | Environment variables |
-| `assets/callback.html.template` | `public/callback.html` | Static OAuth callback page |
-| `assets/oidc-app.jsx.template` | `src/App.jsx` | App shell with OIDC context + protected route |
-| `assets/oidc-login.jsx.template` | `src/pages/Login.jsx` | Login trigger (`authorize.url()` → redirect) |
-| `assets/oidc-callback.jsx.template` | `src/pages/Callback.jsx` | Code exchange handler |
+| `assets/react/.env.template` | `.env` | Environment variables (Vite `VITE_` prefix) |
+| `assets/react/callback.html.template` | `public/callback.html` | Static OAuth callback page |
+| `assets/react/oidc-app.jsx.template` | `src/App.jsx` | App shell with OIDC context + protected route |
+| `assets/react/oidc-login.jsx.template` | `src/pages/Login.jsx` | Login trigger (`authorize.url()` → redirect) |
+| `assets/react/oidc-callback.jsx.template` | `src/pages/Callback.jsx` | Code exchange handler |
+| `assets/react/oidc-home.jsx.template` | `src/pages/Home.jsx` | Protected home page with user info + sign-out |
+
+**Other frameworks:** When their `OIDC Templates` directory is populated, follow the same pattern — read from the framework's `assets/<framework>/` directory.
 
 ### Common pitfalls (OIDC)
 
 - **`state` mismatch**: never construct the authorization URL manually. Always use `client.authorize.url()` — it generates and stores the `state` and `code_verifier` (PKCE) automatically. Calling `token.exchange` with a `state` that doesn't match stored state throws `state_mismatch`.
-- **Callback page as SPA route vs static HTML**: for Vite SPAs without SSR, the callback route must be a real file (`public/callback.html`) or the dev server will return `index.html` which re-triggers routing before the exchange runs. Use `assets/callback.html.template` as a standalone page.
 - **Background renewal requires iframe allowance**: `backgroundRenew: true` opens a hidden iframe to the authorization endpoint. If your CSP blocks `frame-src`, renewal will silently fail. Add your PingOne/AIC domain to `frame-src`.
 - **PKCE is always on**: `@forgerock/oidc-client` uses PKCE by default and does not expose a toggle. Your OAuth client registration must have PKCE enabled (or set to optional).

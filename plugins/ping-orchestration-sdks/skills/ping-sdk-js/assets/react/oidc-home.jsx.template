@@ -1,0 +1,28 @@
+import { useEffect, useState } from 'react';
+import { useOidc } from '../App';
+
+export default function Home() {
+  const { client, setIsAuthenticated } = useOidc();
+  const [userInfo, setUserInfo] = useState(null);
+
+  useEffect(() => {
+    if (client) {
+      client.user.info().then(setUserInfo).catch(() => {});
+    }
+  }, [client]);
+
+  async function handleLogout() {
+    await client.user.logout();
+    setIsAuthenticated(false);
+  }
+
+  return (
+    <div>
+      <h1>Welcome to PLACEHOLDER_APP_NAME</h1>
+      {userInfo && (
+        <p>Signed in as <strong>{userInfo.email ?? userInfo.sub}</strong></p>
+      )}
+      <button onClick={handleLogout}>Sign out</button>
+    </div>
+  );
+}
