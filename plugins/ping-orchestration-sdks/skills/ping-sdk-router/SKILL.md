@@ -41,7 +41,7 @@ For every active row in the registry, run that platform's probe. Probes are boun
 File markers (any one is sufficient):
 ```bash
 find . -maxdepth 4 \
-  \( -name node_modules -o -name .git -o -name build -o -name .gradle -o -name dist -o -name DerivedData -o -name Pods \) -prune -o \
+  \( -name node_modules -o -name .git -o -name build -o -name dist -o -name Pods -o -name .gradle -o -name DerivedData -o -name .next -o -name out -o -name target \) -prune -o \
   \( -name "build.gradle" -o -name "build.gradle.kts" -o -name "settings.gradle" -o -name "settings.gradle.kts" -o -name "AndroidManifest.xml" \) -print
 ```
 
@@ -52,7 +52,7 @@ A non-empty result means Android is detected.
 File markers (any one is sufficient):
 ```bash
 find . -maxdepth 4 \
-  \( -name node_modules -o -name .git -o -name build -o -name .gradle -o -name dist -o -name DerivedData -o -name Pods \) -prune -o \
+  \( -name node_modules -o -name .git -o -name build -o -name dist -o -name Pods -o -name .gradle -o -name DerivedData -o -name .next -o -name out -o -name target \) -prune -o \
   \( -name "Package.swift" -o -name "*.xcodeproj" -o -name "*.xcworkspace" -o -name "Podfile" \) -print
 ```
 
@@ -74,8 +74,8 @@ A non-empty result means ForgeRock SDK references exist and the migration path a
 File/content markers (any one is sufficient):
 ```bash
 find . -maxdepth 4 \
-  \( -name node_modules -o -name .git -o -name build -o -name dist -o -name .next -o -name out \) -prune -o \
-  -name "package.json" -print | head -5 | xargs grep -l '"react"\|"vue"\|"@angular/core"\|"vite"' 2>/dev/null
+  \( -name node_modules -o -name .git -o -name build -o -name dist -o -name Pods -o -name .gradle -o -name DerivedData -o -name .next -o -name out -o -name target \) -prune -o \
+  -name "package.json" -exec grep -l '"react"\|"vue"\|"@angular/core"\|"vite"' {} \; 2>/dev/null
 ```
 
 A non-empty result means a JavaScript (web) project is detected.
@@ -104,7 +104,10 @@ Run these phases in order when this skill is invoked.
 
 Apply rules in order. **First match wins.**
 
-1. **ForgeRock present + a platform detected** — ForgeRock probe hit AND at least one active platform probe hit. Ask the user the **ForgeRock fork prompt** (see Fallback Prompts). Route to `forgerock-to-ping-journey-migration` if they choose migrate; otherwise route to that platform's umbrella skill. Takes precedence over multi-platform detection because migration is almost always the intent when ForgeRock refs exist.
+1. **ForgeRock present + a platform detected** — ForgeRock probe hit AND at least one active platform probe hit.
+   - If **exactly one** platform probe hit: ask the **ForgeRock fork prompt** (see Fallback Prompts) using that platform name. Route to `forgerock-to-ping-journey-migration` if they choose migrate; otherwise route to that platform's umbrella skill.
+   - If **two or more** platform probes hit: ask the **multi-platform prompt** first (listing only the detected platforms), then ask the **ForgeRock fork prompt** for the chosen platform. This ensures the migration targets the right codebase.
+   - Takes precedence over plain multi-platform detection because migration is almost always the intent when ForgeRock refs exist.
 2. **Multi-platform monorepo** — two or more active platform probes hit (and rule 1 did not fire). Ask the **multi-platform prompt**. Route to the chosen platform's umbrella skill.
 3. **Single active platform detected** — exactly one active platform probe hit. Route to that platform's umbrella skill.
 4. **Placeholder platform detected** — no active probe hit, but a placeholder probe hit:
@@ -130,13 +133,19 @@ A compact lookup the agent can match against after Phase 2 classification.
 
 | Probe outcome | Route to |
 |---------------|----------|
-| ForgeRock + Android | Ask fork prompt → `forgerock-to-ping-journey-migration` OR `ping-sdk-android` |
-| ForgeRock + iOS | Ask fork prompt → `forgerock-to-ping-journey-migration` OR `ping-sdk-ios` |
+| ForgeRock + Android only | Ask fork prompt → `forgerock-to-ping-journey-migration` OR `ping-sdk-android` |
+| ForgeRock + iOS only | Ask fork prompt → `forgerock-to-ping-journey-migration` OR `ping-sdk-ios` |
+| ForgeRock + JavaScript only | Ask fork prompt → `forgerock-to-ping-journey-migration` OR `ping-sdk-js` |
+| ForgeRock + Android + iOS | Ask multi-platform prompt → then fork prompt for chosen platform |
+| ForgeRock + Android + JavaScript | Ask multi-platform prompt → then fork prompt for chosen platform |
+| ForgeRock + iOS + JavaScript | Ask multi-platform prompt → then fork prompt for chosen platform |
+| ForgeRock + Android + iOS + JavaScript | Ask multi-platform prompt → then fork prompt for chosen platform |
 | Android only | `ping-sdk-android` |
 | iOS only | `ping-sdk-ios` |
-| Android + iOS (no ForgeRock) | Ask multi-platform prompt → chosen umbrella |
 | JavaScript (web) only | `ping-sdk-js` |
-| ForgeRock + JavaScript | Ask fork prompt → `forgerock-to-ping-journey-migration` OR `ping-sdk-js` |
+| Android + iOS (no ForgeRock) | Ask multi-platform prompt → chosen umbrella |
+| Android + JavaScript (no ForgeRock) | Ask multi-platform prompt → chosen umbrella |
+| iOS + JavaScript (no ForgeRock) | Ask multi-platform prompt → chosen umbrella |
 | React Native placeholder hit | Inform user; no route |
 | No probes hit | Ask no-detection prompt → chosen umbrella |
 
