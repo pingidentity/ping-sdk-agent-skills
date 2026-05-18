@@ -1,14 +1,21 @@
 ---
-name: ping-sdk-js
+name: ping-orchestration-javascript-sdk
 description: >-
-  Use when building web apps with the Ping Orchestration JavaScript SDK —
-  phrases like "add Ping auth to my web app", "use PingOne in React",
-  "set up Journey in JavaScript", "build a Ping login page". Detects
-  framework (React active; Angular, Vue, vanilla JS on the roadmap),
-  collects shared config, delegates Journey to
-  ping-orchestration-reactjs-js-journey-sdk and DaVinci to
-  ping-orchestration-reactjs-js-davinci-sdk, handles OIDC centralized
-  login inline.
+  Guide for building web apps with the Ping Orchestration JavaScript SDK
+  (also referred to as the Ping Identity JavaScript SDK, formerly the
+  ForgeRock JavaScript SDK / @forgerock/javascript-sdk; npm packages:
+  `@forgerock/journey-client`, `@forgerock/davinci-client`,
+  `@forgerock/oidc-client`). Use when the user wants to add Ping
+  authentication to a web app — phrases like "add Ping auth to my web app",
+  "use PingOne in React", "set up Journey in JavaScript", "build a Ping
+  login page", "use DaVinci in my SPA", "integrate @forgerock/journey-client",
+  "set up @forgerock/davinci-client", "migrate from @forgerock/javascript-sdk
+  to the new SDK", or "add OIDC login to my React app". Detects framework
+  (React active; Angular, Vue, vanilla JS on the roadmap), collects shared
+  config, delegates Journey to ping-orchestration-reactjs-js-journey-sdk and
+  DaVinci to ping-orchestration-reactjs-js-davinci-sdk, and handles OIDC
+  centralized login inline. Covers both new sample app creation and
+  integrating into an existing project.
 license: MIT
 metadata:
   author: Ping Identity
@@ -332,7 +339,7 @@ No framework-specific env conventions. Use any approach that suits the project:
 ## `create-sample` command
 
 ```
-/ping-sdk-js create-sample "<description>"
+/ping-orchestration-javascript-sdk create-sample "<description>"
 ```
 
 **Steps:**

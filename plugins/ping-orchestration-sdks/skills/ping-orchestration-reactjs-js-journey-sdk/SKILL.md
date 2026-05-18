@@ -220,7 +220,7 @@ export const CONFIG = {
 > local development may use `http://` while production uses `https://`, and the redirect URI must
 > **exactly match** what is registered in PingAM / AIC.
 
-See the `@forgerock/journey-client` section in [SDK Package Reference](../ping-sdk-js/references/sdk-packages.md) for all configuration options.
+See the `@forgerock/journey-client` section in [SDK Package Reference](../ping-orchestration-javascript-sdk/references/sdk-packages.md) for all configuration options.
 
 ---
 
@@ -246,7 +246,7 @@ export function useInitOidcState(config) {
 }
 ```
 
-See the `@forgerock/oidc-client` section in [SDK Package Reference](../ping-sdk-js/references/sdk-packages.md) and the full [OIDC Centralized Reference](../ping-sdk-js/assets/oidc-centralized-reference.md) for API documentation.
+See the `@forgerock/oidc-client` section in [SDK Package Reference](../ping-orchestration-javascript-sdk/references/sdk-packages.md) and the full [OIDC Centralized Reference](../ping-orchestration-javascript-sdk/assets/oidc-centralized-reference.md) for API documentation.
 
 ---
 
@@ -272,7 +272,7 @@ export default function useJourney({ formMetadata, resumeUrl }) {
 }
 ```
 
-See the `@forgerock/journey-client` section in [SDK Package Reference](../ping-sdk-js/references/sdk-packages.md) for client API details.
+See the `@forgerock/journey-client` section in [SDK Package Reference](../ping-orchestration-javascript-sdk/references/sdk-packages.md) for client API details.
 
 ---
 
@@ -605,14 +605,14 @@ See [scaffold_auth.sh](scripts/scaffold_auth.sh) for details.
 
 ## Reference Documentation
 
-- [SDK Package Reference](../ping-sdk-js/references/sdk-packages.md) — Package selection guide for `@forgerock/journey-client`, `@forgerock/oidc-client`, and optional add-ons
-- [OIDC Centralized Reference](../ping-sdk-js/assets/oidc-centralized-reference.md) — Full `@forgerock/oidc-client` API: authorize, token exchange, user info, logout, storage
+- [SDK Package Reference](../ping-orchestration-javascript-sdk/references/sdk-packages.md) — Package selection guide for `@forgerock/journey-client`, `@forgerock/oidc-client`, and optional add-ons
+- [OIDC Centralized Reference](../ping-orchestration-javascript-sdk/assets/oidc-centralized-reference.md) — Full `@forgerock/oidc-client` API: authorize, token exchange, user info, logout, storage
 - Callback implementations — see template files in `assets/` (e.g. `name-callback.js.template`, `password-callback.js.template`)
 
 ---
 
 ## Related Skills
 
-- `ping-sdk-js` — JavaScript umbrella skill (routes Journey/DaVinci/OIDC, delegates here for Journey flows)
-- `ping-sdk-android` — Android (Kotlin/Jetpack Compose) equivalent
-- `ping-sdk-ios` — iOS (Swift/SwiftUI) equivalent
+- `ping-orchestration-javascript-sdk` — JavaScript umbrella skill (routes Journey/DaVinci/OIDC, delegates here for Journey flows)
+- `ping-orchestration-android-sdk` — Android (Kotlin/Jetpack Compose) equivalent
+- `ping-orchestration-ios-sdk` — iOS (Swift/SwiftUI) equivalent

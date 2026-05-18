@@ -148,7 +148,7 @@ export const DAVINCI_CONFIG = {
 };
 ```
 
-See the `@forgerock/davinci-client` section in [SDK Package Reference](../ping-sdk-js/references/sdk-packages.md) for all configuration options.
+See the `@forgerock/davinci-client` section in [SDK Package Reference](../ping-orchestration-javascript-sdk/references/sdk-packages.md) for all configuration options.
 
 ---
 
@@ -333,15 +333,15 @@ See [scaffold_auth.sh](scripts/scaffold_auth.sh) for details.
 
 ## Reference Documentation
 
-- [SDK Package Reference](../ping-sdk-js/references/sdk-packages.md) — Package selection guide for `@forgerock/davinci-client`, `@forgerock/oidc-client`, and optional add-ons
-- [OIDC Centralized Reference](../ping-sdk-js/assets/oidc-centralized-reference.md) — Full `@forgerock/oidc-client` API: authorize, token exchange, user info, logout, storage
+- [SDK Package Reference](../ping-orchestration-javascript-sdk/references/sdk-packages.md) — Package selection guide for `@forgerock/davinci-client`, `@forgerock/oidc-client`, and optional add-ons
+- [OIDC Centralized Reference](../ping-orchestration-javascript-sdk/assets/oidc-centralized-reference.md) — Full `@forgerock/oidc-client` API: authorize, token exchange, user info, logout, storage
 - Collector implementations — see template files in `assets/` (e.g. `text-collector.js.template`, `password-collector.js.template`)
 
 ---
 
 ## Related Skills
 
-- `ping-sdk-js` — JavaScript umbrella skill (routes Journey/DaVinci/OIDC, delegates here for DaVinci flows)
+- `ping-orchestration-javascript-sdk` — JavaScript umbrella skill (routes Journey/DaVinci/OIDC, delegates here for DaVinci flows)
 - `ping-orchestration-reactjs-js-journey-sdk` — ReactJS authentication using the Journey module (for PingOne AIC/PingAM)
-- `ping-sdk-android` — Android (Kotlin/Jetpack Compose) DaVinci equivalent
-- `ping-sdk-ios` — iOS (Swift/SwiftUI) DaVinci equivalent
+- `ping-orchestration-android-sdk` — Android (Kotlin/Jetpack Compose) DaVinci equivalent
+- `ping-orchestration-ios-sdk` — iOS (Swift/SwiftUI) DaVinci equivalent

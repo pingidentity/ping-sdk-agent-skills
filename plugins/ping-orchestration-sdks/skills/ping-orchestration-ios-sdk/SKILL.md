@@ -1,19 +1,31 @@
 ---
-name: ping-sdk-ios
-description: >
-  Guide for building iOS apps that integrate with the Ping Identity SDK (PingSDK). Use this
-  skill whenever the user is: (1) building any iOS app that uses PingOne, PingAM/AIC, DaVinci,
-  Journey, or OIDC authentication; (2) asking how to configure PingSDK modules (Journey, DaVinci,
-  OIDC, FIDO, Protect, ExternalIdP, OATH, Push); (3) asking how to render Journey callbacks or
-  DaVinci collectors in SwiftUI; (4) troubleshooting authentication flows in a PingSDK-based iOS
-  app; (5) setting up token/session storage with KeychainStorage; (6) scaffolding a new Xcode
-  project for a PingSDK app; (7) applying Ping Identity branding to a sample app; (8) implementing
-  OIDC centralized login with OidcWebClient, configuring ASWebAuthenticationSession or
-  SFSafariViewController, handling browser redirects, or wiring onOpenURL for OAuth2 authorization
-  code flows; (9) analysing a PingAM/AIC Journey export JSON to identify required callbacks and
-  generate a matching iOS sample. Invoke proactively even if the user just says "I need to add
-  PingOne login to my app", "how do I set up Journey in iOS", "how do I add OIDC centralized
-  login", "make this look like a Ping sample app", or pastes / attaches a Journey export JSON.
+name: ping-orchestration-ios-sdk
+description: >-
+  Guide for building iOS apps that integrate with the Ping Orchestration iOS SDK
+  (also referred to as the Ping Identity iOS SDK, formerly the ForgeRock iOS SDK
+  / forgerock-ios-sdk; Swift Package: `Ping/ping-ios-sdk`; modules: `PingJourney`,
+  `PingDavinci`, `PingOidc`, `PingExternalIdP`, `PingProtect`, `PingOath`, `PingLogger`,
+  `PingStorage`). Use this skill whenever the user is: (1) building any iOS app that
+  authenticates against PingOne, PingOne Advanced Identity Cloud (AIC), PingAM, or
+  DaVinci using Journey, DaVinci, or OIDC flows; (2) configuring modules (Journey,
+  DaVinci, OIDC, FIDO/passkeys, Protect, ExternalIdP, OATH, Push); (3) rendering
+  Journey callbacks or DaVinci collectors in SwiftUI; (4) troubleshooting Ping
+  authentication flows in an iOS app; (5) setting up token or session storage with
+  `KeychainStorage`; (6) scaffolding a new Xcode project for a Ping-authenticated
+  app; (7) applying Ping Identity branding to a sample app; (8) implementing OIDC
+  centralized login with `OidcWebClient`, configuring `ASWebAuthenticationSession`
+  or `SFSafariViewController`, handling browser redirects, or wiring `onOpenURL`
+  for OAuth 2.0 authorization code flows; (9) analysing a PingAM/AIC Journey export
+  JSON to identify required callbacks and generate a matching iOS sample. Invoke
+  proactively even when the user phrases it loosely — "add PingOne login to my
+  iOS app", "how do I set up Journey in Swift", "add OIDC centralized login",
+  "make this look like a Ping sample app", "use the Ping iOS SDK", "use the
+  PingSDK in my iPhone app", "integrate ping-ios-sdk", or pastes / attaches a
+  Journey export JSON.
+license: MIT
+metadata:
+  author: Ping Identity
+  version: "1.0.0"
 compatibility:
   mcp:
     - xcodebuildmcp  # required for Xcode project scaffolding (see assets/project-scaffolding.md)
@@ -21,11 +33,11 @@ compatibility:
 
 ## Skill Parameters
 
-This skill accepts an optional argument string when invoked as `/ping-sdk-ios <args>`.
+This skill accepts an optional argument string when invoked as `/ping-orchestration-ios-sdk <args>`.
 
 ### No-arg Invocation — Wizard Mode
 
-When invoked with **no arguments** (`/ping-sdk-ios`), run the wizard:
+When invoked with **no arguments** (`/ping-orchestration-ios-sdk`), run the wizard:
 
 **Step W1 — Determine intent** using `AskUserQuestion`:
 
@@ -180,9 +192,9 @@ Read `assets/project-scaffolding.md` and follow Steps 0–G exactly. Key reminde
 
 **Examples:**
 ```
-/ping-sdk-ios create-sample "a simple username/password login using Journey"
-/ping-sdk-ios create-sample "OIDC centralized login with token display and sign-out" app-name "PingDemo" output-path "/Users/me/Dev"
-/ping-sdk-ios create-sample "Journey login with FIDO passkey registration and biometric auth" app-name "FidoSample"
+/ping-orchestration-ios-sdk create-sample "a simple username/password login using Journey"
+/ping-orchestration-ios-sdk create-sample "OIDC centralized login with token display and sign-out" app-name "PingDemo" output-path "/Users/me/Dev"
+/ping-orchestration-ios-sdk create-sample "Journey login with FIDO passkey registration and biometric auth" app-name "FidoSample"
 ```
 
 ---

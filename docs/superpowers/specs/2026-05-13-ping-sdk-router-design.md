@@ -2,7 +2,7 @@
 
 **Status:** Draft
 **Date:** 2026-05-13
-**Skill path:** `plugins/ping-orchestration-sdks/skills/ping-sdk-router/`
+**Skill path:** `plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/`
 
 ## Goal
 
@@ -23,7 +23,7 @@ The frontmatter `description` is tuned for **vague Ping queries only**. Examples
 
 Examples that should NOT match (specialized skill wins):
 
-- "Add Ping auth to my iOS app" → `ping-sdk-ios`
+- "Add Ping auth to my iOS app" → `ping-orchestration-ios-sdk`
 - "Set up DaVinci in Android with Compose" → `ping-orchestration-android-davinci-sdk`
 - "Migrate FRAuth to Ping" → `forgerock-to-ping-journey-migration`
 
@@ -35,9 +35,9 @@ The router selects among the **umbrella skills + migration** only:
 
 | Platform | Target skill | Status |
 |----------|--------------|--------|
-| Android | `ping-sdk-android` | active |
-| iOS | `ping-sdk-ios` | active |
-| JavaScript (web) | `ping-sdk-js` *(planned)* | placeholder |
+| Android | `ping-orchestration-android-sdk` | active |
+| iOS | `ping-orchestration-ios-sdk` | active |
+| JavaScript (web) | `ping-orchestration-javascript-sdk` *(planned)* | placeholder |
 | React Native | `ping-sdk-react-native` *(planned)* | placeholder |
 | ForgeRock migration | `forgerock-to-ping-journey-migration` | active (cross-cutting) |
 
@@ -65,7 +65,7 @@ Apply rules in order. First match wins:
 2. **Multi-platform monorepo** — if probes for two or more `active` platforms hit (and rule 1 didn't fire), ask the user which to target.
 3. **Single active platform detected** — route to that platform's umbrella skill.
 4. **Placeholder platform detected** — handle per-platform:
-   - **JavaScript (web)**: say `ping-sdk-js` is on the way; offer the two existing ReactJS specialized skills (`ping-orchestration-reactjs-js-journey-sdk`, `ping-orchestration-reactjs-js-davinci-sdk`) as a stopgap.
+   - **JavaScript (web)**: say `ping-orchestration-javascript-sdk` is on the way; offer the two existing ReactJS specialized skills (`ping-orchestration-reactjs-js-journey-sdk`, `ping-orchestration-reactjs-js-davinci-sdk`) as a stopgap.
    - **React Native**: say `ping-sdk-react-native` is on the way; no stopgap exists.
 5. **Nothing detected** — ask "Which platform are you building for?" listing only `active` platforms; mention placeholders as "coming soon".
 
@@ -77,7 +77,7 @@ Print a single-line summary: `Detected <signals> → routing to <skill>.` Then i
 
 The registry is the only thing that changes when a new umbrella skill is added. It lives near the top of the SKILL.md body as a markdown table plus per-platform "probe block" snippets below it.
 
-**To add a new platform** (e.g., when `ping-sdk-js` ships):
+**To add a new platform** (e.g., when `ping-orchestration-javascript-sdk` ships):
 
 1. Update the registry row: change `status: placeholder` → `status: active`.
 2. Add or fill in the probe block (file markers + grep patterns).
@@ -88,7 +88,7 @@ No changes to the decision tree or handoff logic. The decision tree is written i
 ## File layout
 
 ```
-plugins/ping-orchestration-sdks/skills/ping-sdk-router/
+plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/
 └── SKILL.md
 ```
 
@@ -149,4 +149,4 @@ Required by the `skill-readme-documentation` lint rule.
 - Caching detection results between runs.
 - Detecting framework variants beyond what's in the registry (KMP, Flutter, etc.).
 - Modifying any existing skill.
-- Building the `ping-sdk-js` or `ping-sdk-react-native` skills themselves — the router only provisions for them.
+- Building the `ping-orchestration-javascript-sdk` or `ping-sdk-react-native` skills themselves — the router only provisions for them.

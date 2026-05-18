@@ -1,4 +1,4 @@
-# ping-sdk-ios Skill
+# ping-orchestration-ios-sdk Skill
 
 A Claude Code skill for building iOS apps that integrate with the **Ping Identity SDK (PingSDK)**. Covers new app scaffolding, SDK integration into existing projects, Journey export analysis, and the full reference guide.
 
@@ -22,7 +22,7 @@ The skill activates automatically when you:
 
 ## How to invoke
 
-### Wizard mode — `/ping-sdk-ios`
+### Wizard mode — `/ping-orchestration-ios-sdk`
 
 No arguments starts an interactive wizard:
 
@@ -31,14 +31,14 @@ No arguments starts an interactive wizard:
 3. **Collect configuration** — app name, flow type, OAuth credentials, server details, callback tier.
 4. **Confirm and generate** — review a summary table, then the skill writes all files.
 
-### Quick sample — `/ping-sdk-ios create-sample "<description>"`
+### Quick sample — `/ping-orchestration-ios-sdk create-sample "<description>"`
 
 Describe what you want in plain English and the skill generates a complete, runnable sample.
 
 ```
-/ping-sdk-ios create-sample "username/password login using Journey"
-/ping-sdk-ios create-sample "OIDC centralized login with token display" app-name "PingDemo" output-path "/Users/me/Dev"
-/ping-sdk-ios create-sample "Journey login with FIDO passkey registration" app-name "FidoSample"
+/ping-orchestration-ios-sdk create-sample "username/password login using Journey"
+/ping-orchestration-ios-sdk create-sample "OIDC centralized login with token display" app-name "PingDemo" output-path "/Users/me/Dev"
+/ping-orchestration-ios-sdk create-sample "Journey login with FIDO passkey registration" app-name "FidoSample"
 ```
 
 Optional parameters:

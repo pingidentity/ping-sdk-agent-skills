@@ -1,18 +1,29 @@
 ---
-name: ping-sdk-android
-description: >
-  Guide for building Android apps that integrate with the Ping Orchestration Android SDK.
-  Covers both new project scaffolding and adding the SDK to an existing app. Use this skill
-  whenever the user is: (1) building any Android app that uses PingOne, PingAM/AIC, DaVinci,
-  Journey, or OIDC authentication; (2) asking how to configure SDK modules (Journey, DaVinci,
-  OIDC, FIDO, Protect, ExternalIdP, OATH, Push, Binding); (3) asking how to render Journey
-  callbacks or DaVinci collectors in Jetpack Compose; (4) troubleshooting authentication flows
-  in a Ping SDK-based Android app; (5) setting up token/session storage with EncryptedDataStore;
-  (6) scaffolding a new Android project for a Ping SDK app; (7) implementing OIDC centralized
-  login with OidcWebClient, handling browser redirects, or wiring the redirect URI intent filter
-  for OAuth2 authorization code flows. Invoke proactively even if the user just says "I need to
-  add PingOne login to my Android app", "how do I set up Journey in Android", "how do I add
-  OIDC centralized login", or "make this look like a Ping sample app".
+name: ping-orchestration-android-sdk
+description: >-
+  Guide for building Android apps that integrate with the Ping Orchestration Android SDK
+  (also referred to as the Ping Identity Android SDK, formerly the ForgeRock Android SDK
+  / forgerock-android-sdk; Gradle artifact: `com.pingidentity.sdks:android`; modules:
+  `journey`, `davinci`, `oidc`, `fido`, `protect`, `externalidp`, `binding`, `oath`,
+  `push`). Covers both new project scaffolding and adding the SDK to an existing app.
+  Use this skill whenever the user is: (1) building any Android app that authenticates
+  against PingOne, PingOne Advanced Identity Cloud (AIC), PingAM, or DaVinci using
+  Journey, DaVinci, or OIDC flows; (2) configuring SDK modules (Journey, DaVinci, OIDC,
+  FIDO/passkeys, Protect, ExternalIdP, OATH, Push, Device Binding); (3) rendering Journey
+  callbacks or DaVinci collectors in Jetpack Compose; (4) troubleshooting Ping
+  authentication flows in an Android app; (5) setting up token or session storage with
+  `EncryptedDataStore`; (6) scaffolding a new Android/Kotlin project for a
+  Ping-authenticated app; (7) implementing OIDC centralized login with `OidcWebClient`,
+  handling browser redirects, or wiring the redirect URI intent filter for OAuth 2.0
+  authorization code flows. Invoke proactively even when the user phrases it loosely —
+  "add PingOne login to my Android app", "how do I set up Journey in Android", "how do I
+  add OIDC centralized login", "make this look like a Ping sample app", "use the Ping
+  Android SDK", "integrate pingidentity sdk on Android", "use forgerock-android-sdk",
+  or "migrate from ForgeRock to Ping on Android".
+license: MIT
+metadata:
+  author: Ping Identity
+  version: "1.0.0"
 ---
 
 ## Skill Parameters

@@ -1,13 +1,16 @@
 ---
-name: ping-sdk-router
+name: ping-orchestration-sdk-router
 description: >-
   Use when a user asks for help with Ping Identity SDK integration without
   specifying a platform — phrases like "help me add Ping auth", "I want to use
-  PingOne", "get started with the Ping SDK". Probes the project to detect
-  Android, iOS, JavaScript, or React Native, asks if ambiguous, and routes to
-  the matching umbrella skill (ping-sdk-android, ping-sdk-ios, ping-sdk-js;
-  ping-sdk-react-native on the roadmap) or to forgerock-to-ping-journey-migration
-  when ForgeRock SDK references are present.
+  PingOne", "get started with the Ping Orchestration SDK", "add Ping login to
+  my app", "integrate the ForgeRock SDK", "use the pingidentity SDK". Probes
+  the project to detect Android, iOS, JavaScript, or React Native, asks if
+  ambiguous, and routes to the matching umbrella skill
+  (ping-orchestration-android-sdk, ping-orchestration-ios-sdk,
+  ping-orchestration-javascript-sdk; React Native on the roadmap) or to
+  forgerock-to-ping-journey-migration when ForgeRock SDK references are
+  present (forgerock-android-sdk, forgerock-ios-sdk, @forgerock/javascript-sdk).
 license: MIT
 metadata:
   author: Ping Identity
@@ -24,9 +27,9 @@ This table is the single source of truth for routing. The decision tree below re
 
 | Platform | Target Skill | Status | Notes |
 |----------|--------------|--------|-------|
-| Android | `ping-sdk-android` | active | — |
-| iOS | `ping-sdk-ios` | active | — |
-| JavaScript (web) | `ping-sdk-js` | active | — |
+| Android | `ping-orchestration-android-sdk` | active | — |
+| iOS | `ping-orchestration-ios-sdk` | active | — |
+| JavaScript (web) | `ping-orchestration-javascript-sdk` | active | — |
 | React Native | `ping-sdk-react-native` | placeholder | No stopgap available |
 | ForgeRock migration | `forgerock-to-ping-journey-migration` | active | Cross-cutting; takes precedence over platform routing when ForgeRock refs are present |
 
@@ -133,16 +136,16 @@ A compact lookup the agent can match against after Phase 2 classification.
 
 | Probe outcome | Route to |
 |---------------|----------|
-| ForgeRock + Android only | Ask fork prompt → `forgerock-to-ping-journey-migration` OR `ping-sdk-android` |
-| ForgeRock + iOS only | Ask fork prompt → `forgerock-to-ping-journey-migration` OR `ping-sdk-ios` |
-| ForgeRock + JavaScript only | Ask fork prompt → `forgerock-to-ping-journey-migration` OR `ping-sdk-js` |
+| ForgeRock + Android only | Ask fork prompt → `forgerock-to-ping-journey-migration` OR `ping-orchestration-android-sdk` |
+| ForgeRock + iOS only | Ask fork prompt → `forgerock-to-ping-journey-migration` OR `ping-orchestration-ios-sdk` |
+| ForgeRock + JavaScript only | Ask fork prompt → `forgerock-to-ping-journey-migration` OR `ping-orchestration-javascript-sdk` |
 | ForgeRock + Android + iOS | Ask multi-platform prompt → then fork prompt for chosen platform |
 | ForgeRock + Android + JavaScript | Ask multi-platform prompt → then fork prompt for chosen platform |
 | ForgeRock + iOS + JavaScript | Ask multi-platform prompt → then fork prompt for chosen platform |
 | ForgeRock + Android + iOS + JavaScript | Ask multi-platform prompt → then fork prompt for chosen platform |
-| Android only | `ping-sdk-android` |
-| iOS only | `ping-sdk-ios` |
-| JavaScript (web) only | `ping-sdk-js` |
+| Android only | `ping-orchestration-android-sdk` |
+| iOS only | `ping-orchestration-ios-sdk` |
+| JavaScript (web) only | `ping-orchestration-javascript-sdk` |
 | Android + iOS (no ForgeRock) | Ask multi-platform prompt → chosen umbrella |
 | Android + JavaScript (no ForgeRock) | Ask multi-platform prompt → chosen umbrella |
 | iOS + JavaScript (no ForgeRock) | Ask multi-platform prompt → chosen umbrella |
@@ -158,9 +161,9 @@ Detected <signals> → routing to <skill-name>.
 ```
 
 Examples:
-- `Detected Android (build.gradle.kts), no ForgeRock refs → routing to ping-sdk-android.`
+- `Detected Android (build.gradle.kts), no ForgeRock refs → routing to ping-orchestration-android-sdk.`
 - `Detected iOS (Package.swift) + ForgeRock refs (forgerock-ios-sdk in Podfile) → routing to forgerock-to-ping-journey-migration.`
-- `Detected React/Vite project (package.json), no ForgeRock refs → routing to ping-sdk-js.`
+- `Detected React/Vite project (package.json), no ForgeRock refs → routing to ping-orchestration-javascript-sdk.`
 
 After the announcement, invoke the chosen skill via the Skill tool. Do not start doing the work yourself.
 
@@ -178,7 +181,7 @@ Use these literal prompts when classification calls for a question. Adapt only t
 > Which would you like to do?
 
 If migrate → route to `forgerock-to-ping-journey-migration`.
-If build new → route to the platform's umbrella skill (`ping-sdk-android`, `ping-sdk-ios`, or `ping-sdk-js`).
+If build new → route to the platform's umbrella skill (`ping-orchestration-android-sdk`, `ping-orchestration-ios-sdk`, or `ping-orchestration-javascript-sdk`).
 
 ### Multi-platform prompt
 
@@ -188,7 +191,7 @@ Route to the umbrella skill for the chosen platform.
 
 ### Active route for JavaScript
 
-JavaScript is now an active platform. When the JavaScript probe hits, print the handoff line and invoke `ping-sdk-js` via the Skill tool — no prompt needed unless ambiguity requires it (e.g., ForgeRock refs also present).
+JavaScript is now an active platform. When the JavaScript probe hits, print the handoff line and invoke `ping-orchestration-javascript-sdk` via the Skill tool — no prompt needed unless ambiguity requires it (e.g., ForgeRock refs also present).
 
 ### Placeholder-detected prompt (React Native)
 
@@ -198,9 +201,9 @@ JavaScript is now an active platform. When the JavaScript probe hits, print the 
 
 > I couldn't detect a supported project type in this directory. Which platform are you building for?
 >
-> - **Android** (`ping-sdk-android`)
-> - **iOS** (`ping-sdk-ios`)
-> - **JavaScript / Web** (`ping-sdk-js`)
+> - **Android** (`ping-orchestration-android-sdk`)
+> - **iOS** (`ping-orchestration-ios-sdk`)
+> - **JavaScript / Web** (`ping-orchestration-javascript-sdk`)
 > - **React Native** — coming soon (`ping-sdk-react-native`)
 
 Route to the chosen umbrella skill (or apply the placeholder prompt for React Native).

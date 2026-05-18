@@ -1,4 +1,4 @@
-# ping-sdk-android
+# ping-orchestration-android-sdk
 
 A Claude Code skill for scaffolding and integrating Android apps with the [Ping Orchestration Android SDK](https://docs.pingidentity.com/sdks/latest/pingoneaidpsdks/get_started_android_sdk.html) (PingOne AIC / PingAM / DaVinci).
 
@@ -29,7 +29,7 @@ It covers three flow types:
 Pass your configuration directly as the command argument:
 
 ```
-/ping-sdk-android create a sample app at /path/to/MyApp with clientId "myClient",
+/ping-orchestration-android-sdk create a sample app at /path/to/MyApp with clientId "myClient",
 discoveryEndpoint "https://...", serverUrl "https://...", realm "alpha",
 cookieName "abc123", redirectUri "myapp://callback", scopes openid email address,
 I want Login + Registration + Passkeys + Device Binding
@@ -40,7 +40,7 @@ The skill reads your configuration, infers the callback tier (Basic / Standard /
 ### Without arguments — wizard mode
 
 ```
-/ping-sdk-android
+/ping-orchestration-android-sdk
 ```
 
 The skill asks four questions in sequence:

@@ -287,7 +287,7 @@ Write every generated `.swift` file to `<output-path>/<AppName>/`. The scaffold 
 **Copy the Ping Identity logo imageset** from the skill's bundled assets — do NOT search for it in DerivedData or other locations:
 
 ```bash
-SKILL_ASSETS="$HOME/.claude/skills/ping-sdk-ios/assets"
+SKILL_ASSETS="$HOME/.claude/skills/ping-orchestration-ios-sdk/assets"
 DEST="<output-path>/<AppName>/Assets.xcassets/Logo.imageset"
 mkdir -p "$DEST"
 cp "$SKILL_ASSETS/Logo.imageset/Ping Identity Logo.png" "$DEST/"

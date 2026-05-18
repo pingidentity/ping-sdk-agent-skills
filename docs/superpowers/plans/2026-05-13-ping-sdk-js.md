@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Create the `ping-sdk-js` umbrella skill that acts as the single web/JS entry point, collecting shared config, delegating Journey/DaVinci to existing ReactJS skills, handling OIDC centralized login inline, and updating the router to activate the JS platform slot.
+**Goal:** Create the `ping-orchestration-javascript-sdk` umbrella skill that acts as the single web/JS entry point, collecting shared config, delegating Journey/DaVinci to existing ReactJS skills, handling OIDC centralized login inline, and updating the router to activate the JS platform slot.
 
 **Architecture:** A layered umbrella — the skill's own SKILL.md handles wizard mode (W1→W2→W3), shared Vite/env-var guidance, and inline OIDC centralized login; Journey and DaVinci flows are delegated to `ping-orchestration-reactjs-js-journey-sdk` and `ping-orchestration-reactjs-js-davinci-sdk` via Skill tool invocation. A framework registry (React active, Angular/Vue/vanilla placeholder) enables future expansion with no decision-tree rewrites.
 
@@ -14,35 +14,35 @@
 
 | Action | Path | Responsibility |
 |--------|------|----------------|
-| Create | `plugins/ping-orchestration-sdks/skills/ping-sdk-js/SKILL.md` | Wizard, shared guidance, framework registry, delegation rules, inline OIDC |
-| Create | `plugins/ping-orchestration-sdks/skills/ping-sdk-js/assets/oidc-centralized-reference.md` | Full `@forgerock/oidc-client` API reference for OIDC flow |
-| Create | `plugins/ping-orchestration-sdks/skills/ping-sdk-js/assets/.env.template` | Shared VITE_ env vars |
-| Create | `plugins/ping-orchestration-sdks/skills/ping-sdk-js/assets/callback.html.template` | Static OAuth callback page |
-| Create | `plugins/ping-orchestration-sdks/skills/ping-sdk-js/assets/oidc-app.jsx.template` | React OIDC app shell with context + protected route |
-| Create | `plugins/ping-orchestration-sdks/skills/ping-sdk-js/assets/oidc-login.jsx.template` | Login trigger component (`authorize.url()`) |
-| Create | `plugins/ping-orchestration-sdks/skills/ping-sdk-js/assets/oidc-callback.jsx.template` | Callback handler (code exchange → redirect home) |
-| Create | `plugins/ping-orchestration-sdks/skills/ping-sdk-js/references/sdk-packages.md` | `@forgerock/*` package selection guide |
-| Modify | `plugins/ping-orchestration-sdks/skills/ping-sdk-router/SKILL.md` | Activate JS row, add JS probe block, update JS fallback prompt, update routing matrix + no-detection prompt, update frontmatter description |
-| Modify | `README.md` | Add `ping-sdk-js` row to SDK Integration Skills table; update `ping-sdk-router` description |
-| Modify | `plugins/ping-orchestration-sdks/README.md` | Same — add `ping-sdk-js` row; update `ping-sdk-router` description |
+| Create | `plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/SKILL.md` | Wizard, shared guidance, framework registry, delegation rules, inline OIDC |
+| Create | `plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/assets/oidc-centralized-reference.md` | Full `@forgerock/oidc-client` API reference for OIDC flow |
+| Create | `plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/assets/.env.template` | Shared VITE_ env vars |
+| Create | `plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/assets/callback.html.template` | Static OAuth callback page |
+| Create | `plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/assets/oidc-app.jsx.template` | React OIDC app shell with context + protected route |
+| Create | `plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/assets/oidc-login.jsx.template` | Login trigger component (`authorize.url()`) |
+| Create | `plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/assets/oidc-callback.jsx.template` | Callback handler (code exchange → redirect home) |
+| Create | `plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/references/sdk-packages.md` | `@forgerock/*` package selection guide |
+| Modify | `plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/SKILL.md` | Activate JS row, add JS probe block, update JS fallback prompt, update routing matrix + no-detection prompt, update frontmatter description |
+| Modify | `README.md` | Add `ping-orchestration-javascript-sdk` row to SDK Integration Skills table; update `ping-orchestration-sdk-router` description |
+| Modify | `plugins/ping-orchestration-sdks/README.md` | Same — add `ping-orchestration-javascript-sdk` row; update `ping-orchestration-sdk-router` description |
 
 ---
 
 ## Task 1: Scaffold skill directory and SKILL.md frontmatter + overview
 
 **Files:**
-- Create: `plugins/ping-orchestration-sdks/skills/ping-sdk-js/SKILL.md`
+- Create: `plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/SKILL.md`
 
 - [ ] **Step 1: Create the skill directory**
 
 ```bash
-mkdir -p plugins/ping-orchestration-sdks/skills/ping-sdk-js/assets
-mkdir -p plugins/ping-orchestration-sdks/skills/ping-sdk-js/references
+mkdir -p plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/assets
+mkdir -p plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/references
 ```
 
 - [ ] **Step 2: Create SKILL.md with frontmatter and overview section**
 
-Create `plugins/ping-orchestration-sdks/skills/ping-sdk-js/SKILL.md` with this exact content:
+Create `plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/SKILL.md` with this exact content:
 
 ```markdown
 ---
@@ -84,7 +84,7 @@ Expected: schema/structure pass (may warn about missing assets — that's fine a
 - [ ] **Step 4: Commit**
 
 ```bash
-git add plugins/ping-orchestration-sdks/skills/ping-sdk-js/SKILL.md
+git add plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/SKILL.md
 git commit -S -m "feat(ping-sdk-js): scaffold skill with frontmatter and overview"
 ```
 
@@ -93,7 +93,7 @@ git commit -S -m "feat(ping-sdk-js): scaffold skill with frontmatter and overvie
 ## Task 2: Framework registry and wizard flow (W1, W1b, W2, W3)
 
 **Files:**
-- Modify: `plugins/ping-orchestration-sdks/skills/ping-sdk-js/SKILL.md` (append after overview)
+- Modify: `plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/SKILL.md` (append after overview)
 
 - [ ] **Step 1: Append the Framework Registry section to SKILL.md**
 
@@ -194,7 +194,7 @@ On confirmation:
 - [ ] **Step 3: Commit**
 
 ```bash
-git add plugins/ping-orchestration-sdks/skills/ping-sdk-js/SKILL.md
+git add plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/SKILL.md
 git commit -S -m "feat(ping-sdk-js): add framework registry and wizard flow W1-W3"
 ```
 
@@ -203,7 +203,7 @@ git commit -S -m "feat(ping-sdk-js): add framework registry and wizard flow W1-W
 ## Task 3: Shared setup guidance and `create-sample` command
 
 **Files:**
-- Modify: `plugins/ping-orchestration-sdks/skills/ping-sdk-js/SKILL.md` (append)
+- Modify: `plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/SKILL.md` (append)
 
 - [ ] **Step 1: Append the Shared Setup Guidance section**
 
@@ -297,7 +297,7 @@ Add after the Shared Setup Guidance section:
 - [ ] **Step 3: Commit**
 
 ```bash
-git add plugins/ping-orchestration-sdks/skills/ping-sdk-js/SKILL.md
+git add plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/SKILL.md
 git commit -S -m "feat(ping-sdk-js): add shared setup guidance and create-sample command"
 ```
 
@@ -306,7 +306,7 @@ git commit -S -m "feat(ping-sdk-js): add shared setup guidance and create-sample
 ## Task 4: OIDC centralized login section in SKILL.md
 
 **Files:**
-- Modify: `plugins/ping-orchestration-sdks/skills/ping-sdk-js/SKILL.md` (append)
+- Modify: `plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/SKILL.md` (append)
 
 - [ ] **Step 1: Append the OIDC Centralized Login section**
 
@@ -402,7 +402,7 @@ Generate these 5 files when flow type is `oidc-centralized`. Read the templates 
 - [ ] **Step 2: Commit**
 
 ```bash
-git add plugins/ping-orchestration-sdks/skills/ping-sdk-js/SKILL.md
+git add plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/SKILL.md
 git commit -S -m "feat(ping-sdk-js): add OIDC centralized login section"
 ```
 
@@ -411,11 +411,11 @@ git commit -S -m "feat(ping-sdk-js): add OIDC centralized login section"
 ## Task 5: Asset files — env template, OIDC templates (5 files)
 
 **Files:**
-- Create: `plugins/ping-orchestration-sdks/skills/ping-sdk-js/assets/.env.template`
-- Create: `plugins/ping-orchestration-sdks/skills/ping-sdk-js/assets/callback.html.template`
-- Create: `plugins/ping-orchestration-sdks/skills/ping-sdk-js/assets/oidc-app.jsx.template`
-- Create: `plugins/ping-orchestration-sdks/skills/ping-sdk-js/assets/oidc-login.jsx.template`
-- Create: `plugins/ping-orchestration-sdks/skills/ping-sdk-js/assets/oidc-callback.jsx.template`
+- Create: `plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/assets/.env.template`
+- Create: `plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/assets/callback.html.template`
+- Create: `plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/assets/oidc-app.jsx.template`
+- Create: `plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/assets/oidc-login.jsx.template`
+- Create: `plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/assets/oidc-callback.jsx.template`
 
 - [ ] **Step 1: Create `.env.template`**
 
@@ -593,7 +593,7 @@ export default function Callback() {
 - [ ] **Step 6: Commit**
 
 ```bash
-git add plugins/ping-orchestration-sdks/skills/ping-sdk-js/assets/
+git add plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/assets/
 git commit -S -m "feat(ping-sdk-js): add OIDC templates and env template"
 ```
 
@@ -602,8 +602,8 @@ git commit -S -m "feat(ping-sdk-js): add OIDC templates and env template"
 ## Task 6: Reference docs — `oidc-centralized-reference.md` and `sdk-packages.md`
 
 **Files:**
-- Create: `plugins/ping-orchestration-sdks/skills/ping-sdk-js/assets/oidc-centralized-reference.md`
-- Create: `plugins/ping-orchestration-sdks/skills/ping-sdk-js/references/sdk-packages.md`
+- Create: `plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/assets/oidc-centralized-reference.md`
+- Create: `plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/references/sdk-packages.md`
 
 - [ ] **Step 1: Create `oidc-centralized-reference.md`**
 
@@ -820,17 +820,17 @@ npm install @forgerock/device-client
 - [ ] **Step 3: Commit**
 
 ```bash
-git add plugins/ping-orchestration-sdks/skills/ping-sdk-js/assets/oidc-centralized-reference.md
-git add plugins/ping-orchestration-sdks/skills/ping-sdk-js/references/sdk-packages.md
+git add plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/assets/oidc-centralized-reference.md
+git add plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/references/sdk-packages.md
 git commit -S -m "feat(ping-sdk-js): add OIDC reference doc and SDK packages guide"
 ```
 
 ---
 
-## Task 7: Update `ping-sdk-router` SKILL.md — activate JS platform
+## Task 7: Update `ping-orchestration-sdk-router` SKILL.md — activate JS platform
 
 **Files:**
-- Modify: `plugins/ping-orchestration-sdks/skills/ping-sdk-router/SKILL.md`
+- Modify: `plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/SKILL.md`
 
 The current file is 218 lines. The changes are:
 
@@ -838,10 +838,10 @@ The current file is 218 lines. The changes are:
 2. **Platform Registry table** (line 29): change `placeholder` → `active` and clear the Notes stopgap text.
 3. **Probe Blocks section** (after line 84): convert the JavaScript placeholder probe into a full active probe block.
 4. **Decision Tree Phase 2, rule 4** (line 104–106): remove the JS placeholder handling — JS is now active and hits rule 3.
-5. **Routing Matrix** (line 133): update JS row from "Stopgap suggestion" to route to `ping-sdk-js`.
+5. **Routing Matrix** (line 133): update JS row from "Stopgap suggestion" to route to `ping-orchestration-javascript-sdk`.
 6. **Fallback Prompts — Placeholder-detected prompt (JavaScript)** (lines 174–181): replace the "coming soon" message with a direct routing message.
 7. **No-detection prompt** (lines 187–195): change "coming soon" for JS to direct routing.
-8. **Adding a New Platform** (line 200): update example from `ping-sdk-js` to `ping-sdk-react-native`.
+8. **Adding a New Platform** (line 200): update example from `ping-orchestration-javascript-sdk` to `ping-sdk-react-native`.
 
 - [ ] **Step 1: Update frontmatter description (lines 3–10)**
 
@@ -869,12 +869,12 @@ Replace with:
 
 Find:
 ```
-| JavaScript (web) | `ping-sdk-js` | placeholder | Stopgap: `ping-orchestration-reactjs-js-journey-sdk`, `ping-orchestration-reactjs-js-davinci-sdk` |
+| JavaScript (web) | `ping-orchestration-javascript-sdk` | placeholder | Stopgap: `ping-orchestration-reactjs-js-journey-sdk`, `ping-orchestration-reactjs-js-davinci-sdk` |
 ```
 
 Replace with:
 ```
-| JavaScript (web) | `ping-sdk-js` | active | — |
+| JavaScript (web) | `ping-orchestration-javascript-sdk` | active | — |
 ```
 
 - [ ] **Step 3: Convert JavaScript placeholder probe to an active probe block**
@@ -924,7 +924,7 @@ test -f package.json && grep -E '"react-native"' package.json
 Find:
 ```
 4. **Placeholder platform detected** — no active probe hit, but a placeholder probe hit:
-   - **JavaScript (web):** announce that `ping-sdk-js` is on the way. Offer the existing ReactJS specialized skills (`ping-orchestration-reactjs-js-journey-sdk`, `ping-orchestration-reactjs-js-davinci-sdk`) as a stopgap.
+   - **JavaScript (web):** announce that `ping-orchestration-javascript-sdk` is on the way. Offer the existing ReactJS specialized skills (`ping-orchestration-reactjs-js-journey-sdk`, `ping-orchestration-reactjs-js-davinci-sdk`) as a stopgap.
    - **React Native:** announce that `ping-sdk-react-native` is on the way. No stopgap exists; ask the user how they would like to proceed.
 ```
 
@@ -943,8 +943,8 @@ Find:
 
 Replace with:
 ```
-| JavaScript (web) only | `ping-sdk-js` |
-| ForgeRock + JavaScript | Ask fork prompt → `forgerock-to-ping-journey-migration` OR `ping-sdk-js` |
+| JavaScript (web) only | `ping-orchestration-javascript-sdk` |
+| ForgeRock + JavaScript | Ask fork prompt → `forgerock-to-ping-journey-migration` OR `ping-orchestration-javascript-sdk` |
 ```
 
 - [ ] **Step 6: Update Placeholder-detected prompt for JavaScript (lines 174–181)**
@@ -953,7 +953,7 @@ Find:
 ```
 ### Placeholder-detected prompt (JavaScript)
 
-> This looks like a `<framework>` project. The umbrella skill `ping-sdk-js` is on the way but isn't ready yet. In the meantime you can use one of the existing ReactJS specialized skills:
+> This looks like a `<framework>` project. The umbrella skill `ping-orchestration-javascript-sdk` is on the way but isn't ready yet. In the meantime you can use one of the existing ReactJS specialized skills:
 >
 > - `ping-orchestration-reactjs-js-journey-sdk` — Journey-based authentication
 > - `ping-orchestration-reactjs-js-davinci-sdk` — DaVinci-based authentication
@@ -965,26 +965,26 @@ Replace with:
 ```
 ### Active route for JavaScript
 
-JavaScript is now an active platform. When the JavaScript probe hits, print the handoff line and invoke `ping-sdk-js` via the Skill tool — no prompt needed unless ambiguity requires it (e.g., ForgeRock refs also present).
+JavaScript is now an active platform. When the JavaScript probe hits, print the handoff line and invoke `ping-orchestration-javascript-sdk` via the Skill tool — no prompt needed unless ambiguity requires it (e.g., ForgeRock refs also present).
 ```
 
 - [ ] **Step 7: Update no-detection prompt (lines 187–195)**
 
 Find:
 ```
-> - **JavaScript / Web** — coming soon (`ping-sdk-js`)
+> - **JavaScript / Web** — coming soon (`ping-orchestration-javascript-sdk`)
 ```
 
 Replace with:
 ```
-> - **JavaScript / Web** (`ping-sdk-js`)
+> - **JavaScript / Web** (`ping-orchestration-javascript-sdk`)
 ```
 
 - [ ] **Step 8: Update the "Adding a New Platform" example (line 200)**
 
 Find:
 ```
-When a new umbrella skill ships (e.g., `ping-sdk-js`), a single contributor edit enables routing for it. Steps:
+When a new umbrella skill ships (e.g., `ping-orchestration-javascript-sdk`), a single contributor edit enables routing for it. Steps:
 ```
 
 Replace with:
@@ -996,19 +996,19 @@ When a new umbrella skill ships (e.g., `ping-sdk-react-native`), a single contri
 
 Find:
 ```
-If build new → route to the platform's umbrella skill (`ping-sdk-android` or `ping-sdk-ios`).
+If build new → route to the platform's umbrella skill (`ping-orchestration-android-sdk` or `ping-orchestration-ios-sdk`).
 ```
 
 Replace with:
 ```
-If build new → route to the platform's umbrella skill (`ping-sdk-android`, `ping-sdk-ios`, or `ping-sdk-js`).
+If build new → route to the platform's umbrella skill (`ping-orchestration-android-sdk`, `ping-orchestration-ios-sdk`, or `ping-orchestration-javascript-sdk`).
 ```
 
 - [ ] **Step 10: Validate and commit**
 
 ```bash
 npx skills-ref validate ./plugins/ping-orchestration-sdks/skills/ping-sdk-router
-git add plugins/ping-orchestration-sdks/skills/ping-sdk-router/SKILL.md
+git add plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/SKILL.md
 git commit -S -m "feat(ping-sdk-router): activate JavaScript platform, add JS probe block"
 ```
 
@@ -1020,54 +1020,54 @@ git commit -S -m "feat(ping-sdk-router): activate JavaScript platform, add JS pr
 - Modify: `README.md` (root) — line 105 area
 - Modify: `plugins/ping-orchestration-sdks/README.md` — line 75 area
 
-- [ ] **Step 1: Add `ping-sdk-js` row to root `README.md` SDK Integration Skills table**
+- [ ] **Step 1: Add `ping-orchestration-javascript-sdk` row to root `README.md` SDK Integration Skills table**
 
 Find (line 105):
 ```
-| [ping-sdk-android](./plugins/ping-orchestration-sdks/skills/ping-sdk-android/SKILL.md) | Android apps with the Ping Orchestration Android SDK — Jetpack Compose + MVVM, Journey callbacks, DaVinci collectors, OIDC centralized login, FIDO, Protect, and project scaffolding |
+| [ping-sdk-android](./plugins/ping-orchestration-sdks/skills/ping-orchestration-android-sdk/SKILL.md) | Android apps with the Ping Orchestration Android SDK — Jetpack Compose + MVVM, Journey callbacks, DaVinci collectors, OIDC centralized login, FIDO, Protect, and project scaffolding |
 ```
 
 Replace with:
 ```
-| [ping-sdk-android](./plugins/ping-orchestration-sdks/skills/ping-sdk-android/SKILL.md) | Android apps with the Ping Orchestration Android SDK — Jetpack Compose + MVVM, Journey callbacks, DaVinci collectors, OIDC centralized login, FIDO, Protect, and project scaffolding |
-| [ping-sdk-js](./plugins/ping-orchestration-sdks/skills/ping-sdk-js/SKILL.md) | Web apps with the Ping Orchestration JavaScript SDK — React + Vite, Journey callbacks (via delegate), DaVinci collectors (via delegate), and OIDC centralized login |
+| [ping-sdk-android](./plugins/ping-orchestration-sdks/skills/ping-orchestration-android-sdk/SKILL.md) | Android apps with the Ping Orchestration Android SDK — Jetpack Compose + MVVM, Journey callbacks, DaVinci collectors, OIDC centralized login, FIDO, Protect, and project scaffolding |
+| [ping-sdk-js](./plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/SKILL.md) | Web apps with the Ping Orchestration JavaScript SDK — React + Vite, Journey callbacks (via delegate), DaVinci collectors (via delegate), and OIDC centralized login |
 ```
 
-- [ ] **Step 2: Update `ping-sdk-router` description in root `README.md` Routing Skills table (line 111)**
+- [ ] **Step 2: Update `ping-orchestration-sdk-router` description in root `README.md` Routing Skills table (line 111)**
 
 Find:
 ```
-| [ping-sdk-router](./plugins/ping-orchestration-sdks/skills/ping-sdk-router/SKILL.md) | First point of contact for vague Ping SDK requests — probes the working directory, detects platform (Android, iOS; JavaScript and React Native on the roadmap) and ForgeRock SDK references, then routes to the matching umbrella skill or to `forgerock-to-ping-journey-migration` |
+| [ping-sdk-router](./plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/SKILL.md) | First point of contact for vague Ping SDK requests — probes the working directory, detects platform (Android, iOS; JavaScript and React Native on the roadmap) and ForgeRock SDK references, then routes to the matching umbrella skill or to `forgerock-to-ping-journey-migration` |
 ```
 
 Replace with:
 ```
-| [ping-sdk-router](./plugins/ping-orchestration-sdks/skills/ping-sdk-router/SKILL.md) | First point of contact for vague Ping SDK requests — probes the working directory, detects platform (Android, iOS, JavaScript; React Native on the roadmap) and ForgeRock SDK references, then routes to the matching umbrella skill or to `forgerock-to-ping-journey-migration` |
+| [ping-sdk-router](./plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/SKILL.md) | First point of contact for vague Ping SDK requests — probes the working directory, detects platform (Android, iOS, JavaScript; React Native on the roadmap) and ForgeRock SDK references, then routes to the matching umbrella skill or to `forgerock-to-ping-journey-migration` |
 ```
 
-- [ ] **Step 3: Add `ping-sdk-js` row to plugin `README.md` SDK Integration Skills table**
+- [ ] **Step 3: Add `ping-orchestration-javascript-sdk` row to plugin `README.md` SDK Integration Skills table**
 
 Find (line 75):
 ```
-| [ping-sdk-android](skills/ping-sdk-android) | Implements authentication in Android apps using the Ping Orchestration Android SDK — Jetpack Compose + MVVM, Journey callbacks, DaVinci collectors, OIDC centralized login, FIDO, Protect, EncryptedDataStore, and full project scaffolding. Covers both new project creation and existing app integration. | [SKILL.md](skills/ping-sdk-android/SKILL.md) |
+| [ping-sdk-android](skills/ping-sdk-android) | Implements authentication in Android apps using the Ping Orchestration Android SDK — Jetpack Compose + MVVM, Journey callbacks, DaVinci collectors, OIDC centralized login, FIDO, Protect, EncryptedDataStore, and full project scaffolding. Covers both new project creation and existing app integration. | [SKILL.md](skills/ping-orchestration-android-sdk/SKILL.md) |
 ```
 
 Replace with:
 ```
-| [ping-sdk-android](skills/ping-sdk-android) | Implements authentication in Android apps using the Ping Orchestration Android SDK — Jetpack Compose + MVVM, Journey callbacks, DaVinci collectors, OIDC centralized login, FIDO, Protect, EncryptedDataStore, and full project scaffolding. Covers both new project creation and existing app integration. | [SKILL.md](skills/ping-sdk-android/SKILL.md) |
-| [ping-sdk-js](skills/ping-sdk-js) | Implements authentication in web apps using the Ping Orchestration JavaScript SDK — React + Vite, Journey callbacks, DaVinci collectors, OIDC centralized login. Delegates Journey and DaVinci to specialized skills; handles OIDC centralized login inline. Covers both sample app creation and existing app integration. | [SKILL.md](skills/ping-sdk-js/SKILL.md) |
+| [ping-sdk-android](skills/ping-sdk-android) | Implements authentication in Android apps using the Ping Orchestration Android SDK — Jetpack Compose + MVVM, Journey callbacks, DaVinci collectors, OIDC centralized login, FIDO, Protect, EncryptedDataStore, and full project scaffolding. Covers both new project creation and existing app integration. | [SKILL.md](skills/ping-orchestration-android-sdk/SKILL.md) |
+| [ping-sdk-js](skills/ping-sdk-js) | Implements authentication in web apps using the Ping Orchestration JavaScript SDK — React + Vite, Journey callbacks, DaVinci collectors, OIDC centralized login. Delegates Journey and DaVinci to specialized skills; handles OIDC centralized login inline. Covers both sample app creation and existing app integration. | [SKILL.md](skills/ping-orchestration-javascript-sdk/SKILL.md) |
 ```
 
-- [ ] **Step 4: Update `ping-sdk-router` description in plugin `README.md` Routing Skills table (line 81)**
+- [ ] **Step 4: Update `ping-orchestration-sdk-router` description in plugin `README.md` Routing Skills table (line 81)**
 
 Find:
 ```
-| [ping-sdk-router](skills/ping-sdk-router) | First point of contact for vague Ping SDK requests. Probes the user's working directory for Android, iOS, JavaScript, or React Native projects (and ForgeRock SDK references), asks if ambiguous, and routes to the matching umbrella skill (`ping-sdk-android`, `ping-sdk-ios`; `ping-sdk-js` and `ping-sdk-react-native` on the roadmap) or to `forgerock-to-ping-journey-migration`. Designed for easy expansion via a platform registry. | [SKILL.md](skills/ping-sdk-router/SKILL.md) |
+| [ping-sdk-router](skills/ping-sdk-router) | First point of contact for vague Ping SDK requests. Probes the user's working directory for Android, iOS, JavaScript, or React Native projects (and ForgeRock SDK references), asks if ambiguous, and routes to the matching umbrella skill (`ping-orchestration-android-sdk`, `ping-orchestration-ios-sdk`; `ping-orchestration-javascript-sdk` and `ping-sdk-react-native` on the roadmap) or to `forgerock-to-ping-journey-migration`. Designed for easy expansion via a platform registry. | [SKILL.md](skills/ping-orchestration-sdk-router/SKILL.md) |
 ```
 
 Replace with:
 ```
-| [ping-sdk-router](skills/ping-sdk-router) | First point of contact for vague Ping SDK requests. Probes the user's working directory for Android, iOS, JavaScript, or React Native projects (and ForgeRock SDK references), asks if ambiguous, and routes to the matching umbrella skill (`ping-sdk-android`, `ping-sdk-ios`, `ping-sdk-js`; `ping-sdk-react-native` on the roadmap) or to `forgerock-to-ping-journey-migration`. Designed for easy expansion via a platform registry. | [SKILL.md](skills/ping-sdk-router/SKILL.md) |
+| [ping-sdk-router](skills/ping-sdk-router) | First point of contact for vague Ping SDK requests. Probes the user's working directory for Android, iOS, JavaScript, or React Native projects (and ForgeRock SDK references), asks if ambiguous, and routes to the matching umbrella skill (`ping-orchestration-android-sdk`, `ping-orchestration-ios-sdk`, `ping-orchestration-javascript-sdk`; `ping-sdk-react-native` on the roadmap) or to `forgerock-to-ping-journey-migration`. Designed for easy expansion via a platform registry. | [SKILL.md](skills/ping-orchestration-sdk-router/SKILL.md) |
 ```
 
 - [ ] **Step 5: Run lint and commit**
@@ -1114,20 +1114,20 @@ find plugins/ping-orchestration-sdks/skills/ping-sdk-js -type f | sort
 
 Expected output (7 files):
 ```
-plugins/ping-orchestration-sdks/skills/ping-sdk-js/SKILL.md
-plugins/ping-orchestration-sdks/skills/ping-sdk-js/assets/.env.template
-plugins/ping-orchestration-sdks/skills/ping-sdk-js/assets/callback.html.template
-plugins/ping-orchestration-sdks/skills/ping-sdk-js/assets/oidc-app.jsx.template
-plugins/ping-orchestration-sdks/skills/ping-sdk-js/assets/oidc-callback.jsx.template
-plugins/ping-orchestration-sdks/skills/ping-sdk-js/assets/oidc-centralized-reference.md
-plugins/ping-orchestration-sdks/skills/ping-sdk-js/assets/oidc-login.jsx.template
-plugins/ping-orchestration-sdks/skills/ping-sdk-js/references/sdk-packages.md
+plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/SKILL.md
+plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/assets/.env.template
+plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/assets/callback.html.template
+plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/assets/oidc-app.jsx.template
+plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/assets/oidc-callback.jsx.template
+plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/assets/oidc-centralized-reference.md
+plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/assets/oidc-login.jsx.template
+plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/references/sdk-packages.md
 ```
 
 - [ ] **Step 5: Verify SKILL.md frontmatter `name` matches directory name**
 
 ```bash
-head -3 plugins/ping-orchestration-sdks/skills/ping-sdk-js/SKILL.md
+head -3 plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/SKILL.md
 ```
 
 Expected:

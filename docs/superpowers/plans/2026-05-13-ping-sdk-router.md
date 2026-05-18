@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a `ping-sdk-router` skill at `plugins/ping-orchestration-sdks/skills/ping-sdk-router/` that probes the user's project, picks the right umbrella skill (Android/iOS today; JS/React Native via placeholders), and hands off — provisioned for easy expansion via a platform registry.
+**Goal:** Add a `ping-orchestration-sdk-router` skill at `plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/` that probes the user's project, picks the right umbrella skill (Android/iOS today; JS/React Native via placeholders), and hands off — provisioned for easy expansion via a platform registry.
 
 **Architecture:** Pure-markdown skill (single `SKILL.md`, no `assets/`/`references/`/`scripts/`). The body contains a platform registry table, per-platform probe blocks (shell `find`/`grep` commands), a deterministic decision tree, and a 3-step recipe for adding new platforms. Validation is via `npx skills-ref validate` plus the repo's `claudelint` rules. Behavioral verification uses three fixture project directories (empty / Android Gradle / Swift Package) that the implementer creates locally and discards (not committed).
 
@@ -14,7 +14,7 @@
 
 Files this plan creates or modifies:
 
-- **Create:** `plugins/ping-orchestration-sdks/skills/ping-sdk-router/SKILL.md` — the entire router skill.
+- **Create:** `plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/SKILL.md` — the entire router skill.
 - **Modify:** `README.md` — add a new "Routing Skills" section to the Available Skills area.
 - **Modify:** `plugins/ping-orchestration-sdks/README.md` — add a parallel "Routing Skills" section.
 
@@ -27,7 +27,7 @@ The spec (`docs/superpowers/specs/2026-05-13-ping-sdk-router-design.md`) governs
 ## Task 1: Scaffold the skill directory and write the frontmatter
 
 **Files:**
-- Create: `plugins/ping-orchestration-sdks/skills/ping-sdk-router/SKILL.md`
+- Create: `plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/SKILL.md`
 
 This task creates the skill directory and writes a SKILL.md containing only the frontmatter and a one-paragraph overview. Subsequent tasks fill in the body. The skill must validate at this stage so we catch frontmatter mistakes before piling on content.
 
@@ -40,7 +40,7 @@ mkdir -p plugins/ping-orchestration-sdks/skills/ping-sdk-router
 
 - [ ] **Step 2: Write the initial SKILL.md (frontmatter + overview)**
 
-Create `plugins/ping-orchestration-sdks/skills/ping-sdk-router/SKILL.md` with this exact content:
+Create `plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/SKILL.md` with this exact content:
 
 ````markdown
 ---
@@ -85,7 +85,7 @@ If `claudelint` is not installed locally, skip this step and note it for the fin
 - [ ] **Step 5: Commit**
 
 ```bash
-git add plugins/ping-orchestration-sdks/skills/ping-sdk-router/SKILL.md
+git add plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/SKILL.md
 git commit -m "feat(ping-sdk-router): scaffold skill with frontmatter and overview"
 ```
 
@@ -94,13 +94,13 @@ git commit -m "feat(ping-sdk-router): scaffold skill with frontmatter and overvi
 ## Task 2: Add the platform registry and probe blocks
 
 **Files:**
-- Modify: `plugins/ping-orchestration-sdks/skills/ping-sdk-router/SKILL.md` — append registry + probe sections after the overview.
+- Modify: `plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/SKILL.md` — append registry + probe sections after the overview.
 
 The registry is the heart of the expansion mechanism. The decision tree (Task 3) reads "active rows" from this table, so adding a new platform later is just a one-row edit + a new probe block.
 
 - [ ] **Step 1: Append the platform registry section**
 
-Append the following to `plugins/ping-orchestration-sdks/skills/ping-sdk-router/SKILL.md`:
+Append the following to `plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/SKILL.md`:
 
 ````markdown
 
@@ -110,9 +110,9 @@ This table is the single source of truth for routing. The decision tree below re
 
 | Platform | Target Skill | Status | Notes |
 |----------|--------------|--------|-------|
-| Android | `ping-sdk-android` | active | — |
-| iOS | `ping-sdk-ios` | active | — |
-| JavaScript (web) | `ping-sdk-js` | placeholder | Stopgap: `ping-orchestration-reactjs-js-journey-sdk`, `ping-orchestration-reactjs-js-davinci-sdk` |
+| Android | `ping-orchestration-android-sdk` | active | — |
+| iOS | `ping-orchestration-ios-sdk` | active | — |
+| JavaScript (web) | `ping-orchestration-javascript-sdk` | placeholder | Stopgap: `ping-orchestration-reactjs-js-journey-sdk`, `ping-orchestration-reactjs-js-davinci-sdk` |
 | React Native | `ping-sdk-react-native` | placeholder | No stopgap available |
 | ForgeRock migration | `forgerock-to-ping-journey-migration` | active | Cross-cutting; takes precedence over platform routing when ForgeRock refs are present |
 ````
@@ -188,7 +188,7 @@ Expected: passes. The skill body grew but structure is unchanged.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add plugins/ping-orchestration-sdks/skills/ping-sdk-router/SKILL.md
+git add plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/SKILL.md
 git commit -m "feat(ping-sdk-router): add platform registry and probe blocks"
 ```
 
@@ -197,13 +197,13 @@ git commit -m "feat(ping-sdk-router): add platform registry and probe blocks"
 ## Task 3: Add the decision tree, routing matrix, and handoff template
 
 **Files:**
-- Modify: `plugins/ping-orchestration-sdks/skills/ping-sdk-router/SKILL.md` — append the decision logic.
+- Modify: `plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/SKILL.md` — append the decision logic.
 
 This is the procedural core: the agent reads it top-to-bottom when the skill is invoked. The classify rules use the order from the spec (ForgeRock first, multi-platform second, single platform third, placeholder fourth, nothing fifth).
 
 - [ ] **Step 1: Append the decision tree section**
 
-Append to `plugins/ping-orchestration-sdks/skills/ping-sdk-router/SKILL.md`:
+Append to `plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/SKILL.md`:
 
 ````markdown
 
@@ -226,7 +226,7 @@ Apply rules in order. **First match wins.**
 2. **Multi-platform monorepo** — two or more active platform probes hit (and rule 1 did not fire). Ask the **multi-platform prompt**. Route to the chosen platform's umbrella skill.
 3. **Single active platform detected** — exactly one active platform probe hit. Route to that platform's umbrella skill.
 4. **Placeholder platform detected** — no active probe hit, but a placeholder probe hit:
-   - **JavaScript (web):** announce that `ping-sdk-js` is on the way. Offer the existing ReactJS specialized skills (`ping-orchestration-reactjs-js-journey-sdk`, `ping-orchestration-reactjs-js-davinci-sdk`) as a stopgap.
+   - **JavaScript (web):** announce that `ping-orchestration-javascript-sdk` is on the way. Offer the existing ReactJS specialized skills (`ping-orchestration-reactjs-js-journey-sdk`, `ping-orchestration-reactjs-js-davinci-sdk`) as a stopgap.
    - **React Native:** announce that `ping-sdk-react-native` is on the way. No stopgap exists; ask the user how they would like to proceed.
 5. **Nothing detected** — no probes hit. Ask the **no-detection prompt**, listing only platforms with `Status: active`. Mention placeholder platforms as "coming soon".
 
@@ -256,10 +256,10 @@ A compact lookup the agent can match against after Phase 2 classification.
 
 | Probe outcome | Route to |
 |---------------|----------|
-| ForgeRock + Android | Ask fork prompt → `forgerock-to-ping-journey-migration` OR `ping-sdk-android` |
-| ForgeRock + iOS | Ask fork prompt → `forgerock-to-ping-journey-migration` OR `ping-sdk-ios` |
-| Android only | `ping-sdk-android` |
-| iOS only | `ping-sdk-ios` |
+| ForgeRock + Android | Ask fork prompt → `forgerock-to-ping-journey-migration` OR `ping-orchestration-android-sdk` |
+| ForgeRock + iOS | Ask fork prompt → `forgerock-to-ping-journey-migration` OR `ping-orchestration-ios-sdk` |
+| Android only | `ping-orchestration-android-sdk` |
+| iOS only | `ping-orchestration-ios-sdk` |
 | Android + iOS (no ForgeRock) | Ask multi-platform prompt → chosen umbrella |
 | JavaScript placeholder hit | Stopgap suggestion (ReactJS specialized skills) |
 | React Native placeholder hit | Inform user; no route |
@@ -299,7 +299,7 @@ Expected: passes.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add plugins/ping-orchestration-sdks/skills/ping-sdk-router/SKILL.md
+git add plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/SKILL.md
 git commit -m "feat(ping-sdk-router): add decision tree, routing matrix, handoff template"
 ```
 
@@ -308,13 +308,13 @@ git commit -m "feat(ping-sdk-router): add decision tree, routing matrix, handoff
 ## Task 4: Add fallback prompts and the "adding a new platform" recipe
 
 **Files:**
-- Modify: `plugins/ping-orchestration-sdks/skills/ping-sdk-router/SKILL.md` — append fallback wording and the expansion recipe.
+- Modify: `plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/SKILL.md` — append fallback wording and the expansion recipe.
 
 Per the spec self-review there are **four** ask-the-user cases. They each get exact wording so the agent says the same thing every time.
 
 - [ ] **Step 1: Append the fallback prompts section**
 
-Append to `plugins/ping-orchestration-sdks/skills/ping-sdk-router/SKILL.md`:
+Append to `plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/SKILL.md`:
 
 ````markdown
 
@@ -332,7 +332,7 @@ Use these literal prompts when classification calls for a question. Adapt only t
 > Which would you like to do?
 
 If migrate → route to `forgerock-to-ping-journey-migration`.
-If build new → route to the platform's umbrella skill (`ping-sdk-android` or `ping-sdk-ios`).
+If build new → route to the platform's umbrella skill (`ping-orchestration-android-sdk` or `ping-orchestration-ios-sdk`).
 
 ### Multi-platform prompt
 
@@ -342,7 +342,7 @@ Route to the umbrella skill for the chosen platform.
 
 ### Placeholder-detected prompt (JavaScript)
 
-> This looks like a `<framework>` project. The umbrella skill `ping-sdk-js` is on the way but isn't ready yet. In the meantime you can use one of the existing ReactJS specialized skills:
+> This looks like a `<framework>` project. The umbrella skill `ping-orchestration-javascript-sdk` is on the way but isn't ready yet. In the meantime you can use one of the existing ReactJS specialized skills:
 >
 > - `ping-orchestration-reactjs-js-journey-sdk` — Journey-based authentication
 > - `ping-orchestration-reactjs-js-davinci-sdk` — DaVinci-based authentication
@@ -357,9 +357,9 @@ Route to the umbrella skill for the chosen platform.
 
 > I couldn't detect a supported project type in this directory. Which platform are you building for?
 >
-> - **Android** (`ping-sdk-android`)
-> - **iOS** (`ping-sdk-ios`)
-> - **JavaScript / Web** — coming soon (`ping-sdk-js`)
+> - **Android** (`ping-orchestration-android-sdk`)
+> - **iOS** (`ping-orchestration-ios-sdk`)
+> - **JavaScript / Web** — coming soon (`ping-orchestration-javascript-sdk`)
 > - **React Native** — coming soon (`ping-sdk-react-native`)
 
 Route to the chosen umbrella skill (or apply the placeholder prompt for JS / RN).
@@ -373,7 +373,7 @@ Append to the same file:
 
 ## Adding a New Platform
 
-When a new umbrella skill ships (e.g., `ping-sdk-js`), a single contributor edit enables routing for it. Steps:
+When a new umbrella skill ships (e.g., `ping-orchestration-javascript-sdk`), a single contributor edit enables routing for it. Steps:
 
 1. **Update the registry row** in the **Platform Registry** table: change `Status` from `placeholder` to `active`. If the target skill name changed, update that too.
 2. **Add or fill in the probe block** in the **Probe Blocks** section. Provide either file markers (a `find` command) or content markers (a `grep` command) that uniquely identify projects of this type. Apply the common ignore globs.
@@ -406,14 +406,14 @@ Expected: passes.
 
 Run:
 ```bash
-wc -l plugins/ping-orchestration-sdks/skills/ping-sdk-router/SKILL.md
+wc -l plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/SKILL.md
 ```
 Expected: under 500 lines (target was under 200; allow some slack but flag if it exceeds 500).
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add plugins/ping-orchestration-sdks/skills/ping-sdk-router/SKILL.md
+git add plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/SKILL.md
 git commit -m "feat(ping-sdk-router): add fallback prompts and expansion recipe"
 ```
 
@@ -493,7 +493,7 @@ cd /tmp/ping-router-fixture-android && find . -maxdepth 4 \
   \( -name node_modules -o -name .git -o -name build -o -name .gradle -o -name dist -o -name DerivedData -o -name Pods \) -prune -o \
   \( -name "Package.swift" -o -name "*.xcodeproj" -o -name "*.xcworkspace" -o -name "Podfile" \) -print
 ```
-Expected: empty output. (Classification: rule 3 "Single active platform detected" → route to `ping-sdk-android`.)
+Expected: empty output. (Classification: rule 3 "Single active platform detected" → route to `ping-orchestration-android-sdk`.)
 
 - [ ] **Step 8: Create the Swift Package fixture with ForgeRock refs**
 
@@ -563,7 +563,7 @@ Insert this block **immediately before** that line (so the order is: SDK Integra
 
 | Skill | Description |
 |-------|-------------|
-| [ping-sdk-router](./plugins/ping-orchestration-sdks/skills/ping-sdk-router/SKILL.md) | First point of contact for vague Ping SDK requests — probes the working directory, detects platform (Android, iOS; JavaScript and React Native on the roadmap) and ForgeRock SDK references, then routes to the matching umbrella skill or to `forgerock-to-ping-journey-migration` |
+| [ping-sdk-router](./plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/SKILL.md) | First point of contact for vague Ping SDK requests — probes the working directory, detects platform (Android, iOS; JavaScript and React Native on the roadmap) and ForgeRock SDK references, then routes to the matching umbrella skill or to `forgerock-to-ping-journey-migration` |
 
 ```
 
@@ -582,7 +582,7 @@ Insert this block **immediately before** that line:
 
 | Skill | Description | Documentation |
 |-------|-------------|---------------|
-| [ping-sdk-router](skills/ping-sdk-router) | First point of contact for vague Ping SDK requests. Probes the user's working directory for Android, iOS, JavaScript, or React Native projects (and ForgeRock SDK references), asks if ambiguous, and routes to the matching umbrella skill (`ping-sdk-android`, `ping-sdk-ios`; `ping-sdk-js` and `ping-sdk-react-native` on the roadmap) or to `forgerock-to-ping-journey-migration`. Designed for easy expansion via a platform registry. | [SKILL.md](skills/ping-sdk-router/SKILL.md) |
+| [ping-sdk-router](skills/ping-sdk-router) | First point of contact for vague Ping SDK requests. Probes the user's working directory for Android, iOS, JavaScript, or React Native projects (and ForgeRock SDK references), asks if ambiguous, and routes to the matching umbrella skill (`ping-orchestration-android-sdk`, `ping-orchestration-ios-sdk`; `ping-orchestration-javascript-sdk` and `ping-sdk-react-native` on the roadmap) or to `forgerock-to-ping-journey-migration`. Designed for easy expansion via a platform registry. | [SKILL.md](skills/ping-orchestration-sdk-router/SKILL.md) |
 
 ```
 
@@ -592,7 +592,7 @@ Run:
 ```bash
 grep -n "ping-sdk-router" README.md plugins/ping-orchestration-sdks/README.md
 ```
-Expected: both files contain at least one `ping-sdk-router` reference.
+Expected: both files contain at least one `ping-orchestration-sdk-router` reference.
 
 - [ ] **Step 4: Run the full lint suite**
 
@@ -600,7 +600,7 @@ Run:
 ```bash
 claudelint .
 ```
-Expected: passes. The `skill-readme-documentation` rule should now be satisfied for `ping-sdk-router`. If `claudelint` is unavailable, skip and rely on Task 7 manual review.
+Expected: passes. The `skill-readme-documentation` rule should now be satisfied for `ping-orchestration-sdk-router`. If `claudelint` is unavailable, skip and rely on Task 7 manual review.
 
 - [ ] **Step 5: Commit**
 
@@ -632,13 +632,13 @@ Run:
 ```bash
 claudelint .
 ```
-Expected: no errors related to `ping-sdk-router`. If any pre-existing errors exist for unrelated skills, leave them alone — they are out of scope for this plan.
+Expected: no errors related to `ping-orchestration-sdk-router`. If any pre-existing errors exist for unrelated skills, leave them alone — they are out of scope for this plan.
 
 - [ ] **Step 3: Confirm the skill directory contains only SKILL.md**
 
 Run:
 ```bash
-ls -la plugins/ping-orchestration-sdks/skills/ping-sdk-router/
+ls -la plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/
 ```
 Expected: only `SKILL.md` (and `.` / `..`). No `assets/`, `references/`, `scripts/`, or stray files.
 
@@ -646,7 +646,7 @@ Expected: only `SKILL.md` (and `.` / `..`). No `assets/`, `references/`, `script
 
 Run:
 ```bash
-head -3 plugins/ping-orchestration-sdks/skills/ping-sdk-router/SKILL.md
+head -3 plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router/SKILL.md
 ```
 Expected: line 2 is `name: ping-sdk-router` (matches the directory name exactly).
 
@@ -664,7 +664,7 @@ Run:
 ```bash
 git log --oneline focused-repo-skills..HEAD
 ```
-Expected: a clean series of commits scoped to `ping-sdk-router` and the README updates. Each commit message should make sense on its own.
+Expected: a clean series of commits scoped to `ping-orchestration-sdk-router` and the README updates. Each commit message should make sense on its own.
 
 If everything passes, the implementation is complete and ready for the user to review.
 
@@ -688,11 +688,11 @@ After writing this plan I reviewed it against the spec. Findings:
 - ✅ Validation (`skills-ref validate`, `claudelint`) → Tasks 1, 3, 6, 7
 - ✅ README updates → Task 6
 - ✅ Out-of-scope items → "Non-Goals" section in Task 4
-- ✅ Provisioning for `ping-sdk-js` and `ping-sdk-react-native` → registry rows + placeholder probes + fallback prompts (Tasks 2 + 4)
+- ✅ Provisioning for `ping-orchestration-javascript-sdk` and `ping-sdk-react-native` → registry rows + placeholder probes + fallback prompts (Tasks 2 + 4)
 
 **Placeholder scan:** none.
 
-**Type/name consistency:** target skill names (`ping-sdk-android`, `ping-sdk-ios`, `ping-sdk-js`, `ping-sdk-react-native`, `forgerock-to-ping-journey-migration`) appear identically across registry, decision tree, routing matrix, fallback prompts, and READMEs.
+**Type/name consistency:** target skill names (`ping-orchestration-android-sdk`, `ping-orchestration-ios-sdk`, `ping-orchestration-javascript-sdk`, `ping-sdk-react-native`, `forgerock-to-ping-journey-migration`) appear identically across registry, decision tree, routing matrix, fallback prompts, and READMEs.
 
 **Gaps / deferred:**
 - Behavioral testing relies on manual smoke tests (Task 5) since the artifact is markdown — no automated test framework applies. This matches the spec's validation strategy.

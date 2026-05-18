@@ -2,7 +2,7 @@
 
 **Status:** Draft
 **Date:** 2026-05-13
-**Skill path:** `plugins/ping-orchestration-sdks/skills/ping-sdk-js/`
+**Skill path:** `plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/`
 
 ## Goal
 
@@ -13,10 +13,10 @@ A JavaScript umbrella skill that acts as the single entry point for building web
 The repo already has two React-specific skills (`ping-orchestration-reactjs-js-journey-sdk`, `ping-orchestration-reactjs-js-davinci-sdk`) but no umbrella that:
 - Unifies the entry point for vague JS/web requests
 - Covers OIDC centralized login (not in either specialized skill)
-- Provisions the `ping-sdk-router` JS platform slot (currently `placeholder`)
+- Provisions the `ping-orchestration-sdk-router` JS platform slot (currently `placeholder`)
 - Provides the shared layer (project setup, env vars, package selection, common pitfalls) so delegates can focus on flow-specific work
 
-This mirrors the role `ping-sdk-ios` plays for iOS — one skill to start from, regardless of which flow you need.
+This mirrors the role `ping-orchestration-ios-sdk` plays for iOS — one skill to start from, regardless of which flow you need.
 
 ## Triggering model
 
@@ -50,7 +50,7 @@ The two existing specialized skills remain independently invocable. The umbrella
 
 ### Framework registry
 
-Same expansion pattern as `ping-sdk-router`'s platform registry. One row per framework; `status` drives the decision tree.
+Same expansion pattern as `ping-orchestration-sdk-router`'s platform registry. One row per framework; `status` drives the decision tree.
 
 | Framework | Journey delegate | DaVinci delegate | Status | Notes |
 |-----------|-----------------|-----------------|--------|-------|
@@ -183,7 +183,7 @@ Reference doc: `assets/oidc-centralized-reference.md` — covers full API, confi
 ## File layout
 
 ```
-plugins/ping-orchestration-sdks/skills/ping-sdk-js/
+plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/
 ├── SKILL.md                              (~350-400 lines)
 ├── assets/
 │   ├── oidc-centralized-reference.md     OIDC flow reference (authorize, exchange, renew, logout)
@@ -200,12 +200,12 @@ No `scripts/` directory — scaffolding is delegated to the specialized skills f
 
 ## Changes to existing files
 
-### `ping-sdk-router` SKILL.md
+### `ping-orchestration-sdk-router` SKILL.md
 
 Flip the JavaScript row in the Platform Registry from `placeholder` to `active`:
 
 ```markdown
-| JavaScript (web) | `ping-sdk-js` | active | — |
+| JavaScript (web) | `ping-orchestration-javascript-sdk` | active | — |
 ```
 
 Fill in the JavaScript probe block (already partially defined as the placeholder probe):
@@ -216,13 +216,13 @@ find . -maxdepth 4 \
   \( -name "package.json" \) -print | head -5 | xargs grep -l '"react"\|"vue"\|"@angular/core"\|"vite"' 2>/dev/null
 ```
 
-Update the placeholder-detected fallback prompt for JavaScript — it currently says "ping-sdk-js is on the way"; update to route directly to `ping-sdk-js`.
+Update the placeholder-detected fallback prompt for JavaScript — it currently says "ping-sdk-js is on the way"; update to route directly to `ping-orchestration-javascript-sdk`.
 
 ### README.md (root) and plugins/ping-orchestration-sdks/README.md
 
-Add `ping-sdk-js` row to the SDK Integration Skills table in both files.
+Add `ping-orchestration-javascript-sdk` row to the SDK Integration Skills table in both files.
 
-Update the `ping-sdk-router` row description: remove "JavaScript and React Native on the roadmap" — JavaScript is now active.
+Update the `ping-orchestration-sdk-router` row description: remove "JavaScript and React Native on the roadmap" — JavaScript is now active.
 
 ## Frontmatter
 
@@ -249,7 +249,7 @@ metadata:
 
 - `npx skills-ref validate ./plugins/ping-orchestration-sdks/skills/ping-sdk-js` — schema/structure check
 - `claudelint .` — lint rules including `skill-readme-documentation`
-- Manual smoke test: verify router now routes JS projects to `ping-sdk-js` instead of showing the placeholder message
+- Manual smoke test: verify router now routes JS projects to `ping-orchestration-javascript-sdk` instead of showing the placeholder message
 
 ## Out of scope
 
