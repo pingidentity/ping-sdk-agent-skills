@@ -17,11 +17,11 @@ npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdk
 npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks
 
 # Or install a particular skill
-npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-android-journey-sdk
-npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-ios-journey-sdk
+npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-sdk-ios
+npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-sdk-android
+npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-sdk-js
+npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-sdk-router
 npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-reactjs-js-journey-sdk
-npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-android-davinci-sdk
-npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-ios-davinci-sdk
 npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-reactjs-js-davinci-sdk
 npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/forgerock-to-ping-journey-migration
 ```
@@ -34,7 +34,7 @@ npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdk
 ### Manual Installation
 ```bash
 git clone https://github.com/pingidentity/ping-sdk-agent-skills.git
-cp -r agent-skills/plugins/ping-orchestration-sdks/skills/* .github/skills/
+cp -r ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/* .github/skills/
 ```
 
 ## Usage in Your AI Assistant
@@ -49,12 +49,10 @@ Once installed, reference the SDK you're working with in your prompt:
 Or specify a particular skill:
 
 **SDK Integration:**
-- `ping-orchestration-android-journey-sdk` - Android Journey SDK
-- `ping-orchestration-ios-journey-sdk` - iOS Journey SDK
-- `ping-orchestration-reactjs-js-journey-sdk` - ReactJS Journey SDK
-- `ping-orchestration-android-davinci-sdk` - Android DaVinci SDK
-- `ping-orchestration-ios-davinci-sdk` - iOS DaVinci SDK
-- `ping-orchestration-reactjs-js-davinci-sdk` - ReactJS DaVinci SDK
+- `ping-sdk-ios` - iOS (Journey, DaVinci, OIDC)
+- `ping-sdk-android` - Android (Journey, DaVinci, OIDC)
+- `ping-sdk-js` - JavaScript/React (Journey, DaVinci, OIDC)
+- `ping-sdk-router` - Auto-detect platform and route to the right skill
 
 **Migration:**
 - `forgerock-to-ping-journey-migration` - Migrate from ForgeRock SDK to Ping Journey SDK
@@ -65,15 +63,11 @@ Or specify a particular skill:
 
 | Skill | Description | Documentation |
 |-------|-------------|---------------|
-| [ping-orchestration-android-journey-sdk](skills/ping-orchestration-android-journey-sdk) | Implements authentication in Android apps using the Ping Orchestration Android SDK (Journey module) with Jetpack Compose and MVVM. Covers Journey configuration, OIDC module setup, callback handling, and full scaffold generation. | [SKILL.md](skills/ping-orchestration-android-journey-sdk/SKILL.md) |
-| [ping-orchestration-reactjs-js-journey-sdk](skills/ping-orchestration-reactjs-js-journey-sdk) | Implements authentication in ReactJS SPAs using the Ping Orchestration JavaScript SDK. Covers Journey client configuration, OIDC token exchange, dynamic callback rendering, protected routes, user profile display, and full scaffold generation. Supports both sample app creation and existing app integration. | [SKILL.md](skills/ping-orchestration-reactjs-js-journey-sdk/SKILL.md) |
-| [ping-orchestration-ios-journey-sdk](skills/ping-orchestration-ios-journey-sdk) | Implements authentication in iOS apps using the Ping Orchestration iOS SDK (Journey module) with SwiftUI and MVVM. Covers Journey configuration, OIDC module setup, callback handling, device binding, FIDO2, and full scaffold generation. Supports both sample app creation and existing app integration. | [SKILL.md](skills/ping-orchestration-ios-journey-sdk/SKILL.md) |
-| [ping-orchestration-android-davinci-sdk](skills/ping-orchestration-android-davinci-sdk) | Implements authentication in Android apps using the Ping Orchestration Android SDK (DaVinci module) with Jetpack Compose and MVVM. Covers DaVinci configuration, OIDC module setup, collector handling (text, password, social login, MFA, FIDO2, PingOne Protect), and full scaffold generation. | [SKILL.md](skills/ping-orchestration-android-davinci-sdk/SKILL.md) |
-| [ping-orchestration-ios-davinci-sdk](skills/ping-orchestration-ios-davinci-sdk) | Implements authentication in iOS apps using the Ping Orchestration iOS SDK (DaVinci module) with SwiftUI and MVVM. Covers DaVinci configuration, OIDC module setup, collector handling (text, password, social login, MFA, FIDO2, PingOne Protect), and full scaffold generation. | [SKILL.md](skills/ping-orchestration-ios-davinci-sdk/SKILL.md) |
-| [ping-orchestration-reactjs-js-davinci-sdk](skills/ping-orchestration-reactjs-js-davinci-sdk) | Implements authentication in ReactJS SPAs using the Ping Orchestration JavaScript SDK (DaVinci). Covers DaVinci client configuration, OIDC setup, collector handling (text, password, social login, MFA, FIDO2, PingOne Protect), and full scaffold generation. | [SKILL.md](skills/ping-orchestration-reactjs-js-davinci-sdk/SKILL.md) |
-| [ping-sdk-ios](skills/ping-sdk-ios) | Implements authentication in iOS apps using the Ping Identity SDK — SwiftUI + MVVM, Journey callbacks, DaVinci collectors, OIDC centralized login (ASWebAuthenticationSession/SFSafariViewController), FIDO, Protect, device binding, KeychainStorage, and full Xcode project scaffolding. | [SKILL.md](skills/ping-sdk-ios/SKILL.md) |
+| [ping-sdk-ios](skills/ping-sdk-ios) | Implements authentication in iOS apps using the Ping Orchestration iOS SDK — SwiftUI + MVVM, Journey callbacks, DaVinci collectors, OIDC centralized login (ASWebAuthenticationSession/SFSafariViewController), FIDO, Protect, device binding, KeychainStorage, and full Xcode project scaffolding. | [SKILL.md](skills/ping-sdk-ios/SKILL.md) |
 | [ping-sdk-android](skills/ping-sdk-android) | Implements authentication in Android apps using the Ping Orchestration Android SDK — Jetpack Compose + MVVM, Journey callbacks, DaVinci collectors, OIDC centralized login, FIDO, Protect, EncryptedDataStore, and full project scaffolding. Covers both new project creation and existing app integration. | [SKILL.md](skills/ping-sdk-android/SKILL.md) |
 | [ping-sdk-js](skills/ping-sdk-js) | Implements authentication in web apps using the Ping Orchestration JavaScript SDK — React + Vite, Journey callbacks, DaVinci collectors, OIDC centralized login. Delegates Journey and DaVinci to specialized skills; handles OIDC centralized login inline. Covers both sample app creation and existing app integration. | [SKILL.md](skills/ping-sdk-js/SKILL.md) |
+| [ping-orchestration-reactjs-js-journey-sdk](skills/ping-orchestration-reactjs-js-journey-sdk) | Implements authentication in ReactJS SPAs using the Ping Orchestration JavaScript SDK. Covers Journey client configuration, OIDC token exchange, dynamic callback rendering, protected routes, user profile display, and full scaffold generation. Supports both sample app creation and existing app integration. | [SKILL.md](skills/ping-orchestration-reactjs-js-journey-sdk/SKILL.md) |
+| [ping-orchestration-reactjs-js-davinci-sdk](skills/ping-orchestration-reactjs-js-davinci-sdk) | Implements authentication in ReactJS SPAs using the Ping Orchestration JavaScript SDK (DaVinci). Covers DaVinci client configuration, OIDC setup, collector handling (text, password, social login, MFA, FIDO2, PingOne Protect), and full scaffold generation. | [SKILL.md](skills/ping-orchestration-reactjs-js-davinci-sdk/SKILL.md) |
 
 ### Routing Skills
 
