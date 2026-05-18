@@ -29,21 +29,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Redirecting...</title>
     <script>
-      // Extract the authorization code and state from the URL
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
-      const state = params.get('state');
-
-      if (code && state) {
-        // Redirect to the login page with code and state as query params
-        // The login view will handle the token exchange
-        window.location.replace(
-          `${window.location.origin}/login?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`
-        );
-      } else {
-        // No code/state — redirect to home
-        window.location.replace(window.location.origin);
-      }
+      window.location.replace(`/login${window.location.search}`);
     </script>
   </head>
   <body>

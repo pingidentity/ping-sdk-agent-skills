@@ -43,12 +43,15 @@ export default function Login() {
   // ── Centralized Login Mode ──────────────────────────────────────────────
   if (CENTRALIZED_LOGIN === 'true') {
     const codeParam = searchParams.get('code');
+    const errorParam = searchParams.get('error');
     const stateParam = searchParams.get('state');
 
-    // If we have code & state, exchange for tokens
     useEffect(() => {
-      async function exchangeTokens() {
-        if (codeParam && stateParam && oidcClient) {
+      async function handleCentralizedLogin() {
+        if (!oidcClient) return;
+
+        if (codeParam && stateParam) {
+          // Exchange authorization code for tokens
           const tokenResponse = await oidcClient.token.exchange(codeParam, stateParam);
           if (!('error' in tokenResponse)) {
             const userInfo = await oidcClient.user.info();
@@ -58,21 +61,19 @@ export default function Login() {
             setAuthentication(true);
             navigate('/');
           }
-        }
-      }
-      exchangeTokens();
-    }, [codeParam, stateParam, oidcClient]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    // If no code/state, redirect to authorization endpoint
-    useEffect(() => {
-      async function redirectToAuth() {
-        if (!codeParam && !stateParam && oidcClient) {
+        } else if (errorParam) {
+          // Authorization server returned an error (e.g. access_denied)
+          console.error(`Centralized login error: ${errorParam}`);
+        } else {
+          // No params yet — redirect to authorization endpoint
           const authUrl = await oidcClient.authorize.url();
-          window.location.assign(authUrl);
+          if (typeof authUrl === 'string') {
+            window.location.assign(authUrl);
+          }
         }
       }
-      redirectToAuth();
-    }, [oidcClient]); // eslint-disable-line react-hooks/exhaustive-deps
+      handleCentralizedLogin();
+    }, [codeParam, errorParam, stateParam, oidcClient]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return <p>Redirecting to login...</p>;
   }
