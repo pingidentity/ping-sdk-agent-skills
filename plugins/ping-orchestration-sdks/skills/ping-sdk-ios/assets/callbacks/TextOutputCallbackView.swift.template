@@ -1,0 +1,45 @@
+/*
+ * TextOutputCallbackView.swift — Journey Basic tier
+ *
+ * Read-only message with severity icon.
+ */
+
+import SwiftUI
+import PingJourney
+
+struct TextOutputCallbackView: View {
+    let callback: TextOutputCallback
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: iconName)
+                .foregroundColor(iconColor)
+                .font(.title2)
+
+            Text(callback.message)
+                .font(.subheadline)
+                .foregroundColor(.primary)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding()
+    }
+
+    private var iconName: String {
+        switch callback.messageType {
+        case .information: return "info.circle.fill"
+        case .warning:     return "exclamationmark.triangle.fill"
+        case .error:       return "xmark.circle.fill"
+        default:           return "info.circle"
+        }
+    }
+
+    private var iconColor: Color {
+        switch callback.messageType {
+        case .information: return .blue
+        case .warning:     return .orange
+        case .error:       return .red
+        default:           return .secondary
+        }
+    }
+}

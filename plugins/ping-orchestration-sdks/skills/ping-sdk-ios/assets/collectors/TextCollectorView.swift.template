@@ -1,0 +1,38 @@
+/*
+ * TextCollectorView.swift — DaVinci Basic tier
+ */
+
+import SwiftUI
+import PingDavinci
+
+struct TextCollectorView: View {
+    let field: TextCollector
+    let onRefresh: () -> Void
+
+    @State private var text: String = ""
+    @State private var isValid: Bool = true
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            TextField(field.required ? "\(field.label)*" : field.label, text: $text)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(isValid ? Color.pingTextField : Color.red, lineWidth: 1)
+                )
+                .onAppear { text = field.value }
+                .onChange(of: text) { _, newValue in
+                    field.value = newValue
+                    isValid = field.validate().isEmpty
+                    onRefresh()
+                }
+
+            if !isValid {
+                ErrorMessageView(message: field.validate().map { $0.errorMessage }.joined(separator: "\n"))
+            }
+        }
+        .padding(.horizontal)
+    }
+}

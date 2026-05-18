@@ -1,0 +1,36 @@
+/*
+ * DeviceBindingCallbackView.swift — Journey Standard tier
+ *
+ * Self-advancing: calls `.bind()` (NO `window:` parameter), then onNext.
+ */
+
+import SwiftUI
+import PingBinding
+
+struct DeviceBindingCallbackView: View {
+    let callback: DeviceBindingCallback
+    let onNext: () -> Void
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("Device Binding")
+                .font(.title2)
+                .fontWeight(.semibold)
+            Text("Please wait while we bind your device.")
+                .font(.body)
+                .foregroundColor(.secondary)
+            ProgressView()
+                .progressViewStyle(.circular)
+                .tint(.pingRed)
+        }
+        .padding()
+        .onAppear { handleBinding() }
+    }
+
+    private func handleBinding() {
+        Task {
+            _ = await callback.bind()
+            onNext()
+        }
+    }
+}

@@ -1,0 +1,78 @@
+/*
+ * JourneyLoginViewModel.swift
+ *
+ * @Observable ViewModel that drives a Journey authentication flow.
+ */
+
+import Foundation
+import Observation
+import PingOidc
+import PingOrchestrate
+import PingJourney
+
+@Observable
+@MainActor
+final class JourneyLoginViewModel {
+    var node: Node?
+    var isLoading = false
+
+    let journeyName: String
+
+    var userInfo: [String: Any] = [:]
+    var isLoadingUserInfo = false
+    var userInfoError: String?
+
+    init(journeyName: String = "PLACEHOLDER_JOURNEY_NAME") {
+        self.journeyName = journeyName
+    }
+
+    func start() async {
+        isLoading = true
+        defer { isLoading = false }
+        node = await AppJourney.shared.journey.start(journeyName) { options in
+            options.forceAuth = false
+            options.noSession = false
+        }
+    }
+
+    func next(continueNode: ContinueNode) async {
+        isLoading = true
+        defer { isLoading = false }
+        node = await continueNode.next()
+    }
+
+    /// Force a re-render after a callback writes a value (no SDK round-trip).
+    func refresh() {
+        let current = node
+        node = nil
+        node = current
+    }
+
+    func loadUserInfo() async {
+        guard let user = await AppJourney.shared.journey.journeyUser() else {
+            userInfoError = "No active session."
+            return
+        }
+        isLoadingUserInfo = true
+        userInfoError = nil
+        defer { isLoadingUserInfo = false }
+        let result = await user.userinfo(cache: false)
+        switch result {
+        case .success(let info):
+            userInfo = info
+        case .failure(let error):
+            userInfoError = error.localizedDescription
+        }
+    }
+
+    func signOut() async {
+        _ = await AppJourney.shared.journey.signOff()
+        node = nil
+        userInfo = [:]
+        userInfoError = nil
+    }
+
+    func reset() {
+        node = nil
+    }
+}

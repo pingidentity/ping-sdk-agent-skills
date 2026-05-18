@@ -1,0 +1,52 @@
+/*
+ * DeviceRegistrationCollectorView.swift — DaVinci Standard tier
+ *
+ * Self-advancing: set `field.value = device` then call onNext.
+ * Use `device.title` (NOT `.name`).
+ */
+
+import SwiftUI
+import PingDavinci
+
+struct DeviceRegistrationCollectorView: View {
+    let field: DeviceRegistrationCollector
+    let onNext: () -> Void
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("Select an MFA device")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .padding(.top)
+
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    ForEach(field.devices, id: \.title) { device in
+                        Button {
+                            field.value = device
+                            onNext()
+                        } label: {
+                            HStack {
+                                Image(systemName: "shield.fill")
+                                    .foregroundColor(.pingRed)
+                                Text(device.title)
+                                    .fontWeight(.medium)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding()
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color(.systemBackground))
+                                    .shadow(color: .black.opacity(0.06), radius: 4)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal)
+            }
+        }
+    }
+}

@@ -1,0 +1,55 @@
+/*
+ * ContinueNodeView.swift
+ *
+ * Renders all callbacks in a Journey ContinueNode.
+ * Suppress the "Next" button for self-advancing callbacks.
+ */
+
+import SwiftUI
+import PingOrchestrate
+import PingJourney
+import PingJourneyPlugin
+// PLACEHOLDER_TIER_IMPORTS
+
+struct ContinueNodeView: View {
+    let node: ContinueNode
+    let onNext: () -> Void
+    let onRefresh: () -> Void
+
+    private var hasSelfAdvancingCallback: Bool {
+        node.callbacks.contains { callback in
+            callback is ConfirmationCallback ||
+            callback is SuspendedTextOutputCallback ||
+            // PLACEHOLDER_SELF_ADVANCING_TYPES
+            false
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            ForEach(Array(node.callbacks.enumerated()), id: \.offset) { _, callback in
+                callbackView(for: callback)
+            }
+
+            if !hasSelfAdvancingCallback {
+                Button(node.submitButtonText.isEmpty ? "Next" : node.submitButtonText, action: onNext)
+                    .buttonStyle(PingPrimaryButtonStyle())
+                    .padding(.top, 16)
+            }
+        }
+        .padding()
+    }
+
+    @ViewBuilder
+    private func callbackView(for callback: any Callback) -> some View {
+        switch callback {
+        // PLACEHOLDER_CALLBACK_CASES
+        case _ as HiddenValueCallback:
+            EmptyView()
+        default:
+            Text("Unsupported callback type: \(String(describing: type(of: callback)))")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+    }
+}

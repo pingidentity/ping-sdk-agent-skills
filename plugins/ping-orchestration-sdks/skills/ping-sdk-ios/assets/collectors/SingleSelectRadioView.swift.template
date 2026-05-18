@@ -1,0 +1,61 @@
+/*
+ * SingleSelectRadioView.swift — DaVinci Standard tier
+ * Used when SingleSelectCollector.type == "RADIO" (or any non-DROPDOWN type).
+ */
+
+import SwiftUI
+import PingDavinci
+
+struct SingleSelectRadioView: View {
+    let field: SingleSelectCollector
+    let onRefresh: () -> Void
+
+    @State private var selectedValue: String = ""
+    @State private var isValid: Bool = true
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(field.required ? "\(field.label)*" : field.label)
+                .font(.headline)
+
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(field.options.indices, id: \.self) { index in
+                    let option = field.options[index]
+
+                    Button {
+                        selectedValue = option.value
+                        field.value = option.value
+                        isValid = field.validate().isEmpty
+                        onRefresh()
+                    } label: {
+                        HStack {
+                            Circle()
+                                .stroke(selectedValue == option.value ? Color.pingRed : Color.gray, lineWidth: 2)
+                                .frame(width: 20, height: 20)
+                                .overlay(
+                                    Circle()
+                                        .fill(selectedValue == option.value ? Color.pingRed : Color.clear)
+                                        .frame(width: 12, height: 12)
+                                )
+                            Text(option.label)
+                                .foregroundColor(.primary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isValid ? Color.pingTextField : Color.red, lineWidth: 1)
+            )
+
+            if !isValid {
+                ErrorMessageView(message: field.validate().map { $0.errorMessage }.joined(separator: "\n"))
+            }
+        }
+        .padding(.horizontal)
+        .onAppear { selectedValue = field.value }
+    }
+}

@@ -1,0 +1,52 @@
+/*
+ * TermsAndConditionsCallbackView.swift — Journey Standard tier
+ *
+ * Use `.accepted` (NOT `.accept`).
+ */
+
+import SwiftUI
+import PingJourney
+
+struct TermsAndConditionsCallbackView: View {
+    let callback: TermsAndConditionsCallback
+    let onRefresh: () -> Void
+
+    @State private var accepted: Bool = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            if !callback.version.isEmpty {
+                Text("Version: \(callback.version)")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            if !callback.createDate.isEmpty {
+                Text(callback.createDate)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            if !callback.terms.isEmpty {
+                ScrollView {
+                    Text(callback.terms)
+                        .font(.subheadline)
+                        .foregroundColor(.primary)
+                        .multilineTextAlignment(.leading)
+                        .padding(8)
+                }
+                .frame(maxHeight: 240)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.pingTextField, lineWidth: 1)
+                )
+            }
+
+            Toggle("I accept the terms and conditions", isOn: $accepted)
+                .toggleStyle(SwitchToggleStyle(tint: .pingRed))
+                .onChange(of: accepted) { _, newValue in
+                    callback.accepted = newValue
+                }
+        }
+        .padding()
+        .onAppear { accepted = callback.accepted }
+    }
+}

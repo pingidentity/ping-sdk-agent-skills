@@ -1,0 +1,19 @@
+/*
+ * PLACEHOLDER_APP_NAMEApp.swift
+ *
+ * App entry point for a DaVinci-based authentication flow.
+ * If your DaVinci flow includes social IdP collectors, also add `.onOpenURL`
+ * → `OpenURLMonitor.shared.handleOpenURL(url)` and a `.onChange(of: scenePhase)`
+ * resume hook (see App.swift.oidc.template for the wiring).
+ */
+
+import SwiftUI
+
+@main
+struct PLACEHOLDER_APP_NAMEApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}

@@ -1,0 +1,41 @@
+/*
+ * FlowCollectorView.swift — DaVinci Basic tier
+ *
+ * Self-advancing: must set `field.value = "action"` before calling onNext.
+ * FLOW_LINK type renders as a text link; other types render as a button.
+ */
+
+import SwiftUI
+import PingDavinci
+
+struct FlowCollectorView: View {
+    let field: FlowCollector
+    let onNext: () -> Void
+
+    var body: some View {
+        Group {
+            if field.type == "FLOW_LINK" {
+                Button {
+                    field.value = "action"
+                    onNext()
+                } label: {
+                    Text(field.label)
+                        .foregroundColor(.pingRed)
+                        .underline()
+                }
+                .buttonStyle(.plain)
+                .frame(maxWidth: .infinity, alignment: .center)
+            } else {
+                Button {
+                    field.value = "action"
+                    onNext()
+                } label: {
+                    Text(field.label)
+                }
+                .buttonStyle(PingPrimaryButtonStyle())
+            }
+        }
+        .padding(.horizontal)
+        .onAppear { field.value = "" }
+    }
+}

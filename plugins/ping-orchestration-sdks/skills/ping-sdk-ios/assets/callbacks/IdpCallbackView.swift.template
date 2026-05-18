@@ -1,0 +1,85 @@
+/*
+ * IdpCallbackView.swift — Journey Full-fat tier
+ *
+ * Self-advancing: kicks off native social IdP authorization, calls onNext on success/failure.
+ * Requires `PingExternalIdP` plus the per-provider SPM dependencies
+ * (PingExternalIdPApple / PingExternalIdPGoogle / PingExternalIdPFacebook).
+ */
+
+import SwiftUI
+import Observation
+import PingExternalIdP
+
+@Observable
+@MainActor
+final class IdpCallbackViewModel {
+    enum AuthState {
+        case authenticating
+        case completed
+        case failure(Error)
+    }
+
+    var authState: AuthState = .authenticating
+    var hasStartedAuthorization = false
+
+    let callback: IdpCallback
+
+    init(callback: IdpCallback) {
+        self.callback = callback
+    }
+
+    func performAuthorization() async {
+        guard !hasStartedAuthorization else { return }
+        hasStartedAuthorization = true
+
+        let result = await callback.authorize()
+        switch result {
+        case .success: authState = .completed
+        case .failure(let error): authState = .failure(error)
+        }
+    }
+}
+
+struct IdpCallbackView: View {
+    let viewModel: IdpCallbackViewModel
+    let onNext: () -> Void
+
+    var body: some View {
+        VStack(spacing: 16) {
+            switch viewModel.authState {
+            case .authenticating:
+                Image(systemName: "person.circle.fill")
+                    .font(.largeTitle)
+                    .foregroundColor(.pingRed)
+                Text(viewModel.callback.provider.capitalized)
+                    .font(.headline)
+                Button("Continue") {
+                    Task {
+                        if !viewModel.hasStartedAuthorization {
+                            await viewModel.performAuthorization()
+                        }
+                    }
+                }
+                .buttonStyle(PingPrimaryButtonStyle())
+
+            case .completed:
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.largeTitle)
+                    .foregroundColor(.green)
+                Text("Authorization successful")
+                Button("Continue", action: onNext)
+                    .buttonStyle(PingPrimaryButtonStyle())
+
+            case .failure(let error):
+                Image(systemName: "xmark.octagon.fill")
+                    .font(.largeTitle)
+                    .foregroundColor(.red)
+                Text("Authorization failed: \(error.localizedDescription)")
+                    .multilineTextAlignment(.center)
+                Button("Continue", action: onNext)
+                    .buttonStyle(.bordered)
+            }
+        }
+        .padding()
+    }
+}

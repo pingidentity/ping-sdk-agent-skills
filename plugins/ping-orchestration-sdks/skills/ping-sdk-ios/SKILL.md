@@ -16,7 +16,7 @@ description: >
   login", "make this look like a Ping sample app", or pastes / attaches a Journey export JSON.
 compatibility:
   mcp:
-    - xcodebuildmcp  # required for Xcode project scaffolding (Section 0)
+    - xcodebuildmcp  # required for Xcode project scaffolding (see assets/project-scaffolding.md)
 ---
 
 ## Skill Parameters
@@ -49,41 +49,58 @@ Options:
 Ask:
 > "Do you have a Journey export JSON file? If so, paste it or attach it and I'll analyse it to generate a sample that handles exactly the callbacks your Journey uses."
 
-- If provided: run Section 15 (Journey Export Analysis) before Step W2. Pre-populate `journeyName`, `callbackTier`, and `serverUrl` from the analysis results.
+- If provided: run Section 13 (Journey Export Analysis) before Step W2. Pre-populate `journeyName`, `callbackTier`, and `serverUrl` from the analysis results.
 - If not: continue to Step W2 as normal.
 
 **Step W2 — Collect configuration** (required for A and B).
 
-Ask all required parameters in a single `AskUserQuestion` call. Show defaults where they exist. Do not proceed until every required field has a value.
+First determine `flowType` if not already known, then ask only the parameters relevant to that flow in a single `AskUserQuestion` call. Show defaults where they exist. Do not proceed until every required field has a value.
+
+**Common parameters (all flows):**
 
 | Parameter | Required | Default | Description |
 |---|---|---|---|
 | `appName` | Yes | — | App name used for Swift types, `PingHeaderView` title, and bundle ID. E.g. `PingDemo` |
-| `outputPath` | Yes (A only) | — | Directory to write the Xcode project (absolute path) |
+| `outputPath` | Yes (option A only) | — | Directory to write the Xcode project (absolute path) |
 | `flowType` | Yes | — | `oidc-web` · `journey` · `davinci` |
 | `clientId` | Yes | — | OAuth 2.0 Client ID |
 | `redirectUri` | Yes | — | OAuth 2.0 redirect URI (custom scheme, e.g. `myapp://callback`) |
-| `discoveryEndpoint` | Yes | — | OIDC discovery endpoint URL (`.well-known/openid-configuration`) |
-| `scopes` | No | `openid profile email` | OAuth 2.0 scopes, comma-separated |
-| `serverUrl` | Journey/DaVinci only | — | PingAM/AIC server URL |
-| `realm` | Journey/DaVinci only | `alpha` | Authentication realm |
-| `cookieName` | Journey/DaVinci only | `iPlanetDirectoryPro` | Session cookie name |
-| `callbackTier` | Journey/DaVinci only | — | `basic`, `standard`, or `full` (see Section 14) |
-| `journeyName` | Journey only | `Login` | Journey tree name |
-| `acrValues` | DaVinci/OIDC only | _(none)_ | Optional ACR values; omit entirely if not provided |
+| `discoveryEndpoint` | Yes | — | Full OIDC discovery URL ending in `/.well-known/openid-configuration` |
+| `scopes` | No | `openid profile email` | OAuth 2.0 scopes, space-separated |
 
-Ask `callbackTier` only for journey/davinci. Ask `journeyName` only for journey. Ask `acrValues` only for davinci/oidc-web.
+**Journey-only additional parameters:**
 
-Present `callbackTier` options:
-- **Basic** — `NameCallback`, `PasswordCallback`, `TextOutputCallback`, `ChoiceCallback` (Journey) / `TextCollector`, `PasswordCollector`, `SubmitCollector`, `LabelCollector` (DaVinci). Minimal dependencies.
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `serverUrl` | Yes | — | PingAM/AIC server base URL (no trailing `/`) |
+| `realm` | No | `alpha` | Authentication realm |
+| `cookieName` | No | `iPlanetDirectoryPro` | Session cookie name |
+| `journeyName` | No | `Login` | Journey tree name |
+| `callbackTier` | Yes | — | `basic`, `standard`, or `full` (see Section 12) |
+
+**DaVinci-only additional parameters:**
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `callbackTier` | Yes | — | `basic`, `standard`, or `full` (see Section 12) |
+| `acrValues` | No | _(none)_ | Optional ACR values string — omit entirely if not provided |
+
+**OIDC Web-only additional parameters:**
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `acrValues` | No | _(none)_ | Optional ACR values string — omit entirely if not provided |
+
+Present `callbackTier` options (Journey and DaVinci only):
+- **Basic** — `NameCallback`, `PasswordCallback`, `TextOutputCallback`, `ChoiceCallback` (Journey) / `TextCollector`, `PasswordCollector`, `SubmitCollector`, `LabelCollector`, `FlowCollector` (DaVinci). Minimal dependencies.
 - **Standard** — Everything in Basic plus: attribute callbacks, FIDO, Protect, Device Binding/Profile, SelectIdp, T&C, KBA, PollingWait, ConsentMapping. No third-party social SDKs.
-- **Full fat** — Everything in Standard plus `IdpCallback`/`IdpCollector` (social login) and `ReCaptchaEnterpriseCallback`. Requires Facebook, Google, and ReCaptcha Enterprise SPM dependencies.
+- **Full fat** — Everything in Standard plus `IdpCallback`/`IdpCollector`/`SocialCollectorView` (social login) and `ReCaptchaEnterpriseCallback`. Requires Facebook, Google, and ReCaptcha Enterprise SPM dependencies.
 
 **Validation rules:**
 - `redirectUri` must use a custom scheme (not `http://` or `https://`).
 - `discoveryEndpoint` must start with `https://` and end with `/.well-known/openid-configuration`. If the user provides a base AM URL, construct `<serverUrl>/oauth2/<realm>/.well-known/openid-configuration` and confirm.
 - `scopes` must include `openid`. If missing, prepend it and warn.
-- `serverUrl` must start with `https://` and have no trailing `/`.
+- `serverUrl` (Journey only) must start with `https://` and have no trailing `/`.
 
 **Step W3 — Confirm and generate.** Summarise collected values in a short table, ask "Ready to generate — does this look right?", then proceed on confirmation.
 
@@ -102,17 +119,36 @@ Present `callbackTier` options:
 1. **Analyse** the description — identify flow type(s), modules, and implied screens.
 2. **Journey export offer** — if the flow type is `journey` (or could be), ask:
    > "Do you have a Journey export JSON? I can analyse it and tailor the sample to exactly the callbacks your Journey uses."
-   If provided, run Section 15 before proceeding. Use its output to determine `callbackTier` and screens.
-3. **Ask one clarifying question** only if the flow type is genuinely ambiguous. Collect `clientId`, `redirectUri`, and `discoveryEndpoint` in a single `AskUserQuestion` with an explicit "I can use placeholders" option.
+   If provided, run Section 13 before proceeding. Use its output to determine `callbackTier` and screens.
+3. **Ask one clarifying question** only if the flow type is genuinely ambiguous. Collect required parameters for the detected flow type (see W2 table) in a single `AskUserQuestion` with an explicit "I can use placeholders" option.
 4. **Resolve the app name** from `app-name` or use `"MyApp"`.
-5. **Generate** using the template files in `assets/`:
-   - For OIDC Web flows: start from `App.swift.oidc.template`, `AppOidc.swift.template`, `OidcLoginViewModel.swift.template`, `ContentView.swift.oidc.template`, `LoginView.swift.oidc.template`, `AuthenticatedView.swift.oidc.template`, `Theme.swift.template`
-   - Substitute all `PLACEHOLDER_*` tokens (see table below)
-   - `@Observable @MainActor` ViewModels — never `ObservableObject`/`@Published`
-   - SwiftUI views with Ping Identity branding (Section 13)
-   - Full node/state switch covering success, failure, error, and continue cases
+5. **Generate** using the template files in `assets/`. Substitute all `PLACEHOLDER_*` tokens (see table below). Use `@Observable @MainActor` ViewModels — never `ObservableObject`/`@Published`. Apply Ping Identity branding (Section 11).
+
+   **OIDC Web flow** — read and substitute:
+   `App.swift.oidc.template`, `AppOidc.swift.template`, `OidcLoginViewModel.swift.template`, `ContentView.swift.oidc.template`, `LoginView.swift.oidc.template`, `AuthenticatedView.swift.oidc.template`, `Theme.swift.template`
+
+   **Journey flow** — read and substitute:
+   `App.swift.journey.template`, `AppJourney.swift.template`, `JourneyLoginViewModel.swift.template`, `ContentView.swift.journey.template`, `LoginView.swift.journey.template`, `AuthenticatedView.swift.journey.template`, `ContinueNodeView.swift.journey.template`, `Theme.swift.template`
+
+   Then, for each callback in `callbackTier`, read and substitute the matching file from `assets/callbacks/`:
+   - **Basic:** `NameCallbackView`, `PasswordCallbackView`, `ChoiceCallbackView`, `TextOutputCallbackView`
+   - **Standard:** everything in Basic plus `TextInputCallbackView`, `ValidatedUsernameCallbackView`, `ValidatedPasswordCallbackView`, `StringAttributeInputCallbackView`, `NumberAttributeInputCallbackView`, `BooleanAttributeInputCallbackView`, `ConfirmationCallbackView`, `TermsAndConditionsCallbackView`, `KbaCreateCallbackView`, `ConsentMappingCallbackView`, `PollingWaitCallbackView`, `SelectIdpCallbackView`, `FidoRegistrationCallbackView`, `FidoAuthenticationCallbackView`, `DeviceProfileCallbackView`, `DeviceBindingCallbackView`, `DeviceSigningVerifierCallbackView`, `PingOneProtectInitializeCallbackView`, `PingOneProtectEvaluationCallbackView`
+   - **Full fat:** everything in Standard plus `IdpCallbackView`, `ReCaptchaEnterpriseCallbackView`
+
+   In `ContinueNodeView.swift.journey.template`, replace `// PLACEHOLDER_CALLBACK_CASES` with the appropriate `switch` cases for the tier, and replace `// PLACEHOLDER_TIER_IMPORTS` with the matching import statements. Replace `// PLACEHOLDER_SELF_ADVANCING_TYPES` with the self-advancing types for the tier.
+
+   **DaVinci flow** — read and substitute:
+   `App.swift.davinci.template`, `AppDaVinci.swift.template`, `DaVinciLoginViewModel.swift.template`, `ContentView.swift.davinci.template`, `LoginView.swift.davinci.template`, `AuthenticatedView.swift.davinci.template`, `CollectorNodeView.swift.davinci.template`, `Theme.swift.template`
+
+   Then, for each collector in `callbackTier`, read and substitute the matching file from `assets/collectors/`:
+   - **Basic:** `TextCollectorView`, `PasswordCollectorView`, `SubmitCollectorView`, `LabelCollectorView`, `FlowCollectorView`
+   - **Standard:** everything in Basic plus `MultiSelectCheckBoxView`, `MultiSelectComboBoxView`, `SingleSelectDropdownView`, `SingleSelectRadioView`, `PhoneNumberCollectorView`, `ProtectCollectorView`, `FidoRegistrationCollectorView`, `FidoAuthenticationCollectorView`, `DeviceRegistrationCollectorView`, `DeviceAuthenticationCollectorView`
+   - **Full fat:** everything in Standard plus `SocialCollectorView`
+
+   In `CollectorNodeView.swift.davinci.template`, replace `// PLACEHOLDER_COLLECTOR_CASES` with the appropriate `switch` cases for the tier, and replace `// PLACEHOLDER_TIER_IMPORTS` and `// PLACEHOLDER_SELF_ADVANCING_TYPES` accordingly.
+
 6. **Deliver:**
-   - With `output-path`: read `assets/project-scaffolding.md` and follow Steps 0–G exactly.
+   - With `output-path`: read `assets/project-scaffolding.md` and follow Steps 0–G exactly. For SPM products per flow type, see Step C in that document.
    - Without `output-path`: print every file inline with a `// --- <Filename>.swift ---` header.
 
 ### Template Placeholders
@@ -120,16 +156,17 @@ Present `callbackTier` options:
 | Placeholder | Replaces with |
 |---|---|
 | `PLACEHOLDER_APP_NAME` | Resolved app name (e.g. `PingDemo`) |
-| `PLACEHOLDER_APP_NAME_UPPER` | Upper-cased app name (e.g. `PINGDEMO`) |
+| `PLACEHOLDER_APP_NAME_UPPER` | Upper-cased app name (e.g. `PINGDEMO`) — used in Keychain account key construction |
 | `PLACEHOLDER_CLIENT_ID` | `clientId` value |
 | `PLACEHOLDER_REDIRECT_URI` | `redirectUri` value |
 | `PLACEHOLDER_DISCOVERY_ENDPOINT` | `discoveryEndpoint` value |
-| `PLACEHOLDER_SCOPES` | Scopes as Swift array literal (e.g. `"openid", "profile", "email"`) |
+| `PLACEHOLDER_SCOPES` | Scopes as comma-separated quoted strings for `Set([...])` (e.g. `"openid", "profile", "email"`) |
 | `PLACEHOLDER_SERVER_URL` | `serverUrl` (Journey/DaVinci only) |
 | `PLACEHOLDER_REALM` | `realm` (Journey/DaVinci only) |
 | `PLACEHOLDER_COOKIE_NAME` | `cookieName` (Journey/DaVinci only) |
 | `PLACEHOLDER_JOURNEY_NAME` | `journeyName` (Journey only, default `"Login"`) |
-| `PLACEHOLDER_ACR_VALUES` | `acrValues` — omit the entire line if not provided |
+| `PLACEHOLDER_ACR_VALUES_LINE` | DaVinci/OIDC: entire `oidcConfig.acrValues = "..."` line — omit the line entirely if not provided |
+| `PLACEHOLDER_KEYCHAIN_ACCOUNT` | Keychain account key — use `"<APP_NAME_UPPER>_ACCESS_TOKEN"` pattern (e.g. `"PINGDEMO_ACCESS_TOKEN"`) |
 
 When the user chose placeholder mode: use `"yourClientId"`, `"yourapp://callback"`, `"https://your-tenant.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration"`.
 
@@ -532,7 +569,7 @@ ZStack {
 }
 ```
 
-**Logo asset:** Copy `Ping Identity Logo.png` from `SampleApps/PingExample/PingExample/Assets.xcassets/Logo.imageset/` into your new app's `Assets.xcassets/Logo.imageset/`. Reference with `Image("Logo")`.
+**Logo asset:** Copy the `Logo.imageset/` folder from `assets/Logo.imageset/` (inside this skill's assets directory) into your new app's `Assets.xcassets/Logo.imageset/`. Reference with `Image("Logo")`.
 
 **Settings / Form:** apply `.tint(.pingRed)` to the `Form`.
 

@@ -1,0 +1,38 @@
+/*
+ * PingOneProtectEvaluationCallbackView.swift — Journey Standard tier
+ *
+ * Self-advancing: calls `.collect()` async, then onNext.
+ */
+
+import SwiftUI
+import PingProtect
+
+struct PingOneProtectEvaluationCallbackView: View {
+    let callback: PingOneProtectEvaluationCallback
+    let onNext: () -> Void
+
+    @State private var task: Task<Void, Never>?
+
+    var body: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .progressViewStyle(.circular)
+                .scaleEffect(1.5)
+                .tint(.pingRed)
+            Text("Collecting device profile…")
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
+        .onAppear { startEvaluation() }
+        .onDisappear { task?.cancel() }
+    }
+
+    private func startEvaluation() {
+        guard task == nil else { return }
+        task = Task { @MainActor in
+            _ = await callback.collect()
+            if !Task.isCancelled { onNext() }
+        }
+    }
+}

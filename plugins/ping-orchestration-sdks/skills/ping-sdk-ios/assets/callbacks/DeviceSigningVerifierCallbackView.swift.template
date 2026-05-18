@@ -1,0 +1,36 @@
+/*
+ * DeviceSigningVerifierCallbackView.swift — Journey Standard tier
+ *
+ * Self-advancing: calls `.sign()`, then onNext.
+ */
+
+import SwiftUI
+import PingBinding
+
+struct DeviceSigningVerifierCallbackView: View {
+    let callback: DeviceSigningVerifierCallback
+    let onNext: () -> Void
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("Device Signing")
+                .font(.title2)
+                .fontWeight(.semibold)
+            Text("Please wait while we sign the challenge.")
+                .font(.body)
+                .foregroundColor(.secondary)
+            ProgressView()
+                .progressViewStyle(.circular)
+                .tint(.pingRed)
+        }
+        .padding()
+        .onAppear { handleSigning() }
+    }
+
+    private func handleSigning() {
+        Task {
+            _ = await callback.sign()
+            onNext()
+        }
+    }
+}

@@ -1,0 +1,43 @@
+/*
+ * StringAttributeInputCallbackView.swift — Journey Standard tier
+ *
+ * Uses `.value` (String). Display `.failedPolicies` on validation failure.
+ */
+
+import SwiftUI
+import PingJourney
+
+struct StringAttributeInputCallbackView: View {
+    let callback: StringAttributeInputCallback
+    let onRefresh: () -> Void
+
+    @State private var text: String = ""
+
+    private var hasErrors: Bool { !callback.failedPolicies.isEmpty }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            TextField(callback.prompt, text: $text)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(hasErrors ? Color.red : Color.pingTextField, lineWidth: 1)
+                )
+                .onAppear { text = callback.value }
+                .onChange(of: text) { _, newValue in
+                    callback.value = newValue
+                }
+                .onSubmit { onRefresh() }
+
+            if hasErrors {
+                ErrorMessageView(
+                    message: callback.failedPolicies
+                        .map { $0.failedDescription(for: callback.prompt) }
+                        .joined(separator: "\n")
+                )
+            }
+        }
+    }
+}

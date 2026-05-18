@@ -1,0 +1,89 @@
+/*
+ * PhoneNumberCollectorView.swift — DaVinci Standard tier
+ *
+ * Use `.phoneNumber` (NOT `.value`) for the phone number field.
+ * Use `.countryCode` for the selected country code.
+ */
+
+import SwiftUI
+import PingDavinci
+
+struct PhoneNumberCollectorView: View {
+    let field: PhoneNumberCollector
+    let onRefresh: () -> Void
+
+    struct Country: Identifiable {
+        var id: String { code }
+        let code: String
+        let name: String
+        let dialCode: String
+    }
+
+    private static let countries: [Country] = [
+        Country(code: "US", name: "United States", dialCode: "+1"),
+        Country(code: "CA", name: "Canada", dialCode: "+1"),
+        Country(code: "GB", name: "United Kingdom", dialCode: "+44"),
+        Country(code: "AU", name: "Australia", dialCode: "+61"),
+        Country(code: "DE", name: "Germany", dialCode: "+49"),
+        Country(code: "FR", name: "France", dialCode: "+33"),
+        Country(code: "JP", name: "Japan", dialCode: "+81"),
+        Country(code: "CN", name: "China", dialCode: "+86"),
+        Country(code: "IN", name: "India", dialCode: "+91"),
+        Country(code: "BR", name: "Brazil", dialCode: "+55"),
+    ]
+
+    @State private var phoneText: String = ""
+    @State private var selectedDialCode: String = "+1"
+    @State private var isValid: Bool = true
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Menu {
+                    ForEach(Self.countries) { country in
+                        Button("\(country.dialCode) \(country.name)") {
+                            selectedDialCode = country.dialCode
+                            field.countryCode = country.code
+                            isValid = field.validate().isEmpty
+                            onRefresh()
+                        }
+                    }
+                } label: {
+                    HStack {
+                        Text(selectedDialCode)
+                            .foregroundColor(.primary)
+                        Image(systemName: "chevron.down")
+                            .foregroundStyle(Color.pingRed)
+                            .font(.caption)
+                    }
+                    .padding()
+                    .frame(width: 80)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(isValid ? Color.pingTextField : Color.red, lineWidth: 1)
+                    )
+                }
+
+                TextField(field.required ? "\(field.label)*" : field.label, text: $phoneText)
+                    .keyboardType(.phonePad)
+                    .autocorrectionDisabled()
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(isValid ? Color.pingTextField : Color.red, lineWidth: 1)
+                    )
+                    .onAppear { phoneText = field.phoneNumber }
+                    .onChange(of: phoneText) { _, newValue in
+                        field.phoneNumber = newValue
+                        isValid = field.validate().isEmpty
+                        onRefresh()
+                    }
+            }
+
+            if !isValid {
+                ErrorMessageView(message: field.validate().map { $0.errorMessage }.joined(separator: "\n"))
+            }
+        }
+        .padding(.horizontal)
+    }
+}

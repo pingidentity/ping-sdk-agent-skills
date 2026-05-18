@@ -1,0 +1,62 @@
+/*
+ * MultiSelectCheckBoxView.swift — DaVinci Standard tier
+ * Used when MultiSelectCollector.type == "CHECKBOX" (or any non-COMBOBOX type).
+ * `field.options` items are NOT Hashable — use `.value` as id.
+ */
+
+import SwiftUI
+import PingDavinci
+
+struct MultiSelectCheckBoxView: View {
+    let field: MultiSelectCollector
+    let onRefresh: () -> Void
+
+    @State private var selectedValues: [String] = []
+    @State private var isValid: Bool = true
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(field.required ? "\(field.label)*" : field.label)
+                .font(.headline)
+                .padding(.bottom, 4)
+
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(field.options.indices, id: \.self) { index in
+                    let option = field.options[index]
+                    let isSelected = selectedValues.contains(option.value)
+
+                    Button {
+                        if isSelected {
+                            selectedValues.removeAll { $0 == option.value }
+                            field.value.removeAll { $0 == option.value }
+                        } else {
+                            selectedValues.append(option.value)
+                            field.value.append(option.value)
+                        }
+                        isValid = field.validate().isEmpty
+                        onRefresh()
+                    } label: {
+                        HStack {
+                            Image(systemName: isSelected ? "checkmark.square.fill" : "square")
+                                .foregroundStyle(isSelected ? Color.pingRed : Color.gray)
+                            Text(option.label)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isValid ? Color.pingTextField : Color.red, lineWidth: 1)
+            )
+
+            if !isValid {
+                ErrorMessageView(message: field.validate().map { $0.errorMessage }.joined(separator: "\n"))
+            }
+        }
+        .padding(.horizontal)
+        .onAppear { selectedValues = field.value }
+    }
+}

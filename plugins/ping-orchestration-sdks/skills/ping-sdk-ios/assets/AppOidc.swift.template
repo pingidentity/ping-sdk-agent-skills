@@ -23,10 +23,10 @@ class AppOidc {
             webConfig.logger      = LogManager.standard
             webConfig.module(PingOidc.OidcModule.config) { oidcValue in
                 oidcValue.clientId          = "PLACEHOLDER_CLIENT_ID"
-                oidcValue.scopes            = [PLACEHOLDER_SCOPES]
+                oidcValue.scopes            = Set([PLACEHOLDER_SCOPES])
                 oidcValue.redirectUri       = "PLACEHOLDER_REDIRECT_URI"
                 oidcValue.discoveryEndpoint = "PLACEHOLDER_DISCOVERY_ENDPOINT"
-                oidcValue.storage           = KeychainStorage<Token>(account: "ACCESS_TOKEN_STORAGE_PLACEHOLDER_APP_NAME_UPPER")
+                oidcValue.storage           = KeychainStorage<Token>(account: "PLACEHOLDER_KEYCHAIN_ACCOUNT")
                 oidcValue.logger            = LogManager.standard
             }
         }

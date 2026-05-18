@@ -1,0 +1,35 @@
+/*
+ * AppJourney.swift
+ *
+ * Singleton that holds the configured Journey instance.
+ * Replace all PLACEHOLDER_ values with your PingAM / AIC tenant details.
+ */
+
+import PingJourney
+import PingOrchestrate
+import PingStorage
+import PingLogger
+
+@MainActor
+class AppJourney {
+    static let shared = AppJourney()
+
+    let journey: Journey
+
+    private init() {
+        journey = Journey.createJourney { journeyConfig in
+            journeyConfig.serverUrl = "PLACEHOLDER_SERVER_URL"
+            journeyConfig.realm     = "PLACEHOLDER_REALM"
+            journeyConfig.cookie    = "PLACEHOLDER_COOKIE_NAME"
+            journeyConfig.logger    = LogManager.standard
+            journeyConfig.module(PingJourney.OidcModule.config) { oidcConfig in
+                oidcConfig.clientId          = "PLACEHOLDER_CLIENT_ID"
+                oidcConfig.scopes            = Set([PLACEHOLDER_SCOPES])
+                oidcConfig.redirectUri       = "PLACEHOLDER_REDIRECT_URI"
+                oidcConfig.discoveryEndpoint = "PLACEHOLDER_DISCOVERY_ENDPOINT"
+                oidcConfig.storage           = KeychainStorage<Token>(account: "PLACEHOLDER_KEYCHAIN_ACCOUNT")
+                oidcConfig.logger            = LogManager.standard
+            }
+        }
+    }
+}

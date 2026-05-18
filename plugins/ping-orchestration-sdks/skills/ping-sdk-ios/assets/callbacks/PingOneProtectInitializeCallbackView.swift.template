@@ -1,0 +1,38 @@
+/*
+ * PingOneProtectInitializeCallbackView.swift — Journey Standard tier
+ *
+ * Self-advancing: calls `.start()` async, then onNext.
+ */
+
+import SwiftUI
+import PingProtect
+
+struct PingOneProtectInitializeCallbackView: View {
+    let callback: PingOneProtectInitializeCallback
+    let onNext: () -> Void
+
+    @State private var task: Task<Void, Never>?
+
+    var body: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .progressViewStyle(.circular)
+                .scaleEffect(1.5)
+                .tint(.pingRed)
+            Text("Initializing device profile collection…")
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
+        .onAppear { startInitialization() }
+        .onDisappear { task?.cancel() }
+    }
+
+    private func startInitialization() {
+        guard task == nil else { return }
+        task = Task { @MainActor in
+            _ = await callback.start()
+            if !Task.isCancelled { onNext() }
+        }
+    }
+}

@@ -1,0 +1,18 @@
+/*
+ * LabelCollectorView.swift — DaVinci Basic tier
+ */
+
+import SwiftUI
+import PingDavinci
+
+struct LabelCollectorView: View {
+    let field: LabelCollector
+
+    var body: some View {
+        Text(field.content)
+            .font(.subheadline)
+            .foregroundColor(.secondary)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.horizontal)
+    }
+}
