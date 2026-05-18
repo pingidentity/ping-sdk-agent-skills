@@ -30,7 +30,7 @@ This table is the single source of truth for routing. The decision tree below re
 | Android | `ping-orchestration-android-sdk` | active | — |
 | iOS | `ping-orchestration-ios-sdk` | active | — |
 | JavaScript (web) | `ping-orchestration-javascript-sdk` | active | — |
-| React Native | `ping-sdk-react-native` | placeholder | No stopgap available |
+| React Native | `ping-orchestration-react-native-sdk` | placeholder | No stopgap available |
 | ForgeRock migration | `forgerock-to-ping-journey-migration` | active | Cross-cutting; takes precedence over platform routing when ForgeRock refs are present |
 
 ## Probe Blocks
@@ -114,7 +114,7 @@ Apply rules in order. **First match wins.**
 2. **Multi-platform monorepo** — two or more active platform probes hit (and rule 1 did not fire). Ask the **multi-platform prompt**. Route to the chosen platform's umbrella skill.
 3. **Single active platform detected** — exactly one active platform probe hit. Route to that platform's umbrella skill.
 4. **Placeholder platform detected** — no active probe hit, but a placeholder probe hit:
-   - **React Native:** announce that `ping-sdk-react-native` is on the way. No stopgap exists; ask the user how they would like to proceed.
+   - **React Native:** announce that `ping-orchestration-react-native-sdk` is on the way. No stopgap exists; ask the user how they would like to proceed.
 5. **Nothing detected** — no probes hit. Ask the **no-detection prompt**, listing only platforms with `Status: active`. Mention placeholder platforms as "coming soon".
 
 ### Phase 3: Handoff
@@ -195,7 +195,7 @@ JavaScript is now an active platform. When the JavaScript probe hits, print the 
 
 ### Placeholder-detected prompt (React Native)
 
-> This looks like a React Native project. The umbrella skill `ping-sdk-react-native` is on the way but isn't ready yet, and there is no specialized React Native skill in this repo today. Would you like to wait, or shall I help you with something else?
+> This looks like a React Native project. The umbrella skill `ping-orchestration-react-native-sdk` is on the way but isn't ready yet, and there is no specialized React Native skill in this repo today. Would you like to wait, or shall I help you with something else?
 
 ### No-detection prompt
 
@@ -204,13 +204,13 @@ JavaScript is now an active platform. When the JavaScript probe hits, print the 
 > - **Android** (`ping-orchestration-android-sdk`)
 > - **iOS** (`ping-orchestration-ios-sdk`)
 > - **JavaScript / Web** (`ping-orchestration-javascript-sdk`)
-> - **React Native** — coming soon (`ping-sdk-react-native`)
+> - **React Native** — coming soon (`ping-orchestration-react-native-sdk`)
 
 Route to the chosen umbrella skill (or apply the placeholder prompt for React Native).
 
 ## Adding a New Platform
 
-When a new umbrella skill ships (e.g., `ping-sdk-react-native`), a single contributor edit enables routing for it. Steps:
+When a new umbrella skill ships (e.g., `ping-orchestration-react-native-sdk`), a single contributor edit enables routing for it. Steps:
 
 1. **Update the registry row** in the **Platform Registry** table: change `Status` from `placeholder` to `active`. If the target skill name changed, update that too.
 2. **Add or fill in the probe block** in the **Probe Blocks** section. Provide either file markers (a `find` command) or content markers (a `grep` command) that uniquely identify projects of this type. Apply the common ignore globs.

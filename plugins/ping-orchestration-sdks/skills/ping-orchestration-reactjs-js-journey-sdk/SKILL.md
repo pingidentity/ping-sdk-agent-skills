@@ -1,6 +1,17 @@
 ---
 name: ping-orchestration-reactjs-js-journey-sdk
-description: Use when building ReactJS web authentication with Ping Identity — scaffolds a complete React SPA authentication flow using the Ping Orchestration JavaScript SDK against PingOne Advanced Identity Cloud (AIC) or PingAM. Handles Journey client configuration, OIDC token exchange, dynamic callback rendering, protected routes, user profile, and logout.
+description: >-
+  Use when building ReactJS web authentication with Ping Identity — scaffolds a
+  complete React SPA authentication flow using the Ping Orchestration JavaScript
+  SDK (`@forgerock/journey-client`, `@forgerock/oidc-client`) against PingOne
+  Advanced Identity Cloud (AIC) or PingAM. Handles Journey client configuration,
+  OIDC token exchange, dynamic Journey callback rendering in React, protected
+  routes, user profile, and logout. Invoke when the user asks to "use
+  @forgerock/journey-client in React", "render Journey callbacks in a React app",
+  "set up Journey authentication with React and Vite", "add PingAM login to my
+  React SPA", "integrate AIC Journey in React", or "build a React app with Ping
+  Identity Journey". Also covers migrating a React app from
+  `@forgerock/javascript-sdk` to `@forgerock/journey-client`.
 license: MIT
 metadata:
   author: Ping Identity

@@ -1,6 +1,17 @@
 ---
 name: ping-orchestration-reactjs-js-davinci-sdk
-description: Use when building ReactJS web authentication with the Ping Orchestration JavaScript SDK (DaVinci) — scaffolds a complete React SPA authentication flow against PingOne DaVinci. Handles DaVinci client configuration, OIDC token exchange, dynamic collector rendering, protected routes, user profile, and logout.
+description: >-
+  Use when building ReactJS web authentication with the Ping Orchestration
+  JavaScript SDK (DaVinci) using `@forgerock/davinci-client` — scaffolds a
+  complete React SPA authentication flow against PingOne DaVinci. Handles
+  DaVinci client configuration, OIDC token exchange, dynamic DaVinci collector
+  rendering in React (text, password, social login, MFA, FIDO2/passkeys, PingOne
+  Protect), protected routes, user profile, and logout. Invoke when the user
+  asks to "use @forgerock/davinci-client in React", "render DaVinci collectors
+  in a React app", "set up PingOne DaVinci authentication in React", "build a
+  React SPA with DaVinci", "add DaVinci login to my React app", or "use the
+  DaVinci SDK with Vite and React". Also covers migrating a React app from
+  `@forgerock/javascript-sdk` to `@forgerock/davinci-client`.
 license: MIT
 metadata:
   author: Ping Identity

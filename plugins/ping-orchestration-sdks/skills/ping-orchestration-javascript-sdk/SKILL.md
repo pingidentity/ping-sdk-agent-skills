@@ -68,14 +68,14 @@ grep -E '"(react|vue|@angular/core|vite)"' package.json
 
 - `react` found → React detected → proceed to W2.
 - `vue` or `@angular/core` found → announce placeholder and offer choices:
-  > "A dedicated `ping-sdk-vue` / `ping-sdk-angular` skill is on the way. I can:
+  > "A dedicated `ping-orchestration-vue-sdk` / `ping-orchestration-angular-sdk` skill is on the way. I can:
   > 1. **Generate framework-neutral SDK wiring** — client init, token exchange, and route guard pseudocode you can adapt to your framework's patterns.
   > 2. **Route to the React skill** (`ping-orchestration-reactjs-js-journey-sdk` / `ping-orchestration-reactjs-js-davinci-sdk`) as a reference implementation you can port.
   >
   > Which would you prefer?"
   - If the user chooses option 1 → proceed to W2 and then use the **Generic (Placeholder Framework) Path** below.
   - If the user chooses option 2 → proceed to W2 and delegate to the React skill.
-- `react-native` found (check separately) → announce that `ping-sdk-react-native` is on the way; no stopgap exists.
+- `react-native` found (check separately) → announce that `ping-orchestration-react-native-sdk` is on the way; no stopgap exists.
 - Nothing found, or no `package.json` → ask: "Which JavaScript framework are you using?" List active frameworks from the Framework Registry. If the user names a placeholder framework, offer the same two options above.
 
 ### W2 — Shared configuration

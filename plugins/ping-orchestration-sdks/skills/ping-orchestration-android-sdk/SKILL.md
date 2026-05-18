@@ -56,7 +56,7 @@ Ask all required parameters in a single `AskUserQuestion`. Show defaults where t
 | `flowType` | Yes | — | `davinci` · `journey` · `oidc-web` |
 | `clientId` | Yes | — | OAuth 2.0 Client ID |
 | `discoveryEndpoint` | Yes | — | Full `.well-known/openid-configuration` URL |
-| `redirectUri` | Yes | `org.forgerock.demo:/oauth2redirect` | OAuth 2.0 redirect URI (must match manifest scheme) |
+| `redirectUri` | Yes | `com.example.myapp:/oauth2redirect` | OAuth 2.0 redirect URI (must match manifest scheme) |
 | `scopes` | No | `openid profile email` | Space-separated OAuth 2.0 scopes |
 | `serverUrl` | Journey only | — | PingAM/AIC base URL (no trailing `/`) |
 | `realm` | Journey only | `alpha` | Authentication realm |
@@ -145,7 +145,7 @@ android {
     defaultConfig {
         minSdk = 29
         targetSdk = 36
-        manifestPlaceholders["appRedirectUriScheme"] = "org.forgerock.demo"
+        manifestPlaceholders["appRedirectUriScheme"] = "com.example.myapp"
     }
     buildFeatures { buildConfig = true }
 }

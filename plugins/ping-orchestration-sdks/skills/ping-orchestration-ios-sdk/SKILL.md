@@ -281,7 +281,7 @@ Journey callback properties are **non-optional Strings**. Do not use `?? fallbac
 
 **Standard-tier gotchas** (compile errors if guessed wrong): `ValidatedUsernameCallback` → `.username` (NOT `.value`); `ValidatedPasswordCallback` → `.password`; `ConfirmationCallback` → `.options`/`.selectedIndex: Int?`; `TermsAndConditionsCallback` → `.accepted: Bool`; `KbaCreateCallback` → `.selectedQuestion`/`.selectedAnswer`; `SelectIdpCallback` → `.value = provider.provider` (no `.setProvider()`).
 
-Read `assets/journey-callbacks.md` for the complete Critical API Facts section before writing any Standard-tier callback view.
+Read `references/journey-callbacks.md` for the complete Critical API Facts section before writing any Standard-tier callback view.
 
 ## 4 — AppJourney Singleton
 
@@ -319,7 +319,7 @@ The `journeyName` collected in the wizard is passed to `journey.start()` at call
 node = await AppJourney.shared.journey.start(journeyName)
 ```
 
-For multi-flow apps (Journey + DaVinci + OIDC Web) and token storage customisation, see `assets/advanced-patterns.md`.
+For multi-flow apps (Journey + DaVinci + OIDC Web) and token storage customisation, see `references/advanced-patterns.md`.
 
 ## 5 — Journey Authentication Flow
 
@@ -393,7 +393,7 @@ default:
 
 `Callback` lives in `PingJourneyPlugin` — import it alongside `PingOrchestrate`. Use `any Callback` in function signatures (Swift 6 existential syntax). Suppress the Next button when `hasSelfAdvancingCallback` (FIDO, Confirmation, Protect, SelectIdp, DeviceBinding callbacks advance themselves).
 
-Use `assets/ContinueNodeView.swift.journey.template` as the full implementation reference. **Always read `assets/journey-callbacks.md`** before writing any callback view code.
+Use `assets/ContinueNodeView.swift.journey.template` as the full implementation reference. **Always read `references/journey-callbacks.md`** before writing any callback view code.
 
 ## 6 — Session Lifecycle
 
@@ -458,7 +458,7 @@ Choose **OIDC Web** when the IDP hosts the login page. Choose **Journey native**
 
 `authorize()` is `async throws` and returns `Result<User, OidcError>`. Two error channels — `throws` for network/OIDC discovery failures and `Result.failure` for authorization errors. Always handle both in a `do/catch` wrapping a `switch result`.
 
-For the `AppOidc` singleton, `OidcWebClientConfig` API, `OidcError` cases, `BrowserType` trade-offs, `OidcLoginViewModel`, and branded `OidcLoginView` — read `assets/oidc-web-reference.md`.
+For the `AppOidc` singleton, `OidcWebClientConfig` API, `OidcError` cases, `BrowserType` trade-offs, `OidcLoginViewModel`, and branded `OidcLoginView` — read `references/oidc-web-reference.md`.
 
 ## 9 — DaVinci Flow
 
@@ -468,7 +468,7 @@ DaVinci uses **collectors** instead of callbacks. The `@Observable` ViewModel pa
 
 **Critical:** always set `submitCollector.value = submitCollector.id` and `flowCollector.value = flowCollector.id` before calling `next()` — these drive the `actionKey` and `eventType` in the POST body.
 
-For the `AppDaVinci` singleton, full `CollectorNodeView`, individual collector views, `DaVinciAuthenticatedView`, and session lifecycle — read `assets/davinci-collectors.md`.
+For the `AppDaVinci` singleton, full `CollectorNodeView`, individual collector views, `DaVinciAuthenticatedView`, and session lifecycle — read `references/davinci-collectors.md`.
 
 ## 10 — Swift 6 Notes
 
