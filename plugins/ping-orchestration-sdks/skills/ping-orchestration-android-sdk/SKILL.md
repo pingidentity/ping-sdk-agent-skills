@@ -393,45 +393,11 @@ fun CallbackNodeView(node: ContinueNode, onNodeUpdated: () -> Unit, onNext: () -
 }
 ```
 
-**Callback reference — exact names, packages, and methods (compile errors if guessed wrong):**
+**Callback reference** (exact names, packages, property names, suspend methods — compile errors if guessed wrong): [references/callback-reference.md](references/callback-reference.md)
 
-Standard callbacks are in `com.pingidentity.journey.callback`. Non-standard packages marked with `†`.
+Key gotchas: `ValidatedUsernameCallback` → `.username` (not `.value`); `TextInputCallback` → `.text`; `ChoiceCallback` → `.selectedIndex`; `TermsAndConditionsCallback` → `.accepted`; `DeviceProfileCallback.collect()`, `DeviceBindingCallback.bind()`, `PingOneProtectInitializeCallback.start()`.
 
-| Callback | Package† | Read | Write | Suspend method |
-|---|---|---|---|---|
-| `NameCallback` | — | `prompt` | `callback.name = text` | — |
-| `PasswordCallback` | — | `prompt` | `callback.password = text` | — |
-| `ValidatedUsernameCallback` | — | `prompt` | `callback.username = text` (**NOT** `.value`) | — |
-| `ValidatedPasswordCallback` | — | `prompt` | `callback.password = text` (**NOT** `.value`) | — |
-| `TextInputCallback` | — | `prompt` | `callback.text = text` (**NOT** `.value`) | — |
-| `TextOutputCallback` | — | `message`, `messageType` | display only | — |
-| `ChoiceCallback` | — | `prompt`, `choices: List<String>` | `callback.selectedIndex = index` (**NOT** `.selected`) | — |
-| `ConfirmationCallback` | — | `prompt`, `options: List<String>` | `callback.selectedIndex = index` | — |
-| `TermsAndConditionsCallback` | — | `terms` | `callback.accepted = true` (**NOT** `.accept`) | — |
-| `KbaCreateCallback` | — | `predefinedQuestions` | `callback.selectedQuestion = q; callback.selectedAnswer = a` | — |
-| `BooleanAttributeInputCallback` | — | `prompt` | `callback.value = bool` | — |
-| `StringAttributeInputCallback` | — | `prompt` | `callback.value = text` | — |
-| `DeviceProfileCallback` | `com.pingidentity.device.profile` | — | — | `callback.collect()` (**NOT** `.execute()`) |
-| `DeviceBindingCallback` | `com.pingidentity.device.binding.journey` | — | — | `callback.bind()` (**NOT** `.execute()`) |
-| `FidoRegistrationCallback` | `com.pingidentity.fido.journey` | — | — | `callback.register()` |
-| `FidoAuthenticationCallback` | `com.pingidentity.fido.journey` | — | — | `callback.authenticate()` |
-| `PingOneProtectInitializeCallback` | `com.pingidentity.protect.journey` | — | — | `callback.start()` (**NOT** `.initialize()`) |
-| `PingOneProtectEvaluationCallback` | `com.pingidentity.protect.journey` | — | — | `callback.collect()` (**NOT** `.evaluate()`) |
-| `SelectIdpCallback` | `com.pingidentity.idp.journey` | `providers: List<IdPValue>` | `callback.value = idp.provider` (**NOT** `.setSelectedIdp()`) | — |
-| `SelectIdpCallback.IdPValue` | — | `provider: String`, `uiConfig` | — (display name = `idp.provider`, **NOT** `idp.type`) | — |
-
-**Auto-advancing callbacks** — wrap in `LaunchedEffect(callback)`, set `showNext = false`:
-`PollingWaitCallback`, `DeviceProfileCallback`, `DeviceBindingCallback`, `DeviceSigningVerifierCallback`, `FidoRegistrationCallback`, `FidoAuthenticationCallback`, `PingOneProtectInitializeCallback`, `PingOneProtectEvaluationCallback`, `ReCaptchaEnterpriseCallback`.
-
-**Gradle modules for non-standard callbacks:**
-
-| Module | Callbacks |
-|---|---|
-| `device-profile` | `DeviceProfileCallback` |
-| `binding` | `DeviceBindingCallback`, `DeviceSigningVerifierCallback` |
-| `fido` | `FidoRegistrationCallback`, `FidoAuthenticationCallback` |
-| `protect` | `PingOneProtectInitializeCallback`, `PingOneProtectEvaluationCallback` |
-| `external-idp` | `SelectIdpCallback` |
+**Auto-advancing callbacks** — wrap in `LaunchedEffect(callback)`, set `showNext = false`: `PollingWaitCallback`, `DeviceProfileCallback`, `DeviceBindingCallback`, `FidoRegistrationCallback`, `FidoAuthenticationCallback`, `PingOneProtectInitializeCallback`, `PingOneProtectEvaluationCallback`.
 
 ## 10 — OIDC Web Flow
 
@@ -473,27 +439,7 @@ FIDO / Protect / device binding?  No → Basic
 
 ## 12 — Common Mistakes
 
-| Mistake | Fix |
-|---|---|
-| `journey.start()` / `.user()` / `.callbacks` / `Logger.STANDARD` unresolved | All are top-level extensions — add explicit imports (see Section 5 import table) |
-| Wrong package for advanced callbacks | See module table in Section 9. e.g. `DeviceBindingCallback` is `com.pingidentity.device.binding.journey`, NOT `com.pingidentity.journey.callback` |
-| Wrong property name on callback | See Section 9 table. Common gotchas: `ValidatedUsernameCallback` → `.username`; `TextInputCallback` → `.text`; `ChoiceCallback` → `.selectedIndex`; `TermsAndConditionsCallback` → `.accepted` |
-| Wrong suspend method name | `DeviceProfileCallback.collect()`, `DeviceBindingCallback.bind()`, `PingOneProtectInitializeCallback.start()`, `PingOneProtectEvaluationCallback.collect()` |
-| `SelectIdpCallback` API wrong | `.providers` (not `.idpList`); `callback.value = idp.provider` (no `.setSelectedIdp()`); display = `idp.provider` (not `idp.type`) |
-| `SuccessNode` recomposition loop | Wrap navigation in `LaunchedEffect(Unit)` |
-| Auto-advancing callback shows Next button | Set `showNext = false` and wrap in `LaunchedEffect(callback)` |
-| `node ==` comparison fails | `Node` has no `equals()` — use `counter: Int` in state |
-| HTTP 401 on Ping SDK artifacts | SDK 2.0.0+ is on Maven Central; remove any custom `maven { }` block |
-| Wrong MFA artifact IDs | `com.pingidentity.sdks:push` and `:oath` — not `mfa-push`/`mfa-oath` |
-| `androidx.browser`/`core` AAR metadata fail | Requires AGP 8.9.1+ and `compileSdk = 36` |
-| K2 compiler crash (`FirIncompatibleClassExpressionChecker`) | Kotlin 2.0.x incompatible with AGP 8.9.1 — use `kotlin = "2.1.21"` |
-| Missing `gradle.properties` | Add `android.useAndroidX=true` + `android.enableJetifier=true` at project root |
-| `menuAnchor()` deprecation | Use `Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable)` |
-| DaVinci vs Journey Oidc import conflict | `com.pingidentity.davinci.module.Oidc` vs `com.pingidentity.journey.module.Oidc` |
-| `PingTextField` name clash | Color constant and composable can't share the same name — composable is `PingTextFieldBranded` |
-| `PingLoadingOverlay` not covering screen | Uses `fillMaxSize()` — must be top sibling in `Box(Modifier.fillMaxSize())` |
-| AAPT error: `style/Theme.Material3.DayNight.NoActionBar` not found | Use `Theme.AppCompat.Light.NoActionBar` as the XML theme parent — Material3 XML theme requires an extra library not in the default dependency set |
-| AAPT error: `mipmap/ic_launcher` not found | Scaffolded projects have no mipmap dirs — set `android:icon="@drawable/ping_logo"` and `android:roundIcon="@drawable/ping_logo"` in AndroidManifest.xml |
+See [references/common-mistakes.md](references/common-mistakes.md) — covers import errors, wrong callback property names, suspend method names, recomposition loops, Gradle/AGP version issues, AAPT errors, and branding component pitfalls.
 
 ## 13 — MFA Modules
 
@@ -531,31 +477,8 @@ For a full guided migration, read the `forgerock-to-ping-journey-migration` skil
 
 ## 15 — Ping Identity Visual Branding
 
-Read `assets/Theme.kt.template` → write to `ui/theme/PingTheme.kt`, substitute `PLACEHOLDER_PACKAGE_NAME`. Copy `assets/ping_logo.png` → `app/src/main/res/drawable/ping_logo.png`.
+Write `assets/Theme.kt.template` to `ui/theme/PingTheme.kt` (substitute `PLACEHOLDER_PACKAGE_NAME`). Copy `assets/ping_logo.png` → `app/src/main/res/drawable/ping_logo.png`.
 
-**Branded components:**
+Branded components: `PingPrimaryButton`, `PingHeaderView`, `PingTextFieldBranded` (name avoids clash with `PingTextField` color constant), `PingSecureField`, `PingErrorMessage`, `PingErrorCard`, `PingLoadingOverlay` (must be top sibling in `Box(Modifier.fillMaxSize())`).
 
-| Component | Purpose |
-|---|---|
-| `PingPrimaryButton(text, onClick)` | Full-width red button (15dp radius, shadow) |
-| `PingHeaderView(title, subtitle)` | Red gradient header with logo |
-| `PingTextFieldBranded(value, onValueChange, label)` | Branded text field (named to avoid clash with `PingTextField` color constant) |
-| `PingSecureField(value, onValueChange, label)` | Password field with toggle |
-| `PingErrorMessage(message)` | Inline field error |
-| `PingErrorCard(message, onRetry?)` | Full error state with retry |
-| `PingLoadingOverlay(message?)` | Blocking spinner overlay (`fillMaxSize` — top sibling in `Box`) |
-
-**Login screen pattern:**
-```kotlin
-Box(Modifier.fillMaxSize()) {
-    Column(Modifier.verticalScroll(rememberScrollState())) {
-        PingHeaderView(title = "My App", subtitle = "Secure authentication")
-        Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            CallbackNodeView(node = continueNode, onNodeUpdated = onNodeUpdated, onNext = onNext)
-        }
-    }
-    if (loading) PingLoadingOverlay("Signing in…")
-}
-```
-
-Apply `CircularProgressIndicator(color = PingRed)` and tint `Checkbox`/`Switch` with `PingRed` to stay on-brand.
+Login screen: `Box(fillMaxSize)` wrapping a `Column(verticalScroll)` with `PingHeaderView` at the top, `CallbackNodeView`/`CollectorNodeView` below, and `PingLoadingOverlay` overlaid when loading. Apply `PingRed` tint to `Checkbox`/`Switch`.

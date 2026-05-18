@@ -335,7 +335,7 @@ See [scaffold_auth.sh](scripts/scaffold_auth.sh) for details.
 
 - [SDK Package Reference](../ping-orchestration-javascript-sdk/references/sdk-packages.md) — Package selection guide for `@forgerock/davinci-client`, `@forgerock/oidc-client`, and optional add-ons
 - [OIDC Centralized Reference](../ping-orchestration-javascript-sdk/assets/oidc-centralized-reference.md) — Full `@forgerock/oidc-client` API: authorize, token exchange, user info, logout, storage
-- Collector implementations — see template files in `assets/` (e.g. `text-collector.js.template`, `password-collector.js.template`)
+- Collector implementations — see template files in `assets/` (e.g. `text.jsx.template`, `password.jsx.template`, `fido-registration.jsx.template`, `social-login-button.jsx.template`)
 
 ---
 

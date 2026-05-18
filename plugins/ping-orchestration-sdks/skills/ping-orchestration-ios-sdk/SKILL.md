@@ -237,10 +237,6 @@ Pick only what you need — the SDK is modular:
 
 ## 1 — SDK Package Reference
 
-```
-https://github.com/ForgeRock/ping-ios-sdk
-```
-
 ```swift
 .package(url: "https://github.com/ForgeRock/ping-ios-sdk", from: "2.0.0")
 // Add only the products your target needs:
@@ -281,27 +277,11 @@ var isRegistered = false   // set in next() based on returned node type
 
 ## 3 — Callback Property Types
 
-Journey callback properties are **non-optional Strings**. Do not use `?? fallback`.
+Journey callback properties are **non-optional Strings**. Do not use `?? fallback`. Basic-tier properties: `NameCallback.name/prompt`, `PasswordCallback.password/prompt`, `TextInputCallback.text/prompt`, `ChoiceCallback.selectedIndex/choices`, `TextOutputCallback.message/messageType`.
 
-**Basic tier:**
+**Standard-tier gotchas** (compile errors if guessed wrong): `ValidatedUsernameCallback` → `.username` (NOT `.value`); `ValidatedPasswordCallback` → `.password`; `ConfirmationCallback` → `.options`/`.selectedIndex: Int?`; `TermsAndConditionsCallback` → `.accepted: Bool`; `KbaCreateCallback` → `.selectedQuestion`/`.selectedAnswer`; `SelectIdpCallback` → `.value = provider.provider` (no `.setProvider()`).
 
-| Callback | Property | Type |
-|---|---|---|
-| `NameCallback` | `.name` (write), `.prompt` (read) | `String` |
-| `PasswordCallback` | `.password` (write), `.prompt` (read) | `String` |
-| `TextInputCallback` | `.text` (write), `.prompt` (read) | `String` |
-| `ChoiceCallback` | `.selectedIndex` (write), `.prompt`, `.choices` (read) | `String` / `[String]` |
-| `TextOutputCallback` | `.message` (read), `.messageType` (read) | `String` / `MessageType` |
-
-**Standard tier — non-obvious property names (compile errors if guessed wrong):** Read `assets/journey-callbacks.md` for the complete Critical API Facts section before writing any Standard-tier callback view.
-
-Key gotchas:
-- `ValidatedUsernameCallback` → `.username` (NOT `.value`)
-- `ValidatedPasswordCallback` → `.password` (NOT `.value`)
-- `ConfirmationCallback` → `.options` (NOT `.choices`), `.selectedIndex: Int?`
-- `TermsAndConditionsCallback` → `.accepted: Bool` (NOT `.accept`)
-- `KbaCreateCallback` → `.selectedQuestion`, `.selectedAnswer` (NOT `.answer`)
-- `SelectIdpCallback` → `.value = provider.provider` — NO `.setProvider()` method
+Read `assets/journey-callbacks.md` for the complete Critical API Facts section before writing any Standard-tier callback view.
 
 ## 4 — AppJourney Singleton
 
@@ -411,57 +391,9 @@ default:
 
 ### Callback Renderer (`ContinueNodeView`)
 
-`Callback` lives in `PingJourneyPlugin` — import it explicitly:
+`Callback` lives in `PingJourneyPlugin` — import it alongside `PingOrchestrate`. Use `any Callback` in function signatures (Swift 6 existential syntax). Suppress the Next button when `hasSelfAdvancingCallback` (FIDO, Confirmation, Protect, SelectIdp, DeviceBinding callbacks advance themselves).
 
-```swift
-import PingJourney
-import PingJourneyPlugin   // required for `any Callback`
-import PingOrchestrate
-import PingFido
-
-struct ContinueNodeView: View {
-    let node: ContinueNode
-    let onNext: () -> Void
-
-    var body: some View {
-        VStack(spacing: 16) {
-            ForEach(node.callbacks, id: \.id) { callback in
-                callbackView(for: callback)
-            }
-            if !hasSelfAdvancingCallback {
-                Button("Next", action: onNext).buttonStyle(PingPrimaryButtonStyle())
-            }
-        }
-    }
-
-    private var hasSelfAdvancingCallback: Bool {
-        node.callbacks.contains { callback in
-            callback is FidoRegistrationCallback || callback is FidoAuthenticationCallback
-        }
-    }
-
-    @ViewBuilder
-    private func callbackView(for callback: any Callback) -> some View {  // 'any Callback' required in Swift 6
-        switch callback {
-        case let nameCallback as NameCallback:
-            NameCallbackView(callback: nameCallback)
-        case let passwordCallback as PasswordCallback:
-            PasswordCallbackView(callback: passwordCallback)
-        case let textOutputCallback as TextOutputCallback:
-            Text(textOutputCallback.message).font(.subheadline).foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        case let fidoRegistrationCallback as FidoRegistrationCallback:
-            FidoRegistrationCallbackView(callback: fidoRegistrationCallback, onNext: onNext)
-        case let fidoAuthenticationCallback as FidoAuthenticationCallback:
-            FidoAuthenticationCallbackView(callback: fidoAuthenticationCallback, onNext: onNext)
-        default:
-            EmptyView()
-        }
-    }
-}
-```
-
-When generating a Journey app, **always read `assets/journey-callbacks.md`** before writing any callback view code.
+Use `assets/ContinueNodeView.swift.journey.template` as the full implementation reference. **Always read `assets/journey-callbacks.md`** before writing any callback view code.
 
 ## 6 — Session Lifecycle
 
@@ -548,202 +480,20 @@ For the `AppDaVinci` singleton, full `CollectorNodeView`, individual collector v
 
 ## 11 — Ping Identity Visual Branding
 
-Read `assets/Theme.swift.template` and write it as-is to `<output-path>/<AppName>/Theme.swift`, substituting `PLACEHOLDER_APP_NAME`. The file contains: color tokens, `PingPrimaryButtonStyle`, `PingHeaderView`, `PingTextField`, `PingSecureField`, `FidoIconView`, `ErrorMessageView`, `LoadingOverlay`, and `ErrorView`.
+Write `assets/Theme.swift.template` as-is to `<AppName>/Theme.swift` (substitute `PLACEHOLDER_APP_NAME`). Contains: `PingPrimaryButtonStyle`, `PingHeaderView`, `PingTextField`, `PingSecureField`, `FidoIconView`, `ErrorMessageView`, `LoadingOverlay`, `ErrorView`. Key tokens: `Color.pingRed` = `#A31300`, corner radius 15pt (buttons) / 8pt (fields), header padding 32pt, content padding 24pt.
 
-**Design tokens:**
-
-| Token | Value | Usage |
-|---|---|---|
-| `Color.pingRed` | `#A31300` (RGB 163, 19, 0) | Primary action buttons, icons, accents |
-| `Color.pingRedDark` | RGB 0.6, 0.1, 0.1 | Gradient end color in headers |
-| `Color.pingTextField` | RGB 220, 230, 230 | Input field stroke border |
-| Button corner radius | 15 pt | Primary action buttons |
-| Input corner radius | 8 pt | Text / secure fields |
-| Header padding | 32 pt vertical | `PingHeaderView` |
-| Standard padding | 24 pt | Content areas |
-
-**Login screen pattern:**
-```swift
-ZStack {
-    ScrollView {
-        VStack(spacing: 0) {
-            PingHeaderView(title: "My App", subtitle: "Secure authentication")
-            VStack(spacing: 24) {
-                if let continueNode {
-                    ContinueNodeView(node: continueNode, onNext: onNext)
-                } else {
-                    Button("Sign In", action: onNext).buttonStyle(PingPrimaryButtonStyle())
-                }
-            }.padding(24)
-        }
-    }
-    if isLoading { LoadingOverlay("Signing in…") }
-}
-```
-
-**Logo asset:** Copy the `Logo.imageset/` folder from `assets/Logo.imageset/` (inside this skill's assets directory) into your new app's `Assets.xcassets/Logo.imageset/`. Reference with `Image("Logo")`.
-
-**Settings / Form:** apply `.tint(.pingRed)` to the `Form`.
+Copy `assets/Logo.imageset/` into `Assets.xcassets/Logo.imageset/` and reference with `Image("Logo")`. Apply `.tint(.pingRed)` to any `Form`.
 
 ## 12 — Callback / Collector Tiers
 
-| Tier | Who it's for |
-|---|---|
-| **Basic** | Login/password journeys with optional multi-choice prompts. Zero extra dependencies. |
-| **Standard** | All common patterns — FIDO, Protect, device binding/profile, T&C, KBA, polling wait, consent, social IdP (browser-based). No third-party native social SDKs. |
-| **Full fat** | Matches official PingExample sample app. Adds native social login (Apple, Facebook, Google) and ReCaptcha Enterprise. Requires those third-party SDKs. |
+Full tier breakdown with decision guide: [references/callback-tiers.md](references/callback-tiers.md)
 
-**Tier 1 — Basic**
-
-Journey: `NameCallback`, `PasswordCallback`, `TextOutputCallback`, `ChoiceCallback`
-DaVinci: `TextCollector`, `PasswordCollector`, `SubmitCollector`, `LabelCollector`, `FlowCollector`
-
-**Tier 2 — Standard**
-
-Everything in Basic plus:
-
-Journey: `TextInputCallback`, `ValidatedUsernameCallback`, `ValidatedPasswordCallback`, attribute callbacks, `ConfirmationCallback`, `SuspendedTextOutputCallback`, `HiddenValueCallback`, `PollingWaitCallback`, `TermsAndConditionsCallback`, `ConsentMappingCallback`, `KbaCreateCallback`, `SelectIdpCallback`, `FidoRegistrationCallback`, `FidoAuthenticationCallback`, `DeviceProfileCallback`, `DeviceBindingCallback`, `DeviceSigningVerifierCallback`, `PingOneProtectInitializeCallback`, `PingOneProtectEvaluationCallback`
-
-DaVinci: `MultiSelectCollector` (CheckBox/ComboBox), `SingleSelectCollector` (Dropdown/RadioButton), `PhoneNumberCollector`, `ProtectCollector`, `FidoRegistrationCollector`, `FidoAuthenticationCollector`, `DeviceRegistrationCollector`, `DeviceAuthenticationCollector`
-
-Additional SPM products: `PingFido`, `PingProtect`, `PingBinding`, `PingDeviceProfile`, `PingExternalIdP`
-
-Self-advancing callbacks (suppress the Next button): `ConfirmationCallback`, `SuspendedTextOutputCallback`, `PingOneProtectInitializeCallback`, `PingOneProtectEvaluationCallback`, `SelectIdpCallback`, `IdpCallback`, `FidoRegistrationCallback`, `FidoAuthenticationCallback`, `DeviceBindingCallback`, `DeviceSigningVerifierCallback`
-
-**Tier 3 — Full fat**
-
-Additional Journey: `IdpCallback`, `ReCaptchaEnterpriseCallback`
-Additional DaVinci: `IdpCollector`
-Additional SPM: `PingReCaptchaEnterprise`, `PingExternalIdPApple`, `PingExternalIdPFacebook`, `PingExternalIdPGoogle`
-
-**Decision guide:**
-```
-FIDO / Protect / device binding / T&C / KBA in your journey?
-  No  → Basic
-  Yes → Native Apple/Google/Facebook social or ReCaptcha?
-          No  → Standard
-          Yes → Full fat
-```
+**Summary:** Basic (username/password/choice, no extra SPM) → Standard (adds FIDO, Protect, device binding, T&C, KBA, social IdP browser-based) → Full fat (adds native Apple/Google/Facebook social + ReCaptcha Enterprise). The wizard's `callbackTier` parameter maps directly to these tiers.
 
 ## Common Pitfalls
 
-| Symptom | Likely cause |
-|---|---|
-| `cannot find type 'Callback' in scope` | Missing `import PingJourneyPlugin` |
-| `cannot find type 'Collector' in scope` | Missing `import PingDavinciPlugin` |
-| `cannot find type 'ContinueNode' / 'SuccessNode'` | Missing `import PingOrchestrate` |
-| `use of protocol 'Callback' as a type must be written 'any Callback'` | Swift 6 existential syntax |
-| `cannot use optional chaining on non-optional value of type 'any Error'` | `FailureNode.cause` is non-optional — remove the `?` |
-| `'appendInterpolation' is deprecated` on `\(value)` where value is `Any` | Use `String(describing: value)` |
-| `result of call to 'signOff()' is unused` | Use `_ = await journey.signOff()` |
-| `type 'any Node' cannot conform to 'Equatable'` | Use a Bool flag instead of `.onChange(of: node)` |
-| `'Observable()' is only available in iOS 17.0 or newer` | `IPHONEOS_DEPLOYMENT_TARGET = 16.0` in xcconfig — bump to `18.0` |
-| `cannot find 'UserDefaults' in scope` inside `@Observable` | Missing `import Foundation` |
-| Tokens overwritten between Journey instances | Each needs a unique `account` string on `KeychainStorage<Token>` |
-| Social IdP redirect not handled | Missing `onOpenURL` → `OpenURLMonitor.shared.handleOpenURL` |
-| Browser opens but redirect never returns | URL scheme not registered — use Ruby snippet in Section 7 / Step D |
-| `error: expected to find '=' in macro condition` at xcconfig | Used `INFOPLIST_KEY_CFBundleURLTypes[0]...` syntax — use underscore-numeric form instead |
-| `error: Multiple commands produce Info.plist` | Hand-authored `Info.plist` conflicts with `GENERATE_INFOPLIST_FILE = YES` — delete it |
-| `authorize()` returns `.failure(.authorizeError)` immediately | `redirectUri` scheme doesn't match registered scheme |
-| `ASWebAuthenticationSession` completes but stays on browser | Missing `BrowserLauncher.currentBrowser.handleAppActivation()` on scene-active |
-| `cannot find 'OpenURLMonitor' / 'BrowserLauncher' in scope` | Missing `import PingBrowser` |
-| `cannot find type 'UITextContentType'` in Theme.swift | Missing `import UIKit` |
-| `Unable to find a device matching ... iPhone 16` | Hardcoded simulator name — detect dynamically via `xcrun simctl list devices` (see `assets/project-scaffolding.md` Step G) |
-| `Missing package product '<AppName>Feature'` | Cleanup script missed occurrences — run `grep -n <AppName>Feature project.pbxproj` and delete all matches |
-| `undefined method 'objects'` in Ruby script | Use `project.objects.each`, not `project.root_object.objects` |
-| DaVinci: `actionKey` and `eventType` missing from POST body | `SubmitCollector.value` / `FlowCollector.value` not set before `next()` |
-| DaVinci: `ForEach requires Option to conform to Hashable` | Use `ForEach(collector.options.indices, id: \.self)` |
-| DaVinci: `PhoneNumberCollector has no member 'value'` | Use `.phoneNumber` not `.value` |
-| DaVinci: `ProtectCollector has no member 'start'` | Use `await collector.collect()` not `.start()` |
-| DaVinci: `extra argument 'deviceName'` on `FidoRegistrationCollector` | DaVinci variant takes only `window:` — no `deviceName:` |
-| DaVinci: `DeviceRegistrationCollector has no member 'register'` | Set `collector.value = device` then call `onNext()` |
-| DaVinci: `Device has no member 'name'` | Use `device.title`, not `.name` |
-| Journey: `ValidatedUsernameCallback has no member 'value'` | Use `.username` |
-| Journey: `ConfirmationCallback has no member 'value'` | Use `.selectedIndex: Int?`; buttons array is `.options` not `.choices` |
-| Journey: `TermsAndConditionsCallback has no member 'accept'` | Use `.accepted` |
-| Journey: `KbaCreateCallback has no member 'answer'` | Use `.selectedAnswer` |
-| Journey: `SelectIdpCallback has no member 'setProvider'` | Assign `.value = provider.provider` directly |
-| SPM: `Type checking error: got 'XCSwiftPackageProductDependency' for attribute 'fileRef'` | Use `build_file.product_ref = dep`, not `build_file.file_ref = dep` |
-| `FBSOpenApplicationServiceErrorDomain` on test | Simulator in bad state — run `xcrun simctl shutdown all` |
+See [references/common-pitfalls.md](references/common-pitfalls.md) — covers Swift 6 errors, OIDC redirect issues, DaVinci collector gotchas, SPM build errors, and simulator problems.
 
 ## 13 — Journey Export Analysis
 
-When the user provides a Journey export JSON (exported from the PingOne / AIC Platform UI), run this analysis before writing any code. The goal is to discover every callback the iOS app must handle so the generated sample is an exact match to the server-side Journey.
-
-### Export Format
-
-```
-trees/
-  <TreeName>/
-    tree/
-      nodes      — layout + connections map; each entry has nodeType and connections
-      staticNodes — Success / Failure terminal nodes
-    nodes        — full config; _type._id is the canonical node class name
-    scripts      — JS scripts keyed by UUID, referenced by ScriptedDecisionNode
-    innerNodes   — (usually empty; inner trees appear as sibling tree entries)
-```
-
-Inner trees appear as separate top-level entries in `trees` and are linked via `InnerTreeEvaluatorNode` (its `tree` field names the inner tree). Analyse every tree, not just the entry tree.
-
-### Analysis Steps
-
-**A1 — Enumerate trees.** List every key in `trees`. Identify the entry tree (referenced from `meta` or inferred as the one not referenced by any `InnerTreeEvaluatorNode`). Mark the rest as inner trees.
-
-**A2 — Collect node types.** For every node in each tree's `nodes` object, record `_type._id`. This is the authoritative node class name.
-
-**A3 — Map to SDK callbacks.**
-
-| `_type._id` | SDK callback / notes |
-|---|---|
-| `UsernameCollectorNode` | `NameCallback` |
-| `PasswordCollectorNode` | `PasswordCallback` |
-| `DataStoreDecisionNode` | No UI — server-side credential validation |
-| `SessionDataNode` | No UI — reads session token into shared state |
-| `WebAuthnRegistrationNode` | `FidoRegistrationCallback` |
-| `WebAuthnAuthenticationNode` | `FidoAuthenticationCallback` |
-| `InnerTreeEvaluatorNode` | No UI — recurse into the named inner tree |
-| `ScriptedDecisionNode` | See A4 — may produce callbacks |
-| `MessageNode` | Info message + confirm button; use `message.en` text |
-| `ChoiceCollectorNode` | `ChoiceCallback` |
-| `AttributeCollectorNode` | `StringAttributeInputCallback` / `BooleanAttributeInputCallback` |
-| `KbaCreateNode` | `KbaCreateCallback` |
-| `TermsAndConditionsNode` | `TermsAndConditionsCallback` |
-| `DeviceProfileNode` | `DeviceProfileCallback` |
-| `DeviceBindingNode` | `DeviceBindingCallback` |
-| `DeviceSigningVerifierNode` | `DeviceSigningVerifierCallback` |
-| `PingOneProtectInitializeNode` | `PingOneProtectInitializeCallback` |
-| `PingOneProtectEvaluationNode` | `PingOneProtectEvaluationCallback` |
-| `SelectIdpNode` | `SelectIdpCallback` |
-| `SocialProviderHandlerNode` | `IdpCallback` (Full tier) |
-| `PollingWaitNode` | `PollingWaitCallback` |
-
-**A4 — Inspect scripts.** For each `ScriptedDecisionNode`, look up its `script` UUID in `scripts`. The `script` field is a JSON-encoded string — unescape `\"` and `\\n` before reading. In the decoded JavaScript, look for:
-
-- **Callback construction**: `new NameCallback(...)`, `new PasswordCallback(...)`, `new TextOutputCallback(...)`, `new ConfirmationCallback(...)`, etc. These are sent to the device and must be handled by the iOS app exactly like callbacks from a native node. Add them to the callback list.
-- **`callbackFactory` / `action.goTo().withCallbacks()` patterns**: extract every callback class name referenced.
-- **State reads/writes**: `nodeState.get(...)`, `sharedState.get(...)`, `nodeState.putShared(...)` — note keys downstream nodes depend on (e.g. `displayName`, `userName`, `WebAuthenticationDOMException`).
-- **Routing-only scripts**: if the script only reads state and sets `outcome`, mark it "server-side routing, no callbacks" — no iOS UI needed.
-- **Error state keys**: scripts writing `WebAuthenticationDOMException` feed an error-handling node; no iOS UI is generated from the write itself.
-
-**A5 — Trace the flow.** Follow `connections` from the entry node through all outcomes (including inner tree `true`/`false`) to the Success and Failure static nodes. Identify which paths lead to authentication vs registration.
-
-**A6 — Determine callback tier.**
-- Any of `WebAuthnRegistrationNode`, `WebAuthnAuthenticationNode`, `DeviceBindingNode`, `DeviceSigningVerifierNode`, `PingOneProtectInitializeNode`, `PingOneProtectEvaluationNode` → **Standard** minimum.
-- `SocialProviderHandlerNode` or `IdpCallback` → **Full fat**.
-- Otherwise → **Basic**.
-
-**A7 — Extract configuration.**
-- `journeyName` — entry tree key in `trees`.
-- `relyingPartyDomain` (from `WebAuthnRegistrationNode` / `WebAuthnAuthenticationNode`) → hint for `serverUrl`.
-- `origins` — FIDO registered bundle IDs and web origins; warn if the target bundle ID is missing.
-- `userVerificationRequirement` — if `REQUIRED`, note biometric/PIN is enforced.
-
-**A8 — Report, then generate.** Output a plain-text summary (tree names, node→callback mapping, identified flows, tier, FIDO origins warnings) before writing any Swift. The generated `ContinueNodeView` must handle exactly the callbacks identified — no more, no less.
-
-### Special Cases
-
-**Inner tree as registration fallback.** When `InnerTreeEvaluatorNode` is wired to `failure`/`noDevice` outcomes, the iOS app receives different callback sets on different steps. Distinguish screens by inspecting which callbacks are present in the current `ContinueNode` (e.g. only `FidoAuthenticationCallback` → auth screen; `NameCallback` + `PasswordCallback` → registration form).
-
-**`MessageNode`.** Map to a `TextOutputCallback`-style view showing `message.en` with a single "Continue" button.
-
-**`ScriptedDecisionNode` writing `displayName`.** The `userUUIDtoDisplayName` pattern copies `username` into `displayName` shared state server-side. No iOS UI needed.
+When the user provides a Journey export JSON, run the full analysis in [references/journey-export-analysis.md](references/journey-export-analysis.md) before writing any code (steps A1–A8: enumerate trees, map nodes→callbacks, inspect scripts, determine tier, extract config).

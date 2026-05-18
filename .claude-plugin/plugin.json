@@ -1,0 +1,9 @@
+{
+  "name": "ping-sdk-agent-skills",
+  "version": "1.0.0",
+  "description": "Ping Orchestration SDK Agent Skills for Android, iOS, and JavaScript",
+  "publisher": "Ping Identity",
+  "author": {
+    "name": "Ping Identity"
+  }
+}
