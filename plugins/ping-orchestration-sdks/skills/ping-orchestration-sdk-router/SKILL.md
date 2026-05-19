@@ -1,12 +1,13 @@
 ---
 name: ping-orchestration-sdk-router
 description: >-
-  Use when a user asks for help with Ping Identity SDK integration without
-  specifying a platform — phrases like "help me add Ping auth", "I want to use
-  PingOne", "get started with the Ping Orchestration SDK", "add Ping login to
-  my app", "integrate the ForgeRock SDK", "use the pingidentity SDK". Probes
-  the project to detect Android, iOS, JavaScript, or React Native, asks if
-  ambiguous, and routes to the matching umbrella skill
+  Use when a user asks for help with Ping Identity SDK, ForgeRock SDK, or Ping
+  Orchestration SDK integration without specifying a platform — phrases like
+  "help me add Ping auth", "I want to use PingOne", "get started with the Ping
+  Orchestration SDK", "add Ping login to my app", "integrate the ForgeRock
+  SDK", "use the pingidentity SDK". Probes the project to detect Android, iOS,
+  JavaScript, or React Native, asks if ambiguous, and routes to the matching
+  umbrella skill
   (ping-orchestration-android-sdk, ping-orchestration-ios-sdk,
   ping-orchestration-javascript-sdk; React Native on the roadmap) or to
   forgerock-to-ping-journey-migration when ForgeRock SDK references are
