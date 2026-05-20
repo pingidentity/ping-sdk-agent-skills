@@ -5,7 +5,7 @@
 ```js
 import { oidc } from '@forgerock/oidc-client';
 
-const client = await oidc({
+const CONFIG = {
   serverConfig: {
     wellknown: 'https://auth.example.com/am/oauth2/alpha/.well-known/openid-configuration',
   },
@@ -13,7 +13,9 @@ const client = await oidc({
   redirectUri: 'https://app.example.com/callback',
   scope: 'openid profile email',
   // acrValues: 'urn:acr:level1',  // optional
-});
+};
+
+const client = await oidc({ config: CONFIG });
 ```
 
 `oidc()` is an async factory that validates the config and pre-fetches the well-known metadata. Call it once at app startup and reuse the returned client instance.

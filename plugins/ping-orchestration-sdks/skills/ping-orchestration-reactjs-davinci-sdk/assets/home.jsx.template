@@ -1,0 +1,32 @@
+/* ============================================================================
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ * ========================================================================== */
+
+import React, { useContext } from 'react';
+import { Link } from 'react-router-dom';
+import { OidcContext } from '../context/oidc.context';
+
+export default function Home() {
+  const [{ isAuthenticated, username, email }] = useContext(OidcContext);
+
+  if (isAuthenticated) {
+    return (
+      <div>
+        <h1>Welcome, {username || 'User'}!</h1>
+        {email && <p>Email: {email}</p>}
+        <nav><Link to="/logout">Sign Out</Link></nav>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h1>PLACEHOLDER_APP_NAME</h1>
+      <p>Please sign in to continue.</p>
+      <nav><Link to="/login">Sign In</Link></nav>
+    </div>
+  );
+}

@@ -1,5 +1,5 @@
 ---
-name: ping-orchestration-reactjs-js-davinci-sdk
+name: ping-orchestration-reactjs-davinci-sdk
 description: >-
   Use when building ReactJS web authentication with the Ping Orchestration
   JavaScript SDK (DaVinci) using `@forgerock/davinci-client` — scaffolds a
@@ -94,6 +94,8 @@ npm install --save-dev vite @vitejs/plugin-react
 ### 3. Environment Variables
 
 Create a `.env` file in your project root. See [.env template](assets/.env.template).
+
+Also add a `.gitignore` to keep secrets and build artifacts out of version control. See [.gitignore template](assets/.gitignore.template).
 
 ```env
 VITE_CLIENT_ID=your-client-id
@@ -353,6 +355,6 @@ See [scaffold_auth.sh](scripts/scaffold_auth.sh) for details.
 ## Related Skills
 
 - `ping-orchestration-javascript-sdk` — JavaScript umbrella skill (routes Journey/DaVinci/OIDC, delegates here for DaVinci flows)
-- `ping-orchestration-reactjs-js-journey-sdk` — ReactJS authentication using the Journey module (for PingOne AIC/PingAM)
+- `ping-orchestration-reactjs-journey-sdk` — ReactJS authentication using the Journey module (for PingOne AIC/PingAM)
 - `ping-orchestration-android-sdk` — Android (Kotlin/Jetpack Compose) DaVinci equivalent
 - `ping-orchestration-ios-sdk` — iOS (Swift/SwiftUI) DaVinci equivalent

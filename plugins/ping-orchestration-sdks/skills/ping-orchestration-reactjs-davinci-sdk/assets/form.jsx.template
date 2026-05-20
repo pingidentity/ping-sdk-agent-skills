@@ -1,0 +1,190 @@
+/* ============================================================================
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ * ========================================================================== */
+
+import React, { useContext, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import TextCollector from './collectors/text';
+import PasswordCollector from './collectors/password';
+import SubmitButton from './collectors/submit-button';
+import FlowButton from './collectors/flow-button';
+import SingleSelect from './collectors/single-select';
+import MultiSelect from './collectors/multi-select';
+import ReadOnly from './collectors/read-only';
+import PhoneNumber from './collectors/phone-number';
+import DeviceRegistration from './collectors/device-registration';
+import DeviceAuthentication from './collectors/device-authentication';
+import SocialLoginButton from './collectors/social-login-button';
+import Protect from './collectors/protect';
+import FidoRegistration from './collectors/fido-registration';
+import FidoAuthentication from './collectors/fido-authentication';
+import { OidcContext } from '../context/oidc.context';
+import { useDavinci } from '../hooks/use-davinci.hook';
+
+/**
+ * Main DaVinci form — self-contained component that:
+ *   - Calls useDavinci() to manage the flow
+ *   - Renders collectors for the current node
+ *   - Exchanges tokens on success via OidcContext
+ */
+export default function Form() {
+  const navigate = useNavigate();
+  const [{ oidcClient }, { setAuthentication, setUser }] = useContext(OidcContext);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [
+    { formName, node, collectors },
+    { setNext, startNewFlow, updater, externalIdp, getError },
+  ] = useDavinci();
+
+  // Exchange tokens when DaVinci flow succeeds
+  useEffect(() => {
+    if (node?.status !== 'success' || !oidcClient) return;
+
+    async function exchangeTokens() {
+      const code = node.client?.authorization?.code;
+      const state = node.client?.authorization?.state;
+
+      if (!code || !state) {
+        console.error('DaVinci success but no code/state on node.client.authorization');
+        return;
+      }
+
+      const tokenResponse = await oidcClient.token.exchange(code, state);
+      if ('error' in tokenResponse) {
+        console.error('Token exchange failed:', tokenResponse.error);
+        return;
+      }
+
+      const userInfo = await oidcClient.user.info();
+      if (!('error' in userInfo)) {
+        setUser(userInfo);
+      }
+
+      setAuthentication(true);
+      navigate('/');
+    }
+
+    exchangeTokens();
+  }, [node?.status, oidcClient]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function onSubmitHandler(event) {
+    event.preventDefault();
+    setIsLoading(true);
+    await setNext();
+    setIsLoading(false);
+  }
+
+  function mapCollectorsToComponents(collector, idx) {
+    const collectorName = collector.name;
+
+    switch (collector.type) {
+      case 'TextCollector':
+        return (
+          <TextCollector
+            collector={collector}
+            inputName={collectorName}
+            updater={updater(collector)}
+            key={collectorName}
+          />
+        );
+      case 'PasswordCollector':
+        return (
+          <PasswordCollector
+            collector={collector}
+            inputName={collectorName}
+            updater={updater(collector)}
+            key={collectorName}
+          />
+        );
+      case 'SingleSelectCollector':
+        return <SingleSelect collector={collector} updater={updater(collector)} key={collectorName} />;
+      case 'MultiSelectCollector':
+        return <MultiSelect collector={collector} updater={updater(collector)} key={collectorName} />;
+      case 'ReadOnlyCollector':
+        return <ReadOnly key={idx + collectorName} collector={collector} />;
+      case 'PhoneNumberCollector':
+      case 'DeviceRegistrationCollector':
+      case 'DeviceAuthenticationCollector':
+        return (
+          <DeviceAuthentication
+            inputName={collectorName}
+            collector={collector}
+            updater={updater(collector)}
+            key={collectorName}
+            submitForm={setNext}
+          />
+        );
+      case 'IdpCollector':
+        return (
+          <SocialLoginButton
+            collector={collector}
+            updater={externalIdp}
+            isLoading={isLoading}
+            key={collectorName}
+          />
+        );
+      case 'FidoRegistrationCollector':
+        return (
+          <FidoRegistration
+            collector={collector}
+            updater={updater(collector)}
+            key={collectorName}
+            submitForm={setNext}
+          />
+        );
+      case 'FidoAuthenticationCollector':
+        return (
+          <FidoAuthentication
+            collector={collector}
+            updater={updater(collector)}
+            key={collectorName}
+            submitForm={setNext}
+          />
+        );
+      case 'ProtectCollector':
+        return <Protect collector={collector} key={collectorName} />;
+      case 'SubmitCollector':
+        return <SubmitButton collector={collector} isLoading={isLoading} key={collectorName} />;
+      case 'FlowCollector':
+        return <FlowButton collector={collector} startNewFlow={startNewFlow} key={collectorName} />;
+      default:
+        return <p key={`unknown-${idx}`} style={{ color: 'orange' }}>Unsupported collector: {collector.type}</p>;
+    }
+  }
+
+  if (!node) {
+    return <p>Loading…</p>;
+  }
+
+  if (node.status === 'success') {
+    return <p>Success! Redirecting…</p>;
+  }
+
+  if (node.status === 'error') {
+    return (
+      <div role="alert" style={{ color: 'red' }}>
+        <p>An error occurred. Please try again.</p>
+      </div>
+    );
+  }
+
+  // Render collectors for any status that has them.
+  // PingOne DaVinci uses status strings like 'USERNAME_PASSWORD_REQUIRED'
+  // rather than 'continue' — always check getCollectors() and render if present.
+  if (collectors && collectors.length > 0) {
+    return (
+      <div>
+        {formName && <h2>{formName}</h2>}
+        <form onSubmit={onSubmitHandler}>
+          {collectors.map(mapCollectorsToComponents)}
+        </form>
+      </div>
+    );
+  }
+
+  return <p>Loading…</p>;
+}

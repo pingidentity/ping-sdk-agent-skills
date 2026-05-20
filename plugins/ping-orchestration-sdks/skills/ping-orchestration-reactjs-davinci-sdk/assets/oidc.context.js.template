@@ -1,0 +1,81 @@
+/* ============================================================================
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ * ========================================================================== */
+
+import { createContext, useState, useEffect, useCallback, useRef } from 'react';
+import { oidc } from '@forgerock/oidc-client';
+
+export const OidcContext = createContext([{}, {}]);
+
+export function useInitOidcState(config) {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmailState] = useState(sessionStorage.getItem('sdk_email') || '');
+  const [username, setUsername] = useState(sessionStorage.getItem('sdk_username') || '');
+  const [oidcClient, setOidcClient] = useState(null);
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
+
+    async function initialize() {
+      try {
+        const client = await oidc({ config });
+        const tokens = await client.token.get();
+        setIsAuthenticated(!('error' in tokens));
+        setOidcClient(client);
+      } catch (error) {
+        console.error('OIDC initialization failed:', error);
+        setOidcClient(null);
+      }
+    }
+
+    initialize();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const setAuthentication = useCallback(
+    async (authenticated) => {
+      if (!authenticated && oidcClient) {
+        try {
+          await oidcClient.user.logout();
+        } catch (error) {
+          console.error('Logout failed:', error);
+        }
+        sessionStorage.removeItem('sdk_email');
+        sessionStorage.removeItem('sdk_username');
+        window.location.assign(window.location.origin);
+        return;
+      }
+      setIsAuthenticated(authenticated);
+    },
+    [oidcClient],
+  );
+
+  const setEmail = useCallback((value) => {
+    if (value) sessionStorage.setItem('sdk_email', value);
+    else sessionStorage.removeItem('sdk_email');
+    setEmailState(value);
+  }, []);
+
+  const setUser = useCallback((userInfo) => {
+    if (userInfo && typeof userInfo === 'object') {
+      const displayName = userInfo.name || userInfo.given_name || userInfo.sub || '';
+      const userEmail = userInfo.email || '';
+      sessionStorage.setItem('sdk_username', displayName);
+      sessionStorage.setItem('sdk_email', userEmail);
+      setUsername(displayName);
+      setEmailState(userEmail);
+    } else {
+      sessionStorage.removeItem('sdk_username');
+      setUsername('');
+    }
+  }, []);
+
+  return [
+    { isAuthenticated, email, username, oidcClient },
+    { setAuthentication, setEmail, setUser },
+  ];
+}

@@ -1,5 +1,5 @@
 ---
-name: ping-orchestration-reactjs-js-journey-sdk
+name: ping-orchestration-reactjs-journey-sdk
 description: >-
   Use when building ReactJS web authentication with Ping Identity — scaffolds a
   complete React SPA authentication flow using the Ping Orchestration JavaScript
@@ -188,6 +188,8 @@ Before I generate the files, I need a few details about your PingAM / AIC setup:
 ### Step 1 — Configure Environment Variables
 
 Create a `.env` file in the project root. See [.env template](assets/.env.template).
+
+Also add a `.gitignore` to keep secrets and build artifacts out of version control. See [.gitignore template](assets/.gitignore.template).
 
 > **Agent instruction:** Substitute all `<parameter>` placeholders with values collected above.
 

@@ -229,4 +229,4 @@ This skill does NOT do any of the following — those are the responsibility of 
 - Cache detection results between runs.
 - Detect framework variants beyond what's in the registry (KMP, Flutter, Tauri, Electron, etc.).
 - Modify any file in the user's project.
-- Route to the 6 platform×SDK skills (`ping-orchestration-{android,ios,reactjs-js}-{journey,davinci}-sdk`) — they are reachable as stopgaps for the JavaScript placeholder, but the router treats them as out-of-scope routing targets otherwise.
+- Route to the 6 platform×SDK skills (`ping-orchestration-{android,ios,reactjs}-{journey,davinci}-sdk`) — they are reachable as stopgaps for the JavaScript placeholder, but the router treats them as out-of-scope routing targets otherwise.

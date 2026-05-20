@@ -57,8 +57,8 @@ Depending on the skill your AI agent uses, you'll need the following:
     npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-android-sdk
     npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk
     npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router
-    npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-reactjs-js-journey-sdk
-    npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-reactjs-js-davinci-sdk
+    npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-reactjs-journey-sdk
+    npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-reactjs-davinci-sdk
     npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/forgerock-to-ping-journey-migration
     ```
 
@@ -100,8 +100,8 @@ The AI will load the appropriate skill and provide guidance based on the SKILL.m
 | [ping-orchestration-ios-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-ios-sdk/SKILL.md) | Implements authentication in iOS apps using the Ping Orchestration iOS SDK (`Ping/ping-ios-sdk`) — SwiftUI + MVVM, Journey callbacks, DaVinci collectors, OIDC centralized login (ASWebAuthenticationSession/SFSafariViewController), FIDO/passkeys, Protect, device binding, KeychainStorage, and full Xcode project scaffolding. Also covers PingAM/AIC Journey export analysis. |
 | [ping-orchestration-android-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-android-sdk/SKILL.md) | Implements authentication in Android apps using the Ping Orchestration Android SDK (`com.pingidentity.sdks:android`) — Jetpack Compose + MVVM, Journey callbacks, DaVinci collectors, OIDC centralized login, FIDO/passkeys, Protect, device binding, EncryptedDataStore, and full project scaffolding. Covers both new project creation and existing app integration. |
 | [ping-orchestration-javascript-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/SKILL.md) | Implements authentication in web apps using the Ping Orchestration JavaScript SDK (`@forgerock/journey-client`, `@forgerock/davinci-client`, `@forgerock/oidc-client`) — React + Vite, Journey callbacks (via delegate), DaVinci collectors (via delegate), and OIDC centralized login. Covers both sample app creation and existing app integration. |
-| [ping-orchestration-reactjs-js-journey-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-reactjs-js-journey-sdk/SKILL.md) | Implements authentication in ReactJS SPAs using the Ping Orchestration JavaScript SDK (`@forgerock/journey-client`) — Vite + React 18, all Journey callbacks, OIDC token exchange, protected routes, and user profile display. |
-| [ping-orchestration-reactjs-js-davinci-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-reactjs-js-davinci-sdk/SKILL.md) | Implements authentication in ReactJS SPAs using the Ping Orchestration JavaScript SDK (`@forgerock/davinci-client`) — Vite + React 18, all DaVinci collectors including FIDO2, OIDC token exchange. |
+| [ping-orchestration-reactjs-journey-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-reactjs-journey-sdk/SKILL.md) | Implements authentication in ReactJS SPAs using the Ping Orchestration JavaScript SDK (`@forgerock/journey-client`) — Vite + React 18, all Journey callbacks, OIDC token exchange, protected routes, and user profile display. |
+| [ping-orchestration-reactjs-davinci-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-reactjs-davinci-sdk/SKILL.md) | Implements authentication in ReactJS SPAs using the Ping Orchestration JavaScript SDK (`@forgerock/davinci-client`) — Vite + React 18, all DaVinci collectors including FIDO2, OIDC token exchange. |
 
 ### Routing Skills ([ping-orchestration-sdks](./plugins/ping-orchestration-sdks/) plugin)
 
@@ -138,12 +138,12 @@ plugins/
         ├── ping-orchestration-sdk-router/           # Platform detection and routing
         │   ├── SKILL.md
         │   └── references/
-        ├── ping-orchestration-reactjs-js-journey-sdk/  # ReactJS Journey sub-skill (delegated by ping-orchestration-javascript-sdk)
+        ├── ping-orchestration-reactjs-journey-sdk/  # ReactJS Journey sub-skill (delegated by ping-orchestration-javascript-sdk)
         │   ├── SKILL.md
         │   ├── references/
         │   ├── assets/
         │   └── scripts/
-        ├── ping-orchestration-reactjs-js-davinci-sdk/  # ReactJS DaVinci sub-skill (delegated by ping-orchestration-javascript-sdk)
+        ├── ping-orchestration-reactjs-davinci-sdk/  # ReactJS DaVinci sub-skill (delegated by ping-orchestration-javascript-sdk)
         │   ├── SKILL.md
         │   ├── references/
         │   ├── assets/

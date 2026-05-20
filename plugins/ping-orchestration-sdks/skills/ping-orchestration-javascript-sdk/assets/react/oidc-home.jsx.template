@@ -1,28 +1,44 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useOidc } from '../App';
 
 export default function Home() {
-  const { client, setIsAuthenticated } = useOidc();
+  const { client, isAuthenticated, setIsAuthenticated } = useOidc();
   const [userInfo, setUserInfo] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (client) {
+    if (client && isAuthenticated) {
       client.user.info().then(setUserInfo).catch(() => {});
     }
-  }, [client]);
+  }, [client, isAuthenticated]);
+
+  async function handleSignIn() {
+    navigate('/login');
+  }
 
   async function handleLogout() {
     await client.user.logout();
     setIsAuthenticated(false);
+    setUserInfo(null);
   }
 
   return (
     <div>
       <h1>Welcome to PLACEHOLDER_APP_NAME</h1>
-      {userInfo && (
-        <p>Signed in as <strong>{userInfo.email ?? userInfo.sub}</strong></p>
+      {isAuthenticated ? (
+        <>
+          {userInfo && (
+            <p>Signed in as <strong>{userInfo.email ?? userInfo.sub}</strong></p>
+          )}
+          <button onClick={handleLogout}>Sign out</button>
+        </>
+      ) : (
+        <>
+          <p>Sign in to get started.</p>
+          <button onClick={handleSignIn}>Sign in</button>
+        </>
       )}
-      <button onClick={handleLogout}>Sign out</button>
     </div>
   );
 }

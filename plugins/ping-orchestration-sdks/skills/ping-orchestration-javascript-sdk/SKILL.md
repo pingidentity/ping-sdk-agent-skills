@@ -12,8 +12,8 @@ description: >-
   "set up @forgerock/davinci-client", "migrate from @forgerock/javascript-sdk
   to the new SDK", or "add OIDC login to my React app". Detects framework
   (React active; Angular, Vue, vanilla JS on the roadmap), collects shared
-  config, delegates Journey to ping-orchestration-reactjs-js-journey-sdk and
-  DaVinci to ping-orchestration-reactjs-js-davinci-sdk, and handles OIDC
+  config, delegates Journey to ping-orchestration-reactjs-journey-sdk and
+  DaVinci to ping-orchestration-reactjs-davinci-sdk, and handles OIDC
   centralized login inline. Covers both new sample app creation and
   integrating into an existing project.
 license: MIT
@@ -26,8 +26,8 @@ metadata:
 
 First point of contact for building web apps with the Ping Orchestration JavaScript SDK (`@forgerock/journey-client`, `@forgerock/davinci-client`, `@forgerock/oidc-client`). Handles three authentication flows:
 
-- **Journey** — callback-based auth against PingAM or PingOne AIC → delegates to `ping-orchestration-reactjs-js-journey-sdk`
-- **DaVinci** — collector-based auth against PingOne DaVinci → delegates to `ping-orchestration-reactjs-js-davinci-sdk`
+- **Journey** — callback-based auth against PingAM or PingOne AIC → delegates to `ping-orchestration-reactjs-journey-sdk`
+- **DaVinci** — collector-based auth against PingOne DaVinci → delegates to `ping-orchestration-reactjs-davinci-sdk`
 - **OIDC centralized login** — OAuth2 authorization code flow (browser redirect) → handled inline
 
 Runs a three-step wizard (W1 → W2 → W3) to determine flow type, detect framework, collect shared config, then hands off or generates code.
@@ -38,7 +38,7 @@ This table is the single source of truth for framework routing. The decision tre
 
 | Framework | Journey Delegate | DaVinci Delegate | OIDC Templates | Status |
 |-----------|-----------------|-----------------|----------------|--------|
-| React | `ping-orchestration-reactjs-js-journey-sdk` | `ping-orchestration-reactjs-js-davinci-sdk` | `assets/react/` | active |
+| React | `ping-orchestration-reactjs-journey-sdk` | `ping-orchestration-reactjs-davinci-sdk` | `assets/react/` | active |
 | Angular | — | — | `assets/angular/` | placeholder |
 | Vue | — | — | `assets/vue/` | placeholder |
 | Vanilla JS | — | — | `assets/vanilla/` | placeholder |
@@ -70,7 +70,7 @@ grep -E '"(react|vue|@angular/core|vite)"' package.json
 - `vue` or `@angular/core` found → announce placeholder and offer choices:
   > "A dedicated `ping-orchestration-vue-sdk` / `ping-orchestration-angular-sdk` skill is on the way. I can:
   > 1. **Generate framework-neutral SDK wiring** — client init, token exchange, and route guard pseudocode you can adapt to your framework's patterns.
-  > 2. **Route to the React skill** (`ping-orchestration-reactjs-js-journey-sdk` / `ping-orchestration-reactjs-js-davinci-sdk`) as a reference implementation you can port.
+  > 2. **Route to the React skill** (`ping-orchestration-reactjs-journey-sdk` / `ping-orchestration-reactjs-davinci-sdk`) as a reference implementation you can port.
   >
   > Which would you prefer?"
   - If the user chooses option 1 → proceed to W2 and then use the **Generic (Placeholder Framework) Path** below.
@@ -135,12 +135,12 @@ import { journey, callbackType } from '@forgerock/journey-client';
 import { oidc } from '@forgerock/oidc-client';
 
 // 1. Initialise OIDC client (for token management after Journey completes)
-const oidcClient = await oidc({
+const oidcClient = await oidc({ config: {
   serverConfig: { wellknown: '<wellknown>' },
   clientId: '<clientId>',
   redirectUri: '<redirectUri>',
   scope: '<scope>',
-});
+} });
 
 // 2. Start Journey
 const client = await journey({
@@ -201,12 +201,14 @@ if (node.status === 'success') {
 ```js
 import { oidc } from '@forgerock/oidc-client';
 
-const client = await oidc({
+const CONFIG = {
   serverConfig: { wellknown: '<wellknown>' },
   clientId: '<clientId>',
   redirectUri: '<redirectUri>',
   scope: '<scope>',
-});
+};
+
+const client = await oidc({ config: CONFIG });
 
 // Login: redirect to authorization endpoint
 const url = await client.authorize.url();
@@ -293,7 +295,7 @@ Reference: `assets/react/.env.template`
 
 Vite-specific pitfalls:
 - Only vars prefixed `VITE_` are exposed to the browser bundle. Server-only secrets must stay unprefixed.
-- For SPAs without SSR, the OAuth callback route must be a real file (`public/callback.html`) or the dev server returns `index.html` which re-triggers routing before the exchange runs.
+- **Do not put a static `public/callback.html` with an inline `oidc().token.exchange()` script.** When `@forgerock/oidc-client` calls `authorize.background()` for silent token renewal, it opens a hidden iframe to the authorization endpoint which redirects back to the `redirectUri`. If a static script at that URL instantiates a second OIDC client and starts exchanging the code, it hijacks the iframe and causes an iframe timeout error. Instead, handle the callback inside the React app as a normal route (see `oidc-callback.jsx.template`).
 
 #### Angular CLI
 
@@ -382,7 +384,7 @@ Handled inline — no delegation. Uses `@forgerock/oidc-client` directly. Full A
 ```js
 import { oidc } from '@forgerock/oidc-client';
 
-const client = await oidc({
+const CONFIG = {
   serverConfig: {
     wellknown: import.meta.env.VITE_PING_WELLKNOWN,
   },
@@ -390,7 +392,9 @@ const client = await oidc({
   redirectUri: import.meta.env.VITE_PING_REDIRECT_URI,
   scope: import.meta.env.VITE_PING_SCOPE,
   // acrValues: import.meta.env.VITE_PING_ACR_VALUES, // uncomment if needed
-});
+};
+
+const client = await oidc({ config: CONFIG });
 ```
 
 ### Token exchange (callback page)
@@ -456,11 +460,10 @@ Generate these files when flow type is `oidc-centralized`. Read templates from t
 | Template file | Output path | Purpose |
 |--------------|------------|---------|
 | `assets/react/.env.template` | `.env` | Environment variables (Vite `VITE_` prefix) |
-| `assets/react/callback.html.template` | `public/callback.html` | Static OAuth callback page |
 | `assets/react/oidc-app.jsx.template` | `src/App.jsx` | App shell with OIDC context + protected route |
 | `assets/react/oidc-login.jsx.template` | `src/pages/Login.jsx` | Login trigger (`authorize.url()` → redirect) |
-| `assets/react/oidc-callback.jsx.template` | `src/pages/Callback.jsx` | Code exchange handler |
-| `assets/react/oidc-home.jsx.template` | `src/pages/Home.jsx` | Protected home page with user info + sign-out |
+| `assets/react/oidc-callback.jsx.template` | `src/pages/Callback.jsx` | Code exchange handler (`token.exchange` via React component) |
+| `assets/react/oidc-home.jsx.template` | `src/pages/Home.jsx` | Home page with sign-in CTA and user info + sign-out |
 
 **Other frameworks:** When their `OIDC Templates` directory is populated, follow the same pattern — read from the framework's `assets/<framework>/` directory.
 

@@ -195,11 +195,11 @@ export default function Form({ action, followUp, topMessage }) {
     formReducer({}, initial),
   );
 
-  // Check for OAuth redirect parameters (code & state from callback.html)
+  // If code+state are present (returning from a social/IdP redirect), pass the
+  // full href to useJourney so client.resume() can extract what it needs.
   const codeParam = searchParams.get('code');
   const stateParam = searchParams.get('state');
-  const resumeUrl =
-    codeParam && stateParam ? `${window.location.origin}${window.location.pathname}?${searchParams.toString()}` : null;
+  const resumeUrl = codeParam && stateParam ? window.location.href : null;
 
   // Initialize the Journey hook
   const [

@@ -58,32 +58,38 @@ export default function useJourney({ formMetadata, resumeUrl }) {
   const [user, setUser] = useState(null);
 
   const stepCount = useRef(0);
+  const initialized = useRef(false);
 
   /**
    * Exchange the SSO session for OAuth tokens after LoginSuccess.
+   *
+   * Uses authorize.background() — a hidden iframe that AIC redirects back to
+   * callback.html with code+state. The SDK reads those params from the iframe
+   * URL directly; callback.html must be an empty stub (no script, no redirect).
+   * If background auth fails (e.g. interaction_required on plain HTTP),
+   * the SDK returns a redirectUrl for a top-level navigation fallback.
    */
   async function authorize() {
     try {
-      // Use the OIDC client to perform a background authorization
       const response = await oidcClient.authorize.background();
 
-      if ('code' in response && 'state' in response) {
-        // Exchange the authorization code for tokens
-        const tokenResponse = await oidcClient.token.exchange(
-          response.code,
-          response.state,
-        );
+      if ('error' in response) {
+        if (response.redirectUrl) {
+          window.location.assign(response.redirectUrl);
+        } else {
+          console.error('Authorization failed with no redirectUrl:', response);
+        }
+        return;
+      }
 
+      if ('code' in response && 'state' in response) {
+        const tokenResponse = await oidcClient.token.exchange(response.code, response.state);
         if ('error' in tokenResponse) {
           console.error('Token exchange failed:', tokenResponse.error);
           return;
         }
-      } else if ('error' in response) {
-        console.error('Background authorization failed:', response.error);
-        return;
       }
 
-      // Get user info from the OIDC userinfo endpoint
       const userInfo = await oidcClient.user.info();
       if (!('error' in userInfo)) {
         setUser(userInfo);
@@ -97,6 +103,9 @@ export default function useJourney({ formMetadata, resumeUrl }) {
    * Initialize the Journey client and start (or resume) the Journey.
    */
   useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
+
     async function initialize() {
       try {
         const client = await journey({ config: CONFIG });

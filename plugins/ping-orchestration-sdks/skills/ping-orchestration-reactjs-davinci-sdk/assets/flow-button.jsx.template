@@ -8,24 +8,25 @@
 import React from 'react';
 
 /**
- * Renders a flow navigation button or link for a FlowCollector.
+ * Renders a flow navigation button for a FlowCollector.
  *
  * @param {object}   props
- * @param {object}   props.collector - The FlowCollector from DaVinci.
- * @param {Function} props.onFlow    - Callback that navigates to a flow branch.
+ * @param {object}   props.collector    - The FlowCollector from DaVinci.
+ * @param {Function} props.startNewFlow - Callback that receives the full collector
+ *                                        and navigates to a flow branch.
  */
-export default function FlowButton({ collector, onFlow }) {
+export default function FlowButton({ collector, startNewFlow }) {
   const handleClick = (e) => {
     e.preventDefault();
-    onFlow(collector.output.key);
+    startNewFlow(collector);
   };
 
   return (
-    <div className="collector-field">
+    <div style={{ marginBottom: '0.5rem' }}>
       <button
         type="button"
-        className="btn btn-secondary"
         onClick={handleClick}
+        style={{ padding: '0.5rem 1.5rem', marginTop: '0.5rem' }}
       >
         {collector.output?.label || 'Continue'}
       </button>

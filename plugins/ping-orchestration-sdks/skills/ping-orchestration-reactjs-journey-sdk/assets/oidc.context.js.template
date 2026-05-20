@@ -21,7 +21,7 @@
  * to the entire component tree.
  */
 
-import { createContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useState, useEffect, useCallback, useRef } from 'react';
 import { oidc } from '@forgerock/oidc-client';
 
 /**
@@ -52,9 +52,13 @@ export function useInitOidcState(config) {
   const [email, setEmailState] = useState(sessionStorage.getItem('sdk_email') || '');
   const [username, setUsername] = useState(sessionStorage.getItem('sdk_username') || '');
   const [oidcClient, setOidcClient] = useState(null);
+  const initialized = useRef(false);
 
   // Initialize the OIDC client and check for existing tokens
   useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
+
     async function initialize() {
       try {
         const client = await oidc({ config });
