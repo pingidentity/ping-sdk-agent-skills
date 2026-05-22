@@ -49,3 +49,6 @@ yarn-error.log
 
 # Build artifacts
 *.zip
+
+# Agent tooling scratch space
+docs/superpowers/
