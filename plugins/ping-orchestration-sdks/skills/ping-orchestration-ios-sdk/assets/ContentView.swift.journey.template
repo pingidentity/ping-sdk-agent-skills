@@ -1,0 +1,61 @@
+/*
+ * ContentView.swift
+ *
+ * Root navigation coordinator for a Journey-based authentication flow.
+ */
+
+import SwiftUI
+import PingOrchestrate
+import PingJourney
+
+struct ContentView: View {
+    @State private var journeyLoginViewModel = JourneyLoginViewModel()
+
+    var body: some View {
+        NavigationStack {
+            switch journeyLoginViewModel.node {
+            case let successNode as SuccessNode:
+                AuthenticatedView(
+                    journeyLoginViewModel: journeyLoginViewModel,
+                    successNode: successNode
+                )
+            case let failureNode as FailureNode:
+                LoginView(
+                    continueNode: nil,
+                    isLoading: journeyLoginViewModel.isLoading,
+                    errorMessage: failureNode.cause.localizedDescription,
+                    onStart: { Task { await journeyLoginViewModel.start() } },
+                    onNext: {}
+                )
+            case let errorNode as ErrorNode:
+                LoginView(
+                    continueNode: errorNode.continueNode,
+                    isLoading: journeyLoginViewModel.isLoading,
+                    errorMessage: errorNode.message.isEmpty ? "An error occurred." : errorNode.message,
+                    onStart: { Task { await journeyLoginViewModel.start() } },
+                    onNext: {
+                        if let next = errorNode.continueNode {
+                            Task { await journeyLoginViewModel.next(continueNode: next) }
+                        }
+                    }
+                )
+            case let continueNode as ContinueNode:
+                LoginView(
+                    continueNode: continueNode,
+                    isLoading: journeyLoginViewModel.isLoading,
+                    errorMessage: nil,
+                    onStart: { Task { await journeyLoginViewModel.start() } },
+                    onNext: { Task { await journeyLoginViewModel.next(continueNode: continueNode) } }
+                )
+            default:
+                LoginView(
+                    continueNode: nil,
+                    isLoading: journeyLoginViewModel.isLoading,
+                    errorMessage: nil,
+                    onStart: { Task { await journeyLoginViewModel.start() } },
+                    onNext: {}
+                )
+            }
+        }
+    }
+}

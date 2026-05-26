@@ -1,0 +1,34 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useOidc } from '../App';
+
+export default function Callback() {
+  const { client, setIsAuthenticated } = useOidc();
+  const navigate = useNavigate();
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!client) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+
+    if (!code || !state) {
+      setError('No authorization code found in the URL.');
+      return;
+    }
+
+    client.token
+      .exchange(code, state)
+      .then(() => {
+        setIsAuthenticated(true);
+        navigate('/', { replace: true });
+      })
+      .catch((err) => setError(err.message));
+  }, [client]);
+
+  const wrapper = { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem', fontFamily: 'system-ui, sans-serif' };
+  if (error) return <div style={wrapper}>Authentication failed: {error}</div>;
+  return <div style={wrapper}>Completing sign-in…</div>;
+}

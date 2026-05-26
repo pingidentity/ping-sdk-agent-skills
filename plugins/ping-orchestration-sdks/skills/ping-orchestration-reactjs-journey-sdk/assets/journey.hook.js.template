@@ -1,0 +1,192 @@
+/*
+ * 
+ *
+ * journey.hook.js.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * useJourney — custom React hook that manages the Journey authentication flow.
+ *
+ * INSTRUCTIONS:
+ *   1. Place in client/components/journey/journey.hook.js
+ *   2. Ensure constants.js exports CONFIG, JOURNEY_LOGIN, JOURNEY_REGISTER
+ *   3. This hook is consumed by the Form component
+ *
+ * This is the core integration point between the Ping Orchestration JavaScript SDK
+ * and your React application. It:
+ *   - Initializes the Journey client
+ *   - Starts or resumes a Journey
+ *   - Handles step submission and navigation
+ *   - Exchanges LoginSuccess for OAuth tokens via the OIDC client
+ *   - Handles LoginFailure with error messages and journey restart
+ */
+
+import { useState, useEffect, useRef, useContext } from 'react';
+import { journey } from '@forgerock/journey-client';
+import { CONFIG } from '../../constants';
+import { OidcContext } from '../../context/oidc.context';
+
+/**
+ * @param {Object} options
+ * @param {Object} options.formMetadata — { tree: string } — the Journey/Tree name
+ * @param {string} [options.resumeUrl] — URL to resume from (after redirect/magic-link)
+ * @returns {Array} [state, methods]
+ *
+ * State:
+ *   - formFailureMessage {string|null} — error message to display
+ *   - renderStep {Object|null}         — current step to render (type: Step, LoginSuccess, LoginFailure)
+ *   - submittingForm {boolean}         — true while processing
+ *   - user {Object|null}               — user info after successful auth
+ *
+ * Methods:
+ *   - setSubmissionStep(step)  — submit the current step (triggers next())
+ *   - setSubmittingForm(bool)  — manually set submitting state
+ *   - redirect(step)           — handle RedirectCallback
+ */
+export default function useJourney({ formMetadata, resumeUrl }) {
+  const [{ oidcClient }] = useContext(OidcContext);
+
+  const [journeyClient, setJourneyClient] = useState(null);
+  const [formFailureMessage, setFormFailureMessage] = useState(null);
+  const [renderStep, setRenderStep] = useState(null);
+  const [submissionStep, setSubmissionStep] = useState(null);
+  const [submittingForm, setSubmittingForm] = useState(false);
+  const [user, setUser] = useState(null);
+
+  const stepCount = useRef(0);
+  const initialized = useRef(false);
+
+  /**
+   * Exchange the SSO session for OAuth tokens after LoginSuccess.
+   *
+   * Uses authorize.background() — a hidden iframe that AIC redirects back to
+   * callback.html with code+state. The SDK reads those params from the iframe
+   * URL directly; callback.html must be an empty stub (no script, no redirect).
+   * If background auth fails (e.g. interaction_required on plain HTTP),
+   * the SDK returns a redirectUrl for a top-level navigation fallback.
+   */
+  async function authorize() {
+    try {
+      const response = await oidcClient.authorize.background();
+
+      if ('error' in response) {
+        if (response.redirectUrl) {
+          window.location.assign(response.redirectUrl);
+        } else {
+          console.error('Authorization failed with no redirectUrl:', response);
+        }
+        return;
+      }
+
+      if ('code' in response && 'state' in response) {
+        const tokenResponse = await oidcClient.token.exchange(response.code, response.state);
+        if ('error' in tokenResponse) {
+          console.error('Token exchange failed:', tokenResponse.error);
+          return;
+        }
+      }
+
+      const userInfo = await oidcClient.user.info();
+      if (!('error' in userInfo)) {
+        setUser(userInfo);
+      }
+    } catch (error) {
+      console.error('Authorization error:', error);
+    }
+  }
+
+  /**
+   * Initialize the Journey client and start (or resume) the Journey.
+   */
+  useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
+
+    async function initialize() {
+      try {
+        const client = await journey({ config: CONFIG });
+        setJourneyClient(client);
+
+        if (resumeUrl) {
+          // Resume a journey after returning from an external redirect
+          const resumeStep = await client.resume(resumeUrl);
+          setSubmissionStep(resumeStep);
+        } else {
+          // Start a fresh journey
+          const initialStep = await client.start({ journey: formMetadata.tree });
+          stepCount.current += 1;
+          setRenderStep(initialStep);
+        }
+      } catch (error) {
+        console.error('Journey initialization failed:', error);
+        setFormFailureMessage('Failed to initialize authentication. Please try again.');
+      }
+    }
+
+    initialize();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /**
+   * Handle step submission — called when the user submits the form.
+   */
+  useEffect(() => {
+    if (!submissionStep || !journeyClient) return;
+
+    async function submitStep() {
+      try {
+        const nextStep = await journeyClient.next(submissionStep);
+
+        if (nextStep.type === 'LoginFailure') {
+          // Authentication failed — extract error and restart
+          const errorMessage =
+            nextStep.message || nextStep.detail?.errorMessage || 'Authentication failed';
+          setFormFailureMessage(errorMessage);
+
+          // Restart the journey so the user can try again
+          const freshStep = await journeyClient.start({ journey: formMetadata.tree });
+          stepCount.current += 1;
+          setRenderStep(freshStep);
+        } else if (nextStep.type === 'LoginSuccess') {
+          // Authentication succeeded — exchange for tokens
+          setRenderStep(nextStep);
+          await authorize();
+        } else {
+          // More callbacks to render
+          stepCount.current += 1;
+          setFormFailureMessage(null);
+          setRenderStep(nextStep);
+        }
+      } catch (error) {
+        console.error('Step submission failed:', error);
+        setFormFailureMessage('An error occurred. Please try again.');
+
+        // Restart the journey
+        const freshStep = await journeyClient.start({ journey: formMetadata.tree });
+        stepCount.current += 1;
+        setRenderStep(freshStep);
+      } finally {
+        setSubmittingForm(false);
+      }
+    }
+
+    submitStep();
+  }, [submissionStep]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /**
+   * Handle RedirectCallback — redirects the browser to the external provider.
+   */
+  function redirect(step) {
+    if (journeyClient) {
+      journeyClient.redirect(step);
+    }
+  }
+
+  return [
+    { formFailureMessage, renderStep, submittingForm, user },
+    { setSubmissionStep, setSubmittingForm, redirect },
+  ];
+}

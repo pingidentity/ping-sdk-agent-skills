@@ -1,0 +1,101 @@
+/* ============================================================================
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ * ========================================================================== */
+
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { davinci } from '@forgerock/davinci-client';
+import { DAVINCI_CONFIG } from '../constants';
+
+const urlParams = new URLSearchParams(window.location.search);
+const continueToken = urlParams.get('continueToken');
+const acrValue = urlParams.get('acrValue');
+
+export function useDavinci() {
+  const [davinciClient, setDavinciClient] = useState(null);
+  const [node, setNode] = useState(null);
+  const initialized = useRef(false);
+
+  // Derive collectors and form metadata from node+client in sync (no stale closure).
+  const { formName, formAction, collectors } = useMemo(() => {
+    if (node && davinciClient) {
+      const clientInfo = davinciClient.getClient() ?? null;
+      const formName = clientInfo?.name ?? '';
+      const formAction = clientInfo?.action ?? '';
+      // PingOne DaVinci may return status strings other than 'continue'
+      // (e.g. 'USERNAME_PASSWORD_REQUIRED'). Always ask getCollectors() and
+      // let the form decide whether to render them.
+      const collectors = (node.status !== 'success' && node.status !== 'error')
+        ? davinciClient.getCollectors()
+        : null;
+      return { formName, formAction, collectors };
+    }
+    return { formName: null, formAction: null, collectors: null };
+  }, [node, davinciClient]);
+
+  // Double-init guard — prevents StrictMode or HMR from calling start() twice.
+  useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
+
+    async function initDavinci() {
+      try {
+        const client = await davinci({ config: DAVINCI_CONFIG });
+        setDavinciClient(client);
+
+        let initialNode;
+        if (continueToken) {
+          initialNode = await client.resume({ continueToken });
+        } else {
+          initialNode = await client.start(
+            acrValue ? { query: { acr_values: acrValue } } : undefined,
+          );
+        }
+
+        setNode(initialNode);
+      } catch (error) {
+        console.error('Error initializing DaVinci:', error);
+      }
+    }
+
+    initDavinci();
+  }, []);
+
+  async function setNext() {
+    try {
+      const nextNode = await davinciClient.next();
+      setNode(nextNode);
+    } catch (error) {
+      console.error('Error getting next node', error);
+    }
+  }
+
+  async function startNewFlow(collector) {
+    if (davinciClient && collector?.type === 'FlowCollector') {
+      try {
+        const getFlowNode = davinciClient.flow({ action: collector.name });
+        const flowNode = await getFlowNode(collector.output.key);
+        setNode(flowNode);
+      } catch (error) {
+        console.error('Error getting flow node:', error);
+      }
+    }
+  }
+
+  function updater(collector) {
+    return davinciClient.update(collector);
+  }
+
+  return [
+    { formName, formAction, node, collectors },
+    {
+      setNext,
+      startNewFlow,
+      updater,
+      externalIdp: davinciClient && davinciClient.externalIdp(),
+      getError: davinciClient && davinciClient.getError,
+    },
+  ];
+}

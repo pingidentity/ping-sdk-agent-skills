@@ -1,0 +1,28 @@
+/* ============================================================================
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ * ========================================================================== */
+
+import React from 'react';
+
+/**
+ * Renders a submit button for a SubmitCollector.
+ * Must be inside a <form onSubmit> — uses type="submit" so the form handles submission.
+ *
+ * @param {object}  props
+ * @param {object}  props.collector  - The SubmitCollector from DaVinci.
+ * @param {boolean} props.isLoading  - Disables the button while the next node is loading.
+ */
+export default function SubmitButton({ collector, isLoading }) {
+  return (
+    <button
+      type="submit"
+      disabled={isLoading}
+      style={{ padding: '0.5rem 1.5rem', marginTop: '0.5rem' }}
+    >
+      {isLoading ? 'Submitting…' : (collector.output?.label || 'Submit')}
+    </button>
+  );
+}

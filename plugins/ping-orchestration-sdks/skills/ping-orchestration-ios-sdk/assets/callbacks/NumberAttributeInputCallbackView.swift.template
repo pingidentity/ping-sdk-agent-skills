@@ -1,0 +1,48 @@
+/*
+ * NumberAttributeInputCallbackView.swift — Journey Standard tier
+ *
+ * Uses `.value` (Double).
+ */
+
+import SwiftUI
+import PingJourney
+
+struct NumberAttributeInputCallbackView: View {
+    let callback: NumberAttributeInputCallback
+    let onRefresh: () -> Void
+
+    @State private var text: String = ""
+
+    private var hasErrors: Bool { !callback.failedPolicies.isEmpty }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            TextField(callback.prompt, text: $text)
+                .keyboardType(.decimalPad)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(hasErrors ? Color.red : Color.pingTextField, lineWidth: 1)
+                )
+                .onAppear { text = String(callback.value) }
+                .onChange(of: text) { _, newValue in
+                    let filtered = newValue.filter { $0.isNumber || $0 == "." }
+                    if filtered != newValue { text = filtered }
+                    if !text.isEmpty, let doubleValue = Double(text) {
+                        callback.value = doubleValue
+                    }
+                }
+                .onSubmit { onRefresh() }
+
+            if hasErrors {
+                ErrorMessageView(
+                    message: callback.failedPolicies
+                        .map { $0.failedDescription(for: callback.prompt) }
+                        .joined(separator: "\n")
+                )
+            }
+        }
+    }
+}

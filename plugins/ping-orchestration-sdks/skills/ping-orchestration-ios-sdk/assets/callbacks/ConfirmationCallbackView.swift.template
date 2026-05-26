@@ -1,0 +1,39 @@
+/*
+ * ConfirmationCallbackView.swift — Journey Standard tier
+ *
+ * Self-advancing: writes `.selectedIndex` and immediately calls onNext.
+ * Use `.options` (NOT `.choices`); `.selectedIndex: Int?`.
+ */
+
+import SwiftUI
+import PingJourney
+
+struct ConfirmationCallbackView: View {
+    let callback: ConfirmationCallback
+    let onSelected: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            if !callback.prompt.isEmpty {
+                Text(callback.prompt)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.leading)
+            }
+
+            HStack {
+                Spacer()
+                ForEach(callback.options.indices, id: \.self) { index in
+                    Button(callback.options[index]) {
+                        callback.selectedIndex = index
+                        onSelected()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.pingRed)
+                    .padding(.horizontal, 4)
+                }
+            }
+        }
+        .padding()
+    }
+}

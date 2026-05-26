@@ -1,0 +1,35 @@
+/*
+ * AppDaVinci.swift
+ *
+ * Singleton that holds the configured DaVinci instance.
+ * DaVinci does NOT use serverUrl/realm/cookieName.
+ * Replace all PLACEHOLDER_ values with your PingOne DaVinci tenant details.
+ */
+
+import PingDavinci
+import PingOidc
+import PingOrchestrate
+import PingStorage
+import PingLogger
+
+@MainActor
+class AppDaVinci {
+    static let shared = AppDaVinci()
+
+    let davinci: DaVinci
+
+    private init() {
+        davinci = DaVinci.createDaVinci { config in
+            config.logger = LogManager.standard
+            config.module(PingDavinci.OidcModule.config) { oidcConfig in
+                oidcConfig.clientId          = "PLACEHOLDER_CLIENT_ID"
+                oidcConfig.scopes            = Set([PLACEHOLDER_SCOPES])
+                oidcConfig.redirectUri       = "PLACEHOLDER_REDIRECT_URI"
+                oidcConfig.discoveryEndpoint = "PLACEHOLDER_DISCOVERY_ENDPOINT"
+                oidcConfig.storage           = KeychainStorage<Token>(account: "PLACEHOLDER_KEYCHAIN_ACCOUNT")
+                oidcConfig.logger            = LogManager.standard
+                // PLACEHOLDER_ACR_VALUES_LINE
+            }
+        }
+    }
+}

@@ -1,0 +1,97 @@
+/*
+ * DaVinciLoginViewModel.swift
+ *
+ * @Observable ViewModel that drives a DaVinci flow.
+ */
+
+import Foundation
+import Observation
+import PingOidc
+import PingOrchestrate
+import PingDavinci
+import PingDavinciPlugin
+import PingExternalIdP
+
+@Observable
+@MainActor
+final class DaVinciLoginViewModel {
+    var node: Node?
+    var isLoading = false
+
+    var userInfo: [String: Any] = [:]
+    var isLoadingUserInfo = false
+    var userInfoError: String?
+
+    /// True after a `next()` call when one or more validated collectors failed.
+    var shouldValidate = false
+
+    init() {}
+
+    func start() async {
+        isLoading = true
+        defer { isLoading = false }
+        node = await AppDaVinci.shared.davinci.start()
+    }
+
+    func next(continueNode: ContinueNode) async {
+        // Skip server round-trip if any validated collector is invalid.
+        if recomputeShouldValidate(node: continueNode) { return }
+
+        isLoading = true
+        defer { isLoading = false }
+        node = await continueNode.next()
+    }
+
+    /// Recompute validation state. Returns true when local validation found errors
+    /// (so the UI should highlight them and the agent should NOT call next()).
+    func recomputeShouldValidate(node: ContinueNode) -> Bool {
+        var anyInvalid = false
+        for collector in node.collectors {
+            // Social collectors with a resume request must not be locally validated.
+            if let socialCollector = collector as? IdpCollector,
+               socialCollector.resumeRequest != nil {
+                shouldValidate = false
+                return false
+            }
+            if let validated = collector as? ValidatedCollector,
+               !validated.validate().isEmpty {
+                anyInvalid = true
+            }
+        }
+        shouldValidate = anyInvalid
+        return anyInvalid
+    }
+
+    /// Force re-render after a collector writes a value (no SDK round-trip).
+    func refresh() {
+        let current = node
+        node = nil
+        node = current
+    }
+
+    func loadUserInfo() async {
+        guard let user = await AppDaVinci.shared.davinci.user() else {
+            userInfoError = "No active session."
+            return
+        }
+        isLoadingUserInfo = true
+        userInfoError = nil
+        defer { isLoadingUserInfo = false }
+        let result = await user.userinfo(cache: false)
+        switch result {
+        case .success(let info):
+            userInfo = info
+        case .failure(let error):
+            userInfoError = error.localizedDescription
+        }
+    }
+
+    func signOut() async {
+        if let user = await AppDaVinci.shared.davinci.user() {
+            await user.revoke()
+        }
+        node = nil
+        userInfo = [:]
+        userInfoError = nil
+    }
+}

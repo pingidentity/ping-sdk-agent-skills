@@ -1,0 +1,25 @@
+{
+  "name": "my-react-journey-app",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A Ping authenticated ReactJS app using the Orchestration JavaScript SDK",
+  "scripts": {
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@forgerock/journey-client": "latest",
+    "@forgerock/oidc-client": "latest",
+    "@forgerock/protect": "latest",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.19.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
+    "@vitejs/plugin-react": "^4.3.3",
+    "vite": "^6.3.6"
+  }
+}

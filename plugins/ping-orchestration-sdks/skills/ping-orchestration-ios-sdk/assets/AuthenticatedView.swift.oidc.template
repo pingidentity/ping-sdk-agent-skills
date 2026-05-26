@@ -1,0 +1,99 @@
+/*
+ * AuthenticatedView.swift
+ *
+ * Displays session status, user profile info, and sign-out for an authenticated user.
+ */
+
+import SwiftUI
+import PingOidc
+
+struct AuthenticatedView: View {
+    let oidcLoginViewModel: OidcLoginViewModel
+
+    var body: some View {
+        ZStack {
+            ScrollView {
+                VStack(spacing: 0) {
+                    PingHeaderView(title: "PLACEHOLDER_APP_NAME", subtitle: "Signed In")
+
+                    VStack(spacing: 24) {
+                        tokenSection
+                        userInfoSection
+                        signOutButton
+                    }
+                    .padding(24)
+                }
+            }
+
+            if oidcLoginViewModel.isLoadingUserInfo {
+                LoadingOverlay("Loading profile…")
+            }
+        }
+        .task {
+            await oidcLoginViewModel.loadUserInfo()
+        }
+        .navigationBarBackButtonHidden(true)
+    }
+
+    private var tokenSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Session Active", systemImage: "checkmark.seal.fill")
+                .font(.headline)
+                .foregroundColor(.pingRed)
+
+            Text("You are authenticated. Your token is stored securely in the Keychain.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.pingRed.opacity(0.06))
+        )
+    }
+
+    @ViewBuilder
+    private var userInfoSection: some View {
+        if let userInfoError = oidcLoginViewModel.userInfoError {
+            ErrorMessageView(message: "Could not load profile: \(userInfoError)")
+        } else if !oidcLoginViewModel.userInfo.isEmpty {
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Profile")
+                    .font(.headline)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+
+                Divider()
+
+                ForEach(oidcLoginViewModel.userInfo.keys.sorted(), id: \.self) { key in
+                    HStack(alignment: .top) {
+                        Text(key)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .frame(width: 110, alignment: .leading)
+                        Text(String(describing: oidcLoginViewModel.userInfo[key] ?? ""))
+                            .font(.caption)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+
+                    Divider()
+                }
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 2)
+            )
+        }
+    }
+
+    private var signOutButton: some View {
+        Button("Sign Out") {
+            Task { await oidcLoginViewModel.signOut() }
+        }
+        .buttonStyle(PingPrimaryButtonStyle())
+    }
+}

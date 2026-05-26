@@ -1,0 +1,44 @@
+/*
+ * FidoRegistrationCollectorView.swift — DaVinci Standard tier
+ *
+ * Self-advancing. DaVinci variant: `collector.register(window:)` — NO `deviceName:` parameter.
+ */
+
+import SwiftUI
+import UIKit
+import PingFido
+
+struct FidoRegistrationCollectorView: View {
+    let collector: FidoRegistrationCollector
+    let onNext: () -> Void
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Text("FIDO Registration")
+                .font(.title2)
+                .fontWeight(.semibold)
+
+            Button {
+                Task { await register() }
+            } label: {
+                Text(collector.label.isEmpty ? "Register passkey" : collector.label)
+            }
+            .buttonStyle(PingPrimaryButtonStyle())
+            .padding(.horizontal)
+        }
+    }
+
+    private func register() async {
+        guard let window = UIApplication.shared.connectedScenes
+            .compactMap({ ($0 as? UIWindowScene)?.windows.first })
+            .first
+        else { return }
+
+        let result = await collector.register(window: window)
+        switch result {
+        case .success: onNext()
+        case .failure(let error):
+            print("FIDO registration failed: \(error.localizedDescription)")
+        }
+    }
+}

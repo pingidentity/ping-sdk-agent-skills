@@ -1,0 +1,137 @@
+/*
+ * 
+ *
+ * oidc.context.js.template
+ *
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+
+/*
+ * OIDC Context Provider — manages authentication state across the application.
+ *
+ * INSTRUCTIONS:
+ *   1. Place in client/context/oidc.context.js
+ *   2. Wrap your app with <OidcContext.Provider value={oidcState}>
+ *   3. Access auth state via useContext(OidcContext) in child components
+ *
+ * This context initializes the OIDC client on mount, checks for an existing
+ * session (stored tokens), and provides authentication state and methods
+ * to the entire component tree.
+ */
+
+import { createContext, useState, useEffect, useCallback, useRef } from 'react';
+import { oidc } from '@forgerock/oidc-client';
+
+/**
+ * React Context for OIDC authentication state.
+ * Value shape: [state, methods]
+ */
+export const OidcContext = createContext();
+
+/**
+ * Custom hook to initialize OIDC state.
+ *
+ * @param {Object} config - SDK configuration object (from constants.js)
+ * @returns {Array} [state, methods] — provide as value to OidcContext.Provider
+ *
+ * State:
+ *   - isAuthenticated {boolean}  — whether the user has a valid session
+ *   - email {string}             — user's email from session storage
+ *   - username {string}          — user's display name from session storage
+ *   - oidcClient {Object|null}   — initialized OIDC client instance
+ *
+ * Methods:
+ *   - setAuthentication(bool)    — set auth state; false triggers logout
+ *   - setEmail(string)           — persist email to session storage
+ *   - setUser(userInfo)          — persist user info to session storage
+ */
+export function useInitOidcState(config) {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmailState] = useState(sessionStorage.getItem('sdk_email') || '');
+  const [username, setUsername] = useState(sessionStorage.getItem('sdk_username') || '');
+  const [oidcClient, setOidcClient] = useState(null);
+  const initialized = useRef(false);
+
+  // Initialize the OIDC client and check for existing tokens
+  useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
+
+    async function initialize() {
+      try {
+        const client = await oidc({ config });
+
+        // Check if the user already has valid tokens (session persistence)
+        const tokens = await client.token.get();
+        const authenticated = !('error' in tokens);
+
+        setIsAuthenticated(authenticated);
+        setOidcClient(client);
+      } catch (error) {
+        console.error('OIDC initialization failed:', error);
+        setOidcClient(null);
+      }
+    }
+
+    initialize();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /**
+   * Set authentication state.
+   * When set to false, triggers a full logout (revoke tokens + end session).
+   */
+  const setAuthentication = useCallback(
+    async (authenticated) => {
+      if (!authenticated && oidcClient) {
+        try {
+          await oidcClient.user.logout();
+        } catch (error) {
+          console.error('Logout failed:', error);
+        }
+        sessionStorage.removeItem('sdk_email');
+        sessionStorage.removeItem('sdk_username');
+        // Redirect to origin to clear state
+        window.location.assign(window.location.origin);
+        return;
+      }
+      setIsAuthenticated(authenticated);
+    },
+    [oidcClient],
+  );
+
+  /**
+   * Persist email to session storage and state.
+   */
+  const setEmail = useCallback((value) => {
+    if (value) {
+      sessionStorage.setItem('sdk_email', value);
+    } else {
+      sessionStorage.removeItem('sdk_email');
+    }
+    setEmailState(value);
+  }, []);
+
+  /**
+   * Persist user info from the OIDC userinfo response.
+   */
+  const setUser = useCallback((userInfo) => {
+    if (userInfo && typeof userInfo === 'object') {
+      const displayName = userInfo.name || userInfo.given_name || userInfo.sub || '';
+      const userEmail = userInfo.email || '';
+      sessionStorage.setItem('sdk_username', displayName);
+      sessionStorage.setItem('sdk_email', userEmail);
+      setUsername(displayName);
+      setEmailState(userEmail);
+    } else {
+      sessionStorage.removeItem('sdk_username');
+      setUsername('');
+    }
+  }, []);
+
+  return [
+    { isAuthenticated, email, username, oidcClient },
+    { setAuthentication, setEmail, setUser },
+  ];
+}

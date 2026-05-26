@@ -1,0 +1,49 @@
+/*
+ * PollingWaitCallbackView.swift — Journey Standard tier
+ *
+ * Self-advancing: when the wait timer elapses, calls onTimeout (which advances the flow).
+ * `.waitTime` is in milliseconds.
+ */
+
+import SwiftUI
+import PingJourney
+
+struct PollingWaitCallbackView: View {
+    let callback: PollingWaitCallback
+    let onTimeout: () -> Void
+
+    @State private var progress: Double = 0
+    @State private var task: Task<Void, Never>?
+
+    var body: some View {
+        VStack(alignment: .center, spacing: 16) {
+            Text(callback.message)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+
+            ProgressView(value: progress, total: 1.0)
+                .progressViewStyle(.circular)
+                .scaleEffect(1.5)
+                .tint(.pingRed)
+        }
+        .padding()
+        .onAppear { startPolling() }
+        .onDisappear { task?.cancel() }
+    }
+
+    private func startPolling() {
+        guard task == nil else { return }
+        let waitSeconds = Double(callback.waitTime) / 1000.0
+        let updateInterval = 0.1
+        let totalSteps = waitSeconds / updateInterval
+
+        task = Task { @MainActor in
+            for step in 0..<Int(totalSteps) {
+                if Task.isCancelled { return }
+                progress = Double(step + 1) / totalSteps
+                try? await Task.sleep(nanoseconds: UInt64(updateInterval * 1_000_000_000))
+            }
+            if !Task.isCancelled { onTimeout() }
+        }
+    }
+}

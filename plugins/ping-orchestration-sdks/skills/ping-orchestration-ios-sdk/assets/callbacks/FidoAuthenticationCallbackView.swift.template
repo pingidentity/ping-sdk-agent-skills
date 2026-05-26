@@ -1,0 +1,42 @@
+/*
+ * FidoAuthenticationCallbackView.swift — Journey Standard tier
+ *
+ * Self-advancing: calls onNext after the platform passkey assertion completes.
+ * Signature is `authenticate(window:)`.
+ */
+
+import SwiftUI
+import UIKit
+import PingFido
+import PingJourney
+
+struct FidoAuthenticationCallbackView: View {
+    let callback: FidoAuthenticationCallback
+    let onNext: () -> Void
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Text("FIDO Authentication")
+                .font(.title2)
+                .fontWeight(.semibold)
+
+            Button {
+                Task { await authenticate() }
+            } label: {
+                Text("Sign in with passkey")
+            }
+            .buttonStyle(PingPrimaryButtonStyle())
+        }
+        .padding()
+    }
+
+    private func authenticate() async {
+        guard let window = UIApplication.shared.connectedScenes
+            .compactMap({ ($0 as? UIWindowScene)?.windows.first })
+            .first
+        else { return }
+
+        _ = await callback.authenticate(window: window)
+        onNext()
+    }
+}

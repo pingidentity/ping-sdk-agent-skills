@@ -1,0 +1,88 @@
+/*
+ * SocialCollectorView.swift — DaVinci Full-fat tier
+ *
+ * Self-advancing: calls `idpCollector.authorize()` async.
+ * Requires PingExternalIdP + per-provider: PingExternalIdPApple,
+ * PingExternalIdPGoogle, PingExternalIdPFacebook.
+ */
+
+import SwiftUI
+import Observation
+import PingDavinci
+import PingExternalIdP
+import PingExternalIdPApple
+import PingExternalIdPGoogle
+import PingExternalIdPFacebook
+
+@Observable
+@MainActor
+final class SocialCollectorViewModel {
+    var isAuthenticating = false
+    var error: String?
+
+    let idpCollector: IdpCollector
+
+    init(idpCollector: IdpCollector) {
+        self.idpCollector = idpCollector
+    }
+
+    func authorize() async -> Result<Bool, IdpExceptions> {
+        isAuthenticating = true
+        let result = await idpCollector.authorize()
+        isAuthenticating = false
+        return result
+    }
+}
+
+struct SocialCollectorView: View {
+    @State private var viewModel: SocialCollectorViewModel
+    let onNext: (Bool) -> Void
+    let onStart: () -> Void
+
+    init(idpCollector: IdpCollector, onNext: @escaping (Bool) -> Void, onStart: @escaping () -> Void) {
+        _viewModel = State(wrappedValue: SocialCollectorViewModel(idpCollector: idpCollector))
+        self.onNext = onNext
+        self.onStart = onStart
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            if let error = viewModel.error {
+                Text(error)
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button {
+                Task {
+                    let result = await viewModel.authorize()
+                    switch result {
+                    case .success: onNext(true)
+                    case .failure(let err):
+                        viewModel.error = err.localizedDescription
+                        onStart()
+                    }
+                }
+            } label: {
+                Text(viewModel.idpCollector.label)
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .background(buttonBackground)
+                    .cornerRadius(15)
+            }
+        }
+        .padding(.horizontal)
+    }
+
+    private var buttonBackground: Color {
+        switch viewModel.idpCollector.idpType {
+        case "APPLE":    return Color(red: 0, green: 0, blue: 0)
+        case "FACEBOOK": return Color(red: 0, green: 0.5, blue: 1)
+        default:         return .pingRed
+        }
+    }
+}

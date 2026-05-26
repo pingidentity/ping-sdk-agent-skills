@@ -1,0 +1,28 @@
+/*
+ * BooleanAttributeInputCallbackView.swift — Journey Standard tier
+ */
+
+import SwiftUI
+import PingJourney
+
+struct BooleanAttributeInputCallbackView: View {
+    let callback: BooleanAttributeInputCallback
+    let onRefresh: () -> Void
+
+    @State private var value: Bool = false
+
+    var body: some View {
+        HStack {
+            Text(callback.prompt)
+                .foregroundColor(.primary)
+            Spacer()
+            Toggle("", isOn: $value)
+                .toggleStyle(SwitchToggleStyle(tint: .pingRed))
+                .onChange(of: value) { _, newValue in
+                    callback.value = newValue
+                }
+        }
+        .padding()
+        .onAppear { value = callback.value }
+    }
+}

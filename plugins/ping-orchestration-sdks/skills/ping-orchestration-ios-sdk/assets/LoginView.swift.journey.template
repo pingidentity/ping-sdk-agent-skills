@@ -1,0 +1,95 @@
+/*
+ * LoginView.swift
+ *
+ * Journey login screen — renders callbacks inside the app using SwiftUI.
+ * No browser is launched.
+ */
+
+import SwiftUI
+import PingOrchestrate
+import PingJourney
+
+struct LoginView: View {
+    let continueNode: ContinueNode?
+    let isLoading: Bool
+    let errorMessage: String?
+    let onStart: () -> Void
+    let onNext: () -> Void
+    let onRefresh: () -> Void
+
+    init(
+        continueNode: ContinueNode?,
+        isLoading: Bool,
+        errorMessage: String?,
+        onStart: @escaping () -> Void,
+        onNext: @escaping () -> Void,
+        onRefresh: @escaping () -> Void = {}
+    ) {
+        self.continueNode = continueNode
+        self.isLoading = isLoading
+        self.errorMessage = errorMessage
+        self.onStart = onStart
+        self.onNext = onNext
+        self.onRefresh = onRefresh
+    }
+
+    var body: some View {
+        ZStack {
+            ScrollView {
+                VStack(spacing: 0) {
+                    PingHeaderView(title: "PLACEHOLDER_APP_NAME", subtitle: "Sign In")
+
+                    VStack(spacing: 24) {
+                        if let errorMessage {
+                            ErrorView(message: errorMessage, onRetry: onStart)
+                        }
+
+                        if let continueNode {
+                            if !continueNode.pageHeader.isEmpty {
+                                Text(continueNode.pageHeader)
+                                    .font(.title2)
+                                    .fontWeight(.semibold)
+                                    .multilineTextAlignment(.center)
+                            }
+                            if !continueNode.pageDescription.isEmpty {
+                                Text(continueNode.pageDescription)
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                            }
+
+                            ContinueNodeView(
+                                node: continueNode,
+                                onNext: onNext,
+                                onRefresh: onRefresh
+                            )
+
+                            if !continueNode.pageFooter.isEmpty {
+                                Text(continueNode.pageFooter)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                            }
+                        } else if errorMessage == nil {
+                            VStack(spacing: 12) {
+                                Text("Sign in with your Ping Identity account.")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+
+                                Button("Start", action: onStart)
+                                    .buttonStyle(PingPrimaryButtonStyle())
+                            }
+                        }
+                    }
+                    .padding(24)
+                }
+            }
+
+            if isLoading {
+                LoadingOverlay("Signing in…")
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+    }
+}

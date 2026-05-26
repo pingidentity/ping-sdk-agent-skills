@@ -1,0 +1,68 @@
+/*
+ * MultiSelectComboBoxView.swift — DaVinci Standard tier
+ * Used when MultiSelectCollector.type == "COMBOBOX".
+ * `field.options` items are NOT Hashable — use `.value` as id.
+ */
+
+import SwiftUI
+import PingDavinci
+
+struct MultiSelectComboBoxView: View {
+    let field: MultiSelectCollector
+    let onRefresh: () -> Void
+
+    @State private var selectedValues: [String] = []
+    @State private var isValid: Bool = true
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(field.required ? "\(field.label)*" : field.label)
+                .font(.headline)
+
+            Menu {
+                ForEach(field.options.indices, id: \.self) { index in
+                    let option = field.options[index]
+                    let isSelected = selectedValues.contains(option.value)
+
+                    Button {
+                        if isSelected {
+                            selectedValues.removeAll { $0 == option.value }
+                            field.value.removeAll { $0 == option.value }
+                        } else {
+                            selectedValues.append(option.value)
+                            field.value.append(option.value)
+                        }
+                        isValid = field.validate().isEmpty
+                        onRefresh()
+                    } label: {
+                        HStack {
+                            Image(systemName: isSelected ? "checkmark.square.fill" : "square")
+                            Text(option.label)
+                        }
+                    }
+                }
+            } label: {
+                HStack {
+                    Text(selectedValues.isEmpty ? "Select options" : selectedValues.joined(separator: ", "))
+                        .foregroundColor(selectedValues.isEmpty ? .gray : .primary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .foregroundStyle(Color.pingRed)
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(isValid ? Color.pingTextField : Color.red, lineWidth: 1)
+                )
+            }
+
+            if !isValid {
+                ErrorMessageView(message: field.validate().map { $0.errorMessage }.joined(separator: "\n"))
+            }
+        }
+        .padding(.horizontal)
+        .onAppear { selectedValues = field.value }
+    }
+}

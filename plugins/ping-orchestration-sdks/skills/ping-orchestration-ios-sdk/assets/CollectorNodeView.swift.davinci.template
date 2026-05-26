@@ -1,0 +1,53 @@
+/*
+ * CollectorNodeView.swift
+ *
+ * Renders all collectors in a DaVinci ContinueNode.
+ * Suppress the "Next" button for self-advancing collectors.
+ */
+
+import SwiftUI
+import PingOrchestrate
+import PingDavinci
+import PingDavinciPlugin
+// PLACEHOLDER_TIER_IMPORTS
+
+struct CollectorNodeView: View {
+    let node: ContinueNode
+    let onNext: () -> Void
+    let onRefresh: () -> Void
+
+    private var hasSelfAdvancingCollector: Bool {
+        node.collectors.contains { collector in
+            collector is SubmitCollector ||
+            collector is FlowCollector ||
+            // PLACEHOLDER_SELF_ADVANCING_TYPES
+            false
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            ForEach(node.collectors, id: \.id) { collector in
+                collectorView(for: collector)
+            }
+
+            if !hasSelfAdvancingCollector {
+                Button("Next", action: onNext)
+                    .buttonStyle(PingPrimaryButtonStyle())
+                    .padding(.top, 16)
+            }
+        }
+        .padding()
+    }
+
+    @ViewBuilder
+    private func collectorView(for collector: any Collector) -> some View {
+        switch collector {
+        // PLACEHOLDER_COLLECTOR_CASES
+        default:
+            Text("Unsupported collector: \(String(describing: type(of: collector)))")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+    }
+}

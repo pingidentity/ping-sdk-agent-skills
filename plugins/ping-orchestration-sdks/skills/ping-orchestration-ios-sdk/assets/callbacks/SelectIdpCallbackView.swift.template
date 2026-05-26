@@ -1,0 +1,38 @@
+/*
+ * SelectIdpCallbackView.swift — Journey Standard tier
+ *
+ * Self-advancing: assigns `.value = provider.provider` and calls onNext.
+ * NO `.setProvider()` method exists.
+ */
+
+import SwiftUI
+import PingExternalIdP
+
+struct SelectIdpCallbackView: View {
+    let callback: SelectIdpCallback
+    let onNext: () -> Void
+
+    var body: some View {
+        ScrollView {
+            LazyVStack(alignment: .center, spacing: 12) {
+                Text("Select a provider")
+                    .font(.headline)
+                    .padding(.bottom, 8)
+
+                ForEach(callback.providers) { provider in
+                    Button {
+                        callback.value = provider.provider
+                        onNext()
+                    } label: {
+                        Text(provider.provider.capitalized)
+                            .fontWeight(.semibold)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.pingRed)
+                }
+            }
+        }
+        .padding()
+    }
+}

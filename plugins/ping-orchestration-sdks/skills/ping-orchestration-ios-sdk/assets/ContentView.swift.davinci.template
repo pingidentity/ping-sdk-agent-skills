@@ -1,0 +1,65 @@
+/*
+ * ContentView.swift
+ *
+ * Root navigation coordinator for a DaVinci-based authentication flow.
+ */
+
+import SwiftUI
+import PingOrchestrate
+import PingDavinci
+
+struct ContentView: View {
+    @State private var davinciLoginViewModel = DaVinciLoginViewModel()
+
+    var body: some View {
+        NavigationStack {
+            switch davinciLoginViewModel.node {
+            case is SuccessNode:
+                AuthenticatedView(davinciLoginViewModel: davinciLoginViewModel)
+            case let failureNode as FailureNode:
+                let message: String = {
+                    if let apiError = failureNode.cause as? ApiError,
+                       case .error(_, _, let msg) = apiError {
+                        return msg
+                    }
+                    return failureNode.cause.localizedDescription
+                }()
+                LoginView(
+                    continueNode: nil,
+                    isLoading: davinciLoginViewModel.isLoading,
+                    errorMessage: message,
+                    onStart: { Task { await davinciLoginViewModel.start() } },
+                    onNext: {}
+                )
+            case let errorNode as ErrorNode:
+                LoginView(
+                    continueNode: errorNode.continueNode,
+                    isLoading: davinciLoginViewModel.isLoading,
+                    errorMessage: errorNode.message.isEmpty ? "An error occurred." : errorNode.message,
+                    onStart: { Task { await davinciLoginViewModel.start() } },
+                    onNext: {
+                        if let next = errorNode.continueNode {
+                            Task { await davinciLoginViewModel.next(continueNode: next) }
+                        }
+                    }
+                )
+            case let continueNode as ContinueNode:
+                LoginView(
+                    continueNode: continueNode,
+                    isLoading: davinciLoginViewModel.isLoading,
+                    errorMessage: nil,
+                    onStart: { Task { await davinciLoginViewModel.start() } },
+                    onNext: { Task { await davinciLoginViewModel.next(continueNode: continueNode) } }
+                )
+            default:
+                LoginView(
+                    continueNode: nil,
+                    isLoading: davinciLoginViewModel.isLoading,
+                    errorMessage: nil,
+                    onStart: { Task { await davinciLoginViewModel.start() } },
+                    onNext: {}
+                )
+            }
+        }
+    }
+}

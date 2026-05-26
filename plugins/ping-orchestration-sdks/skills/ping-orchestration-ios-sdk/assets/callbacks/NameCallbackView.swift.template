@@ -1,0 +1,33 @@
+/*
+ * NameCallbackView.swift — Journey Basic tier
+ *
+ * Use `.name` (not `.value`); commit on submit only.
+ */
+
+import SwiftUI
+import PingJourney
+
+struct NameCallbackView: View {
+    let callback: NameCallback
+    let onRefresh: () -> Void
+
+    @State private var text: String = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            TextField(callback.prompt, text: $text)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.pingTextField, lineWidth: 1)
+                )
+                .onAppear { text = callback.name }
+                .onChange(of: text) { _, newValue in
+                    callback.name = newValue
+                }
+                .onSubmit { onRefresh() }
+        }
+    }
+}

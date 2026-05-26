@@ -1,0 +1,89 @@
+/*
+ * KbaCreateCallbackView.swift — Journey Standard tier
+ *
+ * Use `.selectedQuestion`, `.selectedAnswer` (NOT `.answer`).
+ */
+
+import SwiftUI
+import PingJourney
+
+struct KbaCreateCallbackView: View {
+    let callback: KbaCreateCallback
+    let onRefresh: () -> Void
+
+    @State private var selectedQuestion: String = ""
+    @State private var answerText: String = ""
+    @State private var isCustomQuestion: Bool = false
+    @State private var customQuestionText: String = ""
+
+    private let customOption = "Provide your own"
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            if !callback.prompt.isEmpty {
+                Text(callback.prompt)
+                    .font(.headline)
+            }
+
+            Picker(callback.prompt, selection: $selectedQuestion) {
+                ForEach(callback.predefinedQuestions, id: \.self) { question in
+                    Text(question).tag(question)
+                }
+                if callback.allowUserDefinedQuestions {
+                    Text(customOption).tag(customOption)
+                }
+            }
+            .pickerStyle(.menu)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.pingTextField, lineWidth: 1)
+            )
+            .onChange(of: selectedQuestion) { _, newValue in
+                if newValue == customOption {
+                    isCustomQuestion = true
+                    callback.selectedQuestion = customQuestionText
+                } else {
+                    isCustomQuestion = false
+                    callback.selectedQuestion = newValue
+                }
+            }
+
+            if isCustomQuestion {
+                TextField("Your question", text: $customQuestionText)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.sentences)
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.pingTextField, lineWidth: 1)
+                    )
+                    .onChange(of: customQuestionText) { _, newValue in
+                        callback.selectedQuestion = newValue
+                    }
+            }
+
+            TextField("Answer", text: $answerText)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.pingTextField, lineWidth: 1)
+                )
+                .onChange(of: answerText) { _, newValue in
+                    callback.selectedAnswer = newValue
+                }
+                .onSubmit { onRefresh() }
+        }
+        .padding()
+        .onAppear {
+            selectedQuestion = callback.predefinedQuestions.first ?? ""
+            answerText = callback.selectedAnswer
+            if !selectedQuestion.isEmpty {
+                callback.selectedQuestion = selectedQuestion
+            }
+        }
+    }
+}

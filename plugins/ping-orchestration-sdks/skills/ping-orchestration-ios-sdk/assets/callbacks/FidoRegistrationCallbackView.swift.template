@@ -1,0 +1,52 @@
+/*
+ * FidoRegistrationCallbackView.swift — Journey Standard tier
+ *
+ * Self-advancing: calls onNext after the platform passkey ceremony completes.
+ * Signature is `register(deviceName:window:)`.
+ */
+
+import SwiftUI
+import UIKit
+import PingFido
+import PingJourney
+
+struct FidoRegistrationCallbackView: View {
+    let callback: FidoRegistrationCallback
+    let onNext: () -> Void
+
+    @State private var deviceName: String = ""
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Text("FIDO Registration")
+                .font(.title2)
+                .fontWeight(.semibold)
+
+            TextField("Device name (optional)", text: $deviceName)
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.pingTextField, lineWidth: 1)
+                )
+
+            Button {
+                Task { await register() }
+            } label: {
+                Text("Register passkey")
+            }
+            .buttonStyle(PingPrimaryButtonStyle())
+        }
+        .padding()
+    }
+
+    private func register() async {
+        guard let window = UIApplication.shared.connectedScenes
+            .compactMap({ ($0 as? UIWindowScene)?.windows.first })
+            .first
+        else { return }
+
+        let name = deviceName.isEmpty ? nil : deviceName
+        _ = await callback.register(deviceName: name, window: window)
+        onNext()
+    }
+}

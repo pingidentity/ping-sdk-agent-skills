@@ -1,0 +1,54 @@
+/*
+ * SingleSelectDropdownView.swift — DaVinci Standard tier
+ * Used when SingleSelectCollector.type == "DROPDOWN".
+ * `field.options` items are NOT Hashable — use index.
+ */
+
+import SwiftUI
+import PingDavinci
+
+struct SingleSelectDropdownView: View {
+    let field: SingleSelectCollector
+    let onRefresh: () -> Void
+
+    @State private var selectedValue: String = ""
+    @State private var isValid: Bool = true
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(field.required ? "\(field.label)*" : field.label)
+                .font(.headline)
+
+            Menu {
+                ForEach(field.options.indices, id: \.self) { index in
+                    let option = field.options[index]
+                    Button(option.label) {
+                        selectedValue = option.value
+                        field.value = option.value
+                        isValid = field.validate().isEmpty
+                        onRefresh()
+                    }
+                }
+            } label: {
+                HStack {
+                    Text(selectedValue.isEmpty ? "Select an option" : selectedValue)
+                        .foregroundColor(selectedValue.isEmpty ? .gray : .primary)
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .foregroundStyle(Color.pingRed)
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(isValid ? Color.pingTextField : Color.red, lineWidth: 1)
+                )
+            }
+
+            if !isValid {
+                ErrorMessageView(message: field.validate().map { $0.errorMessage }.joined(separator: "\n"))
+            }
+        }
+        .padding(.horizontal)
+        .onAppear { selectedValue = field.value }
+    }
+}

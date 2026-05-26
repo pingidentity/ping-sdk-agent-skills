@@ -1,0 +1,33 @@
+/*
+ * ProtectCollectorView.swift — DaVinci Standard tier
+ *
+ * Calls `.collect()` async then calls onRefresh. Not self-advancing.
+ */
+
+import SwiftUI
+import PingProtect
+
+struct ProtectCollectorView: View {
+    let field: ProtectCollector
+    let onRefresh: () -> Void
+
+    @State private var isLoading = true
+
+    var body: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .progressViewStyle(.circular)
+                .scaleEffect(1.5)
+                .tint(.pingRed)
+            Text("Collecting device profile…")
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
+        .task {
+            _ = await field.collect()
+            isLoading = false
+            onRefresh()
+        }
+    }
+}

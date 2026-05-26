@@ -1,0 +1,52 @@
+import { createContext, useContext, useEffect, useState } from 'react';
+import { oidc } from '@forgerock/oidc-client';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Login from './pages/Login';
+import Callback from './pages/Callback';
+import Home from './pages/Home';
+
+const OidcContext = createContext(null);
+
+export function useOidc() {
+  return useContext(OidcContext);
+}
+
+const CONFIG = {
+  serverConfig: { wellknown: import.meta.env.VITE_PING_WELLKNOWN },
+  clientId: import.meta.env.VITE_PING_CLIENT_ID,
+  redirectUri: import.meta.env.VITE_PING_REDIRECT_URI,
+  scope: import.meta.env.VITE_PING_SCOPE,
+  // acrValues: import.meta.env.VITE_PING_ACR_VALUES, // uncomment if needed
+};
+
+let clientInstance = null;
+async function getClient() {
+  if (!clientInstance) {
+    clientInstance = await oidc({ config: CONFIG });
+  }
+  return clientInstance;
+}
+
+export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [client, setClient] = useState(null);
+
+  useEffect(() => {
+    getClient().then((c) => {
+      setClient(c);
+      c.token.get().then((tokens) => setIsAuthenticated(!!tokens)).catch(() => setIsAuthenticated(false));
+    });
+  }, []);
+
+  return (
+    <OidcContext.Provider value={{ client, isAuthenticated, setIsAuthenticated }}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/callback" element={<Callback />} />
+        </Routes>
+      </BrowserRouter>
+    </OidcContext.Provider>
+  );
+}

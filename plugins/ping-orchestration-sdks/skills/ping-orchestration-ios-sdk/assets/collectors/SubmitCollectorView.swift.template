@@ -1,0 +1,25 @@
+/*
+ * SubmitCollectorView.swift — DaVinci Basic tier
+ *
+ * Self-advancing: must set `field.value = "submit"` before calling onNext.
+ */
+
+import SwiftUI
+import PingDavinci
+
+struct SubmitCollectorView: View {
+    let field: SubmitCollector
+    let onNext: () -> Void
+
+    var body: some View {
+        Button {
+            field.value = "submit"
+            onNext()
+        } label: {
+            Text(field.label)
+        }
+        .buttonStyle(PingPrimaryButtonStyle())
+        .padding(.horizontal)
+        .onDisappear { field.value = "" }
+    }
+}

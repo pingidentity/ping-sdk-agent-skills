@@ -1,0 +1,43 @@
+/*
+ * ValidatedUsernameCallbackView.swift — Journey Standard tier
+ *
+ * Use `.username` (NOT `.value`). Display `.failedPolicies` on validation failure.
+ */
+
+import SwiftUI
+import PingJourney
+
+struct ValidatedUsernameCallbackView: View {
+    let callback: ValidatedUsernameCallback
+    let onRefresh: () -> Void
+
+    @State private var text: String = ""
+
+    private var hasErrors: Bool { !callback.failedPolicies.isEmpty }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            TextField(callback.prompt, text: $text)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(hasErrors ? Color.red : Color.pingTextField, lineWidth: 1)
+                )
+                .onAppear { text = callback.username }
+                .onChange(of: text) { _, newValue in
+                    callback.username = newValue
+                }
+                .onSubmit { onRefresh() }
+
+            if hasErrors {
+                ErrorMessageView(
+                    message: callback.failedPolicies
+                        .map { $0.failedDescription(for: callback.prompt) }
+                        .joined(separator: "\n")
+                )
+            }
+        }
+    }
+}

@@ -1,0 +1,18 @@
+/*
+ * PLACEHOLDER_APP_NAMEApp.swift
+ *
+ * App entry point for a Journey-based authentication flow.
+ * Native Journey UI is rendered entirely in-app — onOpenURL is not required
+ * unless the Journey uses social IdP callbacks (browser-based).
+ */
+
+import SwiftUI
+
+@main
+struct PLACEHOLDER_APP_NAMEApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}

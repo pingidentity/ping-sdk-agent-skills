@@ -1,0 +1,35 @@
+/* ============================================================================
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ * ========================================================================== */
+
+import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
+import basicSsl from '@vitejs/plugin-basic-ssl';
+
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  const PORT = parseInt(env.VITE_PORT) || 8443;
+
+  return {
+    root: 'client',
+    publicDir: '../public',
+    envDir: '..',
+    build: {
+      outDir: '../dist',
+      emptyOutDir: true,
+    },
+    server: {
+      port: PORT,
+      open: true,
+      strictPort: true,
+      https: true,
+    },
+    preview: {
+      port: PORT,
+    },
+    plugins: [react(), basicSsl()],
+  };
+});

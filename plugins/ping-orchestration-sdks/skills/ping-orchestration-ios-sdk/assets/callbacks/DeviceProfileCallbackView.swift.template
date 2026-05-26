@@ -1,0 +1,40 @@
+/*
+ * DeviceProfileCallbackView.swift — Journey Standard tier
+ *
+ * Self-advancing: calls `.collect()` (NOT `.getData()`), then onNext.
+ */
+
+import SwiftUI
+import PingJourney
+import PingDeviceProfile
+
+struct DeviceProfileCallbackView: View {
+    let callback: DeviceProfileCallback
+    let onNext: () -> Void
+
+    @State private var task: Task<Void, Never>?
+
+    var body: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .progressViewStyle(.circular)
+                .scaleEffect(1.2)
+                .tint(.pingRed)
+            Text("Gathering device profile…")
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
+        .onAppear { startCollection() }
+        .onDisappear { task?.cancel() }
+    }
+
+    private func startCollection() {
+        guard task == nil else { return }
+        task = Task { @MainActor in
+            _ = await callback.collect()
+            if !Task.isCancelled { onNext() }
+        }
+    }
+}

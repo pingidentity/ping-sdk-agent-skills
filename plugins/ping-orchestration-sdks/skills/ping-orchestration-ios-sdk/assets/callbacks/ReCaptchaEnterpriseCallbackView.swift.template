@@ -1,0 +1,101 @@
+/*
+ * ReCaptchaEnterpriseCallbackView.swift — Journey Full-fat tier
+ *
+ * Self-advancing: calls `.verify { config in ... }` async, then onNext on success.
+ * Requires `PingReCaptchaEnterprise` SPM product.
+ */
+
+import SwiftUI
+import Observation
+import PingJourney
+import PingReCaptchaEnterprise
+
+@Observable
+@MainActor
+final class ReCaptchaViewModel {
+    var isLoading = true
+    var errorMessage: String?
+    var hasCompleted = false
+
+    let callback: ReCaptchaEnterpriseCallback
+    let onNext: () -> Void
+    private var task: Task<Void, Never>?
+
+    init(callback: ReCaptchaEnterpriseCallback, onNext: @escaping () -> Void) {
+        self.callback = callback
+        self.onNext = onNext
+    }
+
+    func startVerification() {
+        guard task == nil, !hasCompleted else { return }
+        isLoading = true
+        errorMessage = nil
+
+        task = Task { [weak self] in
+            guard let self else { return }
+            let result = await self.callback.verify { _ in }
+
+            if !Task.isCancelled {
+                self.task = nil
+                switch result {
+                case .success:
+                    self.hasCompleted = true
+                    self.isLoading = false
+                    self.onNext()
+                case .failure(let error):
+                    self.isLoading = false
+                    self.errorMessage = error.localizedDescription
+                }
+            }
+        }
+    }
+
+    func retry() {
+        errorMessage = nil
+        hasCompleted = false
+        startVerification()
+    }
+
+    func cancel() {
+        task?.cancel()
+        task = nil
+    }
+}
+
+struct ReCaptchaEnterpriseCallbackView: View {
+    @State private var viewModel: ReCaptchaViewModel
+
+    init(callback: ReCaptchaEnterpriseCallback, onNext: @escaping () -> Void) {
+        _viewModel = State(wrappedValue: ReCaptchaViewModel(callback: callback, onNext: onNext))
+    }
+
+    var body: some View {
+        VStack(alignment: .center, spacing: 16) {
+            if viewModel.isLoading {
+                ProgressView()
+                    .progressViewStyle(.circular)
+                    .scaleEffect(1.2)
+                    .tint(.pingRed)
+                Text("Verifying security…")
+                    .multilineTextAlignment(.center)
+            } else if let error = viewModel.errorMessage {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 48))
+                    .foregroundColor(.orange)
+                Text("Verification Failed")
+                    .font(.headline)
+                Text(error)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                Button("Retry", action: viewModel.retry)
+                    .buttonStyle(.borderedProminent)
+                    .tint(.pingRed)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(16)
+        .onAppear { viewModel.startVerification() }
+        .onDisappear { viewModel.cancel() }
+    }
+}

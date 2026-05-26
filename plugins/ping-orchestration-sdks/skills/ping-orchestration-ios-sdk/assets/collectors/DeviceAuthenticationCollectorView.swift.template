@@ -1,0 +1,51 @@
+/*
+ * DeviceAuthenticationCollectorView.swift — DaVinci Standard tier
+ *
+ * Self-advancing: set `field.value = device` then call onNext.
+ */
+
+import SwiftUI
+import PingDavinci
+
+struct DeviceAuthenticationCollectorView: View {
+    let field: DeviceAuthenticationCollector
+    let onNext: () -> Void
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("Select a device to authenticate")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .padding(.top)
+
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    ForEach(field.devices, id: \.id) { device in
+                        Button {
+                            field.value = device
+                            onNext()
+                        } label: {
+                            HStack {
+                                Image(systemName: "lock.shield.fill")
+                                    .foregroundColor(.pingRed)
+                                Text(device.title)
+                                    .fontWeight(.medium)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding()
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color(.systemBackground))
+                                    .shadow(color: .black.opacity(0.06), radius: 4)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal)
+            }
+        }
+    }
+}

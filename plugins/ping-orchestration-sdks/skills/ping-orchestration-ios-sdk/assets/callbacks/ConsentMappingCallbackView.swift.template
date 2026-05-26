@@ -1,0 +1,42 @@
+/*
+ * ConsentMappingCallbackView.swift — Journey Standard tier
+ *
+ * Use `.accepted: Bool` to record consent.
+ */
+
+import SwiftUI
+import PingJourney
+
+struct ConsentMappingCallbackView: View {
+    let callback: ConsentMappingCallback
+    let onRefresh: () -> Void
+
+    @State private var accepted: Bool = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if !callback.displayName.isEmpty {
+                Text(callback.displayName)
+                    .font(.headline)
+            }
+            if !callback.message.isEmpty {
+                Text(callback.message)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            if !callback.fields.isEmpty {
+                Text("Fields: \(callback.fields.joined(separator: ", "))")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Toggle("I consent to this mapping", isOn: $accepted)
+                .toggleStyle(SwitchToggleStyle(tint: .pingRed))
+                .onChange(of: accepted) { _, newValue in
+                    callback.accepted = newValue
+                }
+        }
+        .padding()
+        .onAppear { accepted = callback.accepted }
+    }
+}

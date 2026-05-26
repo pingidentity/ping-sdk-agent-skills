@@ -1,0 +1,31 @@
+/* ============================================================================
+ * Copyright (c) 2026 Ping Identity Corporation. All rights reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ * ========================================================================== */
+
+import React, { useContext, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Form from '../components/form';
+import { OidcContext } from '../context/oidc.context';
+
+/**
+ * Login page — renders the DaVinci Form component.
+ * All flow management and token exchange is handled inside Form via useDavinci().
+ */
+export default function Login() {
+  const navigate = useNavigate();
+  const [{ isAuthenticated }] = useContext(OidcContext);
+
+  useEffect(() => {
+    if (isAuthenticated) navigate('/');
+  }, [isAuthenticated, navigate]);
+
+  return (
+    <div style={{ maxWidth: '400px', margin: '2rem auto', padding: '1rem' }}>
+      <h1>Sign In</h1>
+      <Form />
+    </div>
+  );
+}
