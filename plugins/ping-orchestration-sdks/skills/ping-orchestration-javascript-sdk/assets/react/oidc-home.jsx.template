@@ -24,19 +24,19 @@ export default function Home() {
   }
 
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem', fontFamily: 'system-ui, sans-serif' }}>
       <h1>Welcome to PLACEHOLDER_APP_NAME</h1>
       {isAuthenticated ? (
         <>
           {userInfo && (
             <p>Signed in as <strong>{userInfo.email ?? userInfo.sub}</strong></p>
           )}
-          <button onClick={handleLogout}>Sign out</button>
+          <button onClick={handleLogout} style={{ marginTop: '1rem', padding: '0.75rem 2rem' }}>Sign out</button>
         </>
       ) : (
         <>
           <p>Sign in to get started.</p>
-          <button onClick={handleSignIn}>Sign in</button>
+          <button onClick={handleSignIn} style={{ marginTop: '1rem', padding: '0.75rem 2rem' }}>Sign in</button>
         </>
       )}
     </div>

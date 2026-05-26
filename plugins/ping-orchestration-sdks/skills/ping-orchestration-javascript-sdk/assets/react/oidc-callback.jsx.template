@@ -28,6 +28,7 @@ export default function Callback() {
       .catch((err) => setError(err.message));
   }, [client]);
 
-  if (error) return <div>Authentication failed: {error}</div>;
-  return <div>Completing sign-in…</div>;
+  const wrapper = { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem', fontFamily: 'system-ui, sans-serif' };
+  if (error) return <div style={wrapper}>Authentication failed: {error}</div>;
+  return <div style={wrapper}>Completing sign-in…</div>;
 }

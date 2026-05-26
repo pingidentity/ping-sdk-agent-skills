@@ -10,7 +10,7 @@ export default function Login() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem', fontFamily: 'system-ui, sans-serif' }}>
       <h1>PLACEHOLDER_APP_NAME</h1>
       <button onClick={handleSignIn} style={{ marginTop: '1rem', padding: '0.75rem 2rem' }}>
         Sign In
