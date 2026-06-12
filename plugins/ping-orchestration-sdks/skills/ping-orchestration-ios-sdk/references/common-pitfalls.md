@@ -37,4 +37,5 @@
 | Journey: `KbaCreateCallback has no member 'answer'` | Use `.selectedAnswer` |
 | Journey: `SelectIdpCallback has no member 'setProvider'` | Assign `.value = provider.provider` directly |
 | SPM: `Type checking error: got 'XCSwiftPackageProductDependency' for attribute 'fileRef'` | Use `build_file.product_ref = dep`, not `build_file.file_ref = dep` |
+| SPM: `Couldn't get the list of tags for … cannot use bare repository (safe.bareRepository is 'explicit')` | Claude Code harness injects `GIT_CONFIG_*` env vars that make git treat all repos as bare. Workaround: `env -u GIT_CONFIG_COUNT -u GIT_CONFIG_KEY_0 -u GIT_CONFIG_VALUE_0 xcodebuild -resolvePackageDependencies -workspace <App>.xcworkspace -scheme <App>`. Also purge the poisoned cache: `rm -rf ~/Library/Caches/org.swift.swiftpm/repositories/* && rm -rf <DerivedData>/SourcePackages` then re-resolve. |
 | `FBSOpenApplicationServiceErrorDomain` on test | Simulator in bad state — run `xcrun simctl shutdown all` |

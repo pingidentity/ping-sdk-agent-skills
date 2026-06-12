@@ -23,6 +23,10 @@ Before Step A, decide which of three scaffolding paths to take:
    ```
    Run `xcodebuildmcp --help` to discover other subcommands. Prefer this path when the user wants results immediately — registering the MCP server requires a session restart, but the CLI works in the current session.
 
+   > **Important — CLI output layout may differ from MCP.** After running the CLI, **immediately run `ls <output-path>`** to determine which layout was produced before continuing:
+   > - **Flat layout** (MCP-style): `<AppName>.xcodeproj` + `<AppName>/` source dir as siblings. Proceed with Step B as written.
+   > - **Workspace + SPM package layout** (common with CLI): `<AppName>.xcworkspace` + `<AppName>Package/` as siblings. Use **Step B-Workspace** below instead of Step B.
+
 3. **Neither MCP tools nor CLI.** Ask the user with `AskUserQuestion`:
 
    - **Install XcodeBuildMCP (recommended)** — guide the user to install once, then re-run. Run from a fresh terminal:
@@ -176,6 +180,52 @@ rm -rf "<output-path>/<AppName>Package"
 rm -rf "<output-path>/<AppName>.xcworkspace"
 rm -f  "<output-path>/<AppName>/<AppName>App.swift"
 ```
+
+---
+
+## Step B-Workspace — Workspace + SPM package layout (CLI variant)
+
+Use this step **only** when `ls <output-path>` shows `<AppName>.xcworkspace` and `<AppName>Package/` rather than a flat `.xcodeproj`. This layout is produced by some `xcodebuildmcp` CLI versions.
+
+**Layout produced by CLI:**
+```
+<output-path>/
+├── <AppName>.xcworkspace/
+├── <AppName>/                     ← app target source (keep)
+│   ├── Assets.xcassets/
+│   └── <AppName>App.swift         ← delete this
+├── <AppName>Package/              ← local SPM package — delete entirely
+└── Config/
+```
+
+**Adaptation steps:**
+
+1. Delete the local SPM package and scaffolded app entry:
+   ```bash
+   rm -rf "<output-path>/<AppName>Package"
+   rm -f  "<output-path>/<AppName>/<AppName>App.swift"
+   ```
+
+2. Open `<output-path>/<AppName>.xcodeproj` (embedded in the workspace) in `add_spm_deps.rb` — the xcodeproj gem opens the `.xcodeproj`, not the `.xcworkspace`. Skip the local-feature-product removal loop (already gone). Add `ping-ios-sdk` as in Step C.
+
+3. Assets live in the app target (`<output-path>/<AppName>/Assets.xcassets/`), **not** in a package. Copy the logo there:
+   ```bash
+   DEST="<output-path>/<AppName>/Assets.xcassets/Logo.imageset"
+   mkdir -p "$DEST"
+   cp "$SKILL_ASSETS/Logo.imageset/Ping Identity Logo.png" "$DEST/"
+   cp "$SKILL_ASSETS/Logo.imageset/Contents.json" "$DEST/"
+   ```
+   Reference with `Image("Logo")` — not `Image("Logo", bundle: .module)`.
+
+4. Resolve and build against the workspace:
+   ```bash
+   xcodebuild -resolvePackageDependencies -workspace "<output-path>/<AppName>.xcworkspace" -scheme "<AppName>"
+   xcodebuild build -workspace "<output-path>/<AppName>.xcworkspace" -scheme "<AppName>" \
+     -destination "platform=iOS Simulator,name=$SIM_NAME,OS=latest"
+   ```
+   If resolution fails with `safe.bareRepository is 'explicit'`, see the SPM pitfall in `references/common-pitfalls.md`.
+
+After these steps, continue with **Step F** (write Swift source files to `<output-path>/<AppName>/`) as normal.
 
 ---
 

@@ -56,9 +56,13 @@ Options:
 - **C** → display the reference guide from "Ping SDK for iOS — Integration Guide" onward. Stop.
 - **D** → follow-up free-text question, then route accordingly.
 
-**Step W1b — Journey export offer** (options A and B only).
+**Step W1b — Manifest / Journey export check** (options A and B only).
 
-Ask:
+First, silently check for `.ping/journey-manifest.*.json` in the working directory. If found:
+- Load the manifest. Pre-populate `journeyName`, `serverUrl`, `realm`, `cookieName` (from `sessionCookieName`), and `callbackTier` (from `recommendedCallbackTier`) without asking.
+- Skip the journey export offer below and proceed directly to Step W2.
+
+If no manifest is found, ask:
 > "Do you have a Journey export JSON file? If so, paste it or attach it and I'll analyse it to generate a sample that handles exactly the callbacks your Journey uses."
 
 - If provided: run Section 13 (Journey Export Analysis) before Step W2. Pre-populate `journeyName`, `callbackTier`, and `serverUrl` from the analysis results.
@@ -86,7 +90,7 @@ First determine `flowType` if not already known, then ask only the parameters re
 |---|---|---|---|
 | `serverUrl` | Yes | — | PingAM/AIC server base URL (no trailing `/`) |
 | `realm` | No | `alpha` | Authentication realm |
-| `cookieName` | No | `iPlanetDirectoryPro` | Session cookie name |
+| `cookieName` | No | `iPlanetDirectoryPro` | Session cookie name — **tenant-specific**; confirm from AIC Native Console → Access Management → `<realm>` → Authentication → Settings → Core → Cookie Name, or read from the Journey Node Manifest's `sessionCookieName` field |
 | `journeyName` | No | `Login` | Journey tree name |
 | `callbackTier` | Yes | — | `basic`, `standard`, or `full` (see Section 12) |
 
@@ -125,11 +129,16 @@ Present `callbackTier` options (Journey and DaVinci only):
 | `create-sample` | `create-sample "<description>"` | Generate a complete runnable sample app |
 | `app-name` | `app-name "<name>"` | Set the app name. Defaults to `"MyApp"` if omitted. |
 | `output-path` | `output-path "<path>"` | Write files to disk. If omitted, print inline. |
+| `--manifest` | `--manifest "<path>"` | Path to a Journey Node Manifest JSON (`.ping/journey-manifest.<Name>.json`). When provided, `callbackUnion` and per-node `emitsCallbacks` in the manifest drive callback/collector view generation — overrides tier inference. |
 
 ### `create-sample "<description>"`
 
 1. **Analyse** the description — identify flow type(s), modules, and implied screens.
-2. **Journey export offer** — if the flow type is `journey` (or could be), ask:
+2. **Journey manifest check** — if the flow type is `journey` (or could be) and no `--manifest` arg was given:
+   - Look for `.ping/journey-manifest.*.json` in the working directory.
+   - If found, load it. Use `callbackUnion` as the authoritative callback list. Set `callbackTier` from `recommendedCallbackTier`, `cookieName` from `sessionCookieName`, `serverUrl` and `realm` from the manifest. Do **not** infer callbacks from node type names.
+   - If not found, continue and emit a warning after collecting parameters: *"No Journey Node Manifest found — callback generation is tier-based, not ground truth. Run `/ping-orchestration` to produce a manifest for an exact match."*
+3. **Journey export offer** — if the flow type is `journey`, no manifest was loaded, and the user has not provided an export, ask:
    > "Do you have a Journey export JSON? I can analyse it and tailor the sample to exactly the callbacks your Journey uses."
    If provided, run Section 13 before proceeding. Use its output to determine `callbackTier` and screens.
 3. **Ask one clarifying question** only if the flow type is genuinely ambiguous. Collect required parameters for the detected flow type (see W2 table) in a single `AskUserQuestion` with an explicit "I can use placeholders" option.
