@@ -395,6 +395,8 @@ fun CallbackNodeView(node: ContinueNode, onNodeUpdated: () -> Unit, onNext: () -
 
 **Callback reference** (exact names, packages, property names, suspend methods — compile errors if guessed wrong): [references/callback-reference.md](references/callback-reference.md)
 
+**FIDO2 / passkeys** (Compose views for `FidoRegistrationCallback` / `FidoAuthenticationCallback`, DaVinci collectors, `LaunchedEffect` auto-advance rule, AIC prerequisites): [references/fido2-passkeys.md](references/fido2-passkeys.md)
+
 Key gotchas: `ValidatedUsernameCallback` → `.username` (not `.value`); `TextInputCallback` → `.text`; `ChoiceCallback` → `.selectedIndex`; `TermsAndConditionsCallback` → `.accepted`; `DeviceProfileCallback.collect()`, `DeviceBindingCallback.bind()`, `PingOneProtectInitializeCallback.start()`.
 
 **Auto-advancing callbacks** — wrap in `LaunchedEffect(callback)`, set `showNext = false`: `PollingWaitCallback`, `DeviceProfileCallback`, `DeviceBindingCallback`, `FidoRegistrationCallback`, `FidoAuthenticationCallback`, `PingOneProtectInitializeCallback`, `PingOneProtectEvaluationCallback`.
