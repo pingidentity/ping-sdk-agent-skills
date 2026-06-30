@@ -1,0 +1,109 @@
+/*
+ * TermsAndConditionsCallbackView.tsx — Journey Basic tier
+ *
+ * Renders a scrollable T&C body with an acceptance checkbox.
+ * cb.terms contains the full T&C text; cb.version is the version string.
+ * onValueChange receives true when accepted, false when unchecked.
+ * Parent must gate the Next button on this value (canSubmit = false until accepted).
+ */
+
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import type { JourneyCallback } from '@ping-identity/rn-journey';
+import { PingColors } from '../theme/PingTheme';
+
+type Props = {
+  cb: JourneyCallback;
+  onValueChange: (value: boolean) => void;
+};
+
+type TermsAndConditionsCallback = { terms?: string; version?: string; createDate?: string };
+
+export function TermsAndConditionsCallbackView({ cb, onValueChange }: Props) {
+  const [accepted, setAccepted] = useState(false);
+  const tac = cb as unknown as TermsAndConditionsCallback;
+  const terms: string = tac.terms ?? '';
+  const version: string = tac.version ?? '';
+
+  const toggle = () => {
+    const next = !accepted;
+    setAccepted(next);
+    onValueChange(next);
+  };
+
+  return (
+    <View style={styles.container}>
+      {version ? (
+        <Text style={styles.version}>Terms & Conditions — v{version}</Text>
+      ) : (
+        <Text style={styles.version}>Terms & Conditions</Text>
+      )}
+      <ScrollView style={styles.scroll} nestedScrollEnabled>
+        <Text style={styles.body}>{terms}</Text>
+      </ScrollView>
+      <TouchableOpacity onPress={toggle} style={styles.checkRow} activeOpacity={0.7}>
+        <View style={[styles.checkbox, accepted && styles.checkboxChecked]}>
+          {accepted && <Text style={styles.checkmark}>✓</Text>}
+        </View>
+        <Text style={styles.checkLabel}>I have read and agree to the Terms & Conditions</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    marginBottom: 12,
+  },
+  version: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: PingColors.onSurface,
+    marginBottom: 8,
+  },
+  scroll: {
+    maxHeight: 200,
+    borderWidth: 1,
+    borderColor: PingColors.textField,
+    borderRadius: 8,
+    padding: 10,
+    backgroundColor: PingColors.background,
+    marginBottom: 12,
+  },
+  body: {
+    fontSize: 13,
+    color: PingColors.onSurface,
+    lineHeight: 20,
+  },
+  checkRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: PingColors.outline,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  checkboxChecked: {
+    backgroundColor: PingColors.red,
+    borderColor: PingColors.red,
+  },
+  checkmark: {
+    color: PingColors.white,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  checkLabel: {
+    fontSize: 13,
+    color: PingColors.onSurface,
+    flex: 1,
+    lineHeight: 18,
+  },
+});

@@ -1,0 +1,57 @@
+/*
+ * BooleanAttributeInputCallbackView.tsx — Journey Standard tier
+ *
+ * Collects a boolean attribute via a toggle. cb.value is the default.
+ */
+
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Switch, Text, View } from 'react-native';
+import type { JourneyCallback } from '@ping-identity/rn-journey';
+import { PingColors } from '../theme/PingTheme';
+
+type Props = {
+  cb: JourneyCallback;
+  onValueChange: (value: boolean) => void;
+};
+
+export function BooleanAttributeInputCallbackView({ cb, onValueChange }: Props) {
+  const [value, setValue] = useState(Boolean(cb.value));
+
+  useEffect(() => {
+    onValueChange(value);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleChange = (v: boolean) => {
+    setValue(v);
+    onValueChange(v);
+  };
+
+  return (
+    <View style={styles.row}>
+      <Text style={styles.label}>{String(cb.prompt ?? '')}</Text>
+      <Switch
+        value={value}
+        onValueChange={handleChange}
+        trackColor={{ false: PingColors.textField, true: PingColors.red }}
+        thumbColor={PingColors.white}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+  },
+  label: {
+    fontSize: 14,
+    color: PingColors.onSurface,
+    flex: 1,
+    marginRight: 12,
+  },
+});

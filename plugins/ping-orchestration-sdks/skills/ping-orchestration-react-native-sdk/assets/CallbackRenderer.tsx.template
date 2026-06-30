@@ -1,0 +1,305 @@
+/*
+ * CallbackRenderer.tsx — Manual variant (useJourney only)
+ *
+ * Iterates node.callbacks and renders the correct view per callback type.
+ * Tracks a per-type index counter so KbaCreateCallback index values are correct.
+ * Suppresses the "Next" button for callbacks that advance the journey themselves
+ * (PollingWait, Fido, DeviceBinding, SelectIdp).
+ *
+ * Props:
+ *   node          — JourneyNode (ContinueNode) from useJourney()
+ *   journeyClient — JourneyClient created at module scope in the client file
+ *   onSubmit      — called with the assembled JourneyNextInput when user taps Next
+ */
+
+import React, { useRef, useState } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import type { JourneyNode, JourneyClient, JourneyNextInput } from '@ping-identity/rn-journey';
+import { PingPrimaryButton } from './theme/PingTheme';
+import { NameCallbackView } from './callbacks/NameCallbackView';
+import { PasswordCallbackView } from './callbacks/PasswordCallbackView';
+import { ValidatedUsernameCallbackView } from './callbacks/ValidatedUsernameCallbackView';
+import { ValidatedPasswordCallbackView } from './callbacks/ValidatedPasswordCallbackView';
+import { TextInputCallbackView } from './callbacks/TextInputCallbackView';
+import { StringAttributeInputCallbackView } from './callbacks/StringAttributeInputCallbackView';
+import { NumberAttributeInputCallbackView } from './callbacks/NumberAttributeInputCallbackView';
+import { BooleanAttributeInputCallbackView } from './callbacks/BooleanAttributeInputCallbackView';
+import { TextOutputCallbackView } from './callbacks/TextOutputCallbackView';
+import { SuspendedTextOutputCallbackView } from './callbacks/SuspendedTextOutputCallbackView';
+import { ChoiceCallbackView } from './callbacks/ChoiceCallbackView';
+import { ConfirmationCallbackView } from './callbacks/ConfirmationCallbackView';
+import { TermsAndConditionsCallbackView } from './callbacks/TermsAndConditionsCallbackView';
+import { ConsentMappingCallbackView } from './callbacks/ConsentMappingCallbackView';
+import { KbaCreateCallbackView } from './callbacks/KbaCreateCallbackView';
+import { PollingWaitCallbackView } from './callbacks/PollingWaitCallbackView';
+import { DeviceProfileCallbackView } from './callbacks/DeviceProfileCallbackView';
+import { FidoRegistrationCallbackView } from './callbacks/FidoRegistrationCallbackView';
+import { FidoAuthenticationCallbackView } from './callbacks/FidoAuthenticationCallbackView';
+import { DeviceBindingCallbackView } from './callbacks/DeviceBindingCallbackView';
+import { DeviceSigningVerifierCallbackView } from './callbacks/DeviceSigningVerifierCallbackView';
+import { SelectIdpCallbackView } from './callbacks/SelectIdpCallbackView';
+import { UnsupportedCallbackView } from './callbacks/UnsupportedCallbackView';
+
+// Callback types that self-advance — no "Next" button shown
+const AUTO_ADVANCE_TYPES = new Set([
+  'PollingWaitCallback',
+  'DeviceProfileCallback',
+  'FidoRegistrationCallback',
+  'FidoAuthenticationCallback',
+  'DeviceBindingCallback',
+  'DeviceSigningVerifierCallback',
+  'IdpCallback',
+  'SelectIdpCallback',
+  'SelectIdPCallback',
+]);
+
+type Props = {
+  node: JourneyNode;
+  journeyClient: JourneyClient;
+  onSubmit: (input: JourneyNextInput) => Promise<unknown>;
+};
+
+const OUTPUT_ONLY = new Set(['TextOutputCallback', 'SuspendedTextOutputCallback', 'MetadataCallback']);
+
+export function CallbackRenderer({ node, journeyClient, onSubmit }: Props) {
+  // values[i] mirrors node.callbacks[i].value (updated by each callback view)
+  const [values, setValues] = useState<Record<number, any>>(() =>
+    Object.fromEntries(node.callbacks.map((cb, i) => [i, cb.value])),
+  );
+
+  // Per-type index counter (reset on each render pass below)
+  const typeCounters = useRef<Record<string, number>>({});
+
+  const updateValue = (index: number, value: any) => {
+    setValues((prev) => ({ ...prev, [index]: value }));
+  };
+
+  // Whether any callback suppresses the Next button
+  const hasAutoAdvance = node.callbacks.some((cb) =>
+    AUTO_ADVANCE_TYPES.has(cb.type),
+  );
+
+  const handleNext = async () => {
+    const callbacks = node.callbacks
+      .map((cb, i) => {
+        if (OUTPUT_ONLY.has(cb.type)) return null;
+        const value = values[i];
+        if (value === undefined || value === null) return null;
+        return { type: cb.type, value } as JourneyNextInput;
+      })
+      .filter(Boolean) as JourneyNextInput[];
+    await onSubmit({ callbacks });
+  };
+
+  // Reset per-type counters before rendering
+  typeCounters.current = {};
+
+  const getTypeIndex = (type: string): number => {
+    const idx = typeCounters.current[type] ?? 0;
+    typeCounters.current[type] = idx + 1;
+    return idx;
+  };
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 24}
+    >
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      {node.callbacks.map((cb, i) => {
+        const typeIdx = getTypeIndex(cb.type);
+        switch (cb.type) {
+          case 'NameCallback':
+            return (
+              <NameCallbackView
+                key={i}
+                cb={cb}
+                onValueChange={(v) => updateValue(i, v)}
+              />
+            );
+          case 'ValidatedCreateUsernameCallback':
+            return (
+              <ValidatedUsernameCallbackView
+                key={i}
+                cb={cb}
+                onValueChange={(v) => updateValue(i, v)}
+              />
+            );
+          case 'PasswordCallback':
+            return (
+              <PasswordCallbackView
+                key={i}
+                cb={cb}
+                onValueChange={(v) => updateValue(i, v)}
+              />
+            );
+          case 'ValidatedCreatePasswordCallback':
+            return (
+              <ValidatedPasswordCallbackView
+                key={i}
+                cb={cb}
+                onValueChange={(v) => updateValue(i, v)}
+              />
+            );
+          case 'TextInputCallback':
+            return (
+              <TextInputCallbackView
+                key={i}
+                cb={cb}
+                onValueChange={(v) => updateValue(i, v)}
+              />
+            );
+          case 'StringAttributeInputCallback':
+            return (
+              <StringAttributeInputCallbackView
+                key={i}
+                cb={cb}
+                onValueChange={(v) => updateValue(i, v)}
+              />
+            );
+          case 'NumberAttributeInputCallback':
+            return (
+              <NumberAttributeInputCallbackView
+                key={i}
+                cb={cb}
+                onValueChange={(v) => updateValue(i, v)}
+              />
+            );
+          case 'BooleanAttributeInputCallback':
+            return (
+              <BooleanAttributeInputCallbackView
+                key={i}
+                cb={cb}
+                onValueChange={(v) => updateValue(i, v)}
+              />
+            );
+          case 'TextOutputCallback':
+            return <TextOutputCallbackView key={i} cb={cb} />;
+          case 'SuspendedTextOutputCallback':
+            return <SuspendedTextOutputCallbackView key={i} cb={cb} />;
+          case 'ChoiceCallback':
+            return (
+              <ChoiceCallbackView
+                key={i}
+                cb={cb}
+                onValueChange={(v) => updateValue(i, v)}
+              />
+            );
+          case 'ConfirmationCallback':
+            return (
+              <ConfirmationCallbackView
+                key={i}
+                cb={cb}
+                onValueChange={(v) => updateValue(i, v)}
+              />
+            );
+          case 'TermsAndConditionsCallback':
+            return (
+              <TermsAndConditionsCallbackView
+                key={i}
+                cb={cb}
+                onValueChange={(v) => updateValue(i, v)}
+              />
+            );
+          case 'ConsentMappingCallback':
+            return (
+              <ConsentMappingCallbackView
+                key={i}
+                cb={cb}
+                onValueChange={(v) => updateValue(i, v)}
+              />
+            );
+          case 'KbaCreateCallback':
+            return (
+              <KbaCreateCallbackView
+                key={i}
+                cb={cb}
+                onQuestionChange={(q) => updateValue(i, { ...values[i], question: q, index: typeIdx })}
+                onAnswerChange={(a) => updateValue(i, { ...values[i], answer: a, index: typeIdx })}
+              />
+            );
+          case 'PollingWaitCallback':
+            return (
+              <PollingWaitCallbackView
+                key={i}
+                cb={cb}
+                onNext={() => { onSubmit({ callbacks: [] }); }}
+              />
+            );
+          case 'DeviceProfileCallback':
+            return (
+              <DeviceProfileCallbackView
+                key={i}
+                journey={journeyClient}
+                typeIndex={typeIdx}
+                onNext={() => { onSubmit({ callbacks: [] }); }}
+              />
+            );
+          case 'SelectIdpCallback':
+          case 'SelectIdPCallback':
+            return (
+              <SelectIdpCallbackView
+                key={i}
+                cb={cb}
+                journey={journeyClient}
+                typeIndex={typeIdx}
+                onNext={() => { onSubmit({ callbacks: [] }); }}
+              />
+            );
+          case 'FidoRegistrationCallback':
+            return (
+              <FidoRegistrationCallbackView
+                key={i}
+                journey={journeyClient}
+                typeIndex={typeIdx}
+                onNext={() => { onSubmit({ callbacks: [] }); }}
+              />
+            );
+          case 'FidoAuthenticationCallback':
+            return (
+              <FidoAuthenticationCallbackView
+                key={i}
+                journey={journeyClient}
+                typeIndex={typeIdx}
+                onNext={() => { onSubmit({ callbacks: [] }); }}
+              />
+            );
+          case 'DeviceBindingCallback':
+            return (
+              <DeviceBindingCallbackView
+                key={i}
+                journey={journeyClient}
+                typeIndex={typeIdx}
+                onNext={() => { onSubmit({ callbacks: [] }); }}
+              />
+            );
+          case 'DeviceSigningVerifierCallback':
+            return (
+              <DeviceSigningVerifierCallbackView
+                key={i}
+                journey={journeyClient}
+                typeIndex={typeIdx}
+                onNext={() => { onSubmit({ callbacks: [] }); }}
+              />
+            );
+          default:
+            return <UnsupportedCallbackView key={i} executionMode="unsupported" callbackType={cb.type} />;
+        }
+      })}
+
+      {!hasAutoAdvance && (
+        <View style={styles.buttonRow}>
+          <PingPrimaryButton title="Next" onPress={handleNext} />
+        </View>
+      )}
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  container: { padding: 16, gap: 4 },
+  buttonRow: { marginTop: 16 },
+});

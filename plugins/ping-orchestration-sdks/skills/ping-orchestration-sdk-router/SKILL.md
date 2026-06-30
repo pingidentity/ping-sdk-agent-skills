@@ -9,7 +9,7 @@ description: >-
   JavaScript, or React Native, asks if ambiguous, and routes to the matching
   umbrella skill
   (ping-orchestration-android-sdk, ping-orchestration-ios-sdk,
-  ping-orchestration-javascript-sdk; React Native on the roadmap) or to
+  ping-orchestration-javascript-sdk, ping-orchestration-react-native-sdk) or to
   forgerock-to-ping-journey-migration when ForgeRock SDK references are
   present (forgerock-android-sdk, forgerock-ios-sdk, @forgerock/javascript-sdk).
 license: MIT
@@ -31,7 +31,7 @@ This table is the single source of truth for routing. The decision tree below re
 | Android | `ping-orchestration-android-sdk` | active | — |
 | iOS | `ping-orchestration-ios-sdk` | active | — |
 | JavaScript (web) | `ping-orchestration-javascript-sdk` | active | — |
-| React Native | `ping-orchestration-react-native-sdk` | placeholder | No stopgap available |
+| React Native | `ping-orchestration-react-native-sdk` | active | — |
 | ForgeRock migration | `forgerock-to-ping-journey-migration` | active | Cross-cutting; takes precedence over platform routing when ForgeRock refs are present |
 
 ## Probe Blocks
@@ -84,14 +84,14 @@ find . -maxdepth 4 \
 
 A non-empty result means a JavaScript (web) project is detected.
 
-### Placeholder probes (informational only — do NOT route to these targets)
+### React Native probe
 
-These probes exist so the router can recognize a React Native project and tell the user that an umbrella skill is on the way. They do not currently route.
-
-**React Native:** detect a `package.json` with `react-native`.
+File/content markers (any one is sufficient):
 ```bash
-test -f package.json && grep -E '"react-native"' package.json
+test -f package.json && grep -qE '"react-native"[[:space:]]*:' package.json && echo "react-native detected"
 ```
+
+A non-empty result means a React Native project is detected.
 
 ## Decision Tree
 
@@ -101,8 +101,7 @@ Run these phases in order when this skill is invoked.
 
 1. Run the **ForgeRock probe** (always — it's cross-cutting).
 2. For each row in the **Platform Registry** with `Status: active` (excluding ForgeRock migration), run that platform's probe.
-3. Run the **placeholder probes** for any platform with `Status: placeholder`.
-4. Record which probes hit (non-empty output) and which did not.
+3. Record which probes hit (non-empty output) and which did not.
 
 ### Phase 2: Classify
 
@@ -114,8 +113,7 @@ Apply rules in order. **First match wins.**
    - Takes precedence over plain multi-platform detection because migration is almost always the intent when ForgeRock refs exist.
 2. **Multi-platform monorepo** — two or more active platform probes hit (and rule 1 did not fire). Ask the **multi-platform prompt**. Route to the chosen platform's umbrella skill.
 3. **Single active platform detected** — exactly one active platform probe hit. Route to that platform's umbrella skill.
-4. **Placeholder platform detected** — no active probe hit, but a placeholder probe hit:
-   - **React Native:** announce that `ping-orchestration-react-native-sdk` is on the way. No stopgap exists; ask the user how they would like to proceed.
+4. **React Native detected (single platform)** — React Native probe hit and no other active platform probe hit. Route to `ping-orchestration-react-native-sdk`.
 5. **Nothing detected** — no probes hit. Ask the **no-detection prompt**, listing only platforms with `Status: active`. Mention placeholder platforms as "coming soon".
 
 ### Phase 3: Handoff
@@ -150,7 +148,8 @@ A compact lookup the agent can match against after Phase 2 classification.
 | Android + iOS (no ForgeRock) | Ask multi-platform prompt → chosen umbrella |
 | Android + JavaScript (no ForgeRock) | Ask multi-platform prompt → chosen umbrella |
 | iOS + JavaScript (no ForgeRock) | Ask multi-platform prompt → chosen umbrella |
-| React Native placeholder hit | Inform user; no route |
+| React Native only | `ping-orchestration-react-native-sdk` |
+| React Native + JavaScript (no ForgeRock) | Ask multi-platform prompt → chosen umbrella |
 | No probes hit | Ask no-detection prompt → chosen umbrella |
 
 ## Handoff Template
@@ -194,10 +193,6 @@ Route to the umbrella skill for the chosen platform.
 
 JavaScript is now an active platform. When the JavaScript probe hits, print the handoff line and invoke `ping-orchestration-javascript-sdk` via the Skill tool — no prompt needed unless ambiguity requires it (e.g., ForgeRock refs also present).
 
-### Placeholder-detected prompt (React Native)
-
-> This looks like a React Native project. The umbrella skill `ping-orchestration-react-native-sdk` is on the way but isn't ready yet, and there is no specialized React Native skill in this repo today. Would you like to wait, or shall I help you with something else?
-
 ### No-detection prompt
 
 > I couldn't detect a supported project type in this directory. Which platform are you building for?
@@ -205,9 +200,9 @@ JavaScript is now an active platform. When the JavaScript probe hits, print the 
 > - **Android** (`ping-orchestration-android-sdk`)
 > - **iOS** (`ping-orchestration-ios-sdk`)
 > - **JavaScript / Web** (`ping-orchestration-javascript-sdk`)
-> - **React Native** — coming soon (`ping-orchestration-react-native-sdk`)
+> - **React Native** (`ping-orchestration-react-native-sdk`)
 
-Route to the chosen umbrella skill (or apply the placeholder prompt for React Native).
+Route to the chosen umbrella skill.
 
 ## Adding a New Platform
 

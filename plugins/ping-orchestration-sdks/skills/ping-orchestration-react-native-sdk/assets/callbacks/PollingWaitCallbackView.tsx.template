@@ -1,0 +1,61 @@
+/*
+ * PollingWaitCallbackView.tsx
+ *
+ * Renders a waiting spinner while the server polls for an async event
+ * (e.g. push notification approval, email magic link click).
+ *
+ * No user input — CallbackRenderer should NOT show a Next button.
+ * After `waitTime` ms the timer fires `onNext()` to re-submit and poll again.
+ *
+ * cb.waitTime   — milliseconds to wait before re-polling
+ * cb.message    — optional user-facing status message
+ */
+
+import React, { useEffect } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import type { JourneyCallback } from '@ping-identity/rn-journey';
+import { PingColors } from '../theme/PingTheme';
+
+type Props = {
+  cb: JourneyCallback;
+  onNext: () => void;
+};
+
+type PollingWaitCallback = { waitTime?: number; message?: string };
+
+export function PollingWaitCallbackView({ cb, onNext }: Props) {
+  const poll = cb as unknown as PollingWaitCallback;
+  const waitTime: number = poll.waitTime ?? 2000;
+  const message: string = poll.message ?? 'Please wait…';
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onNext();
+    }, waitTime);
+    return () => clearTimeout(timer);
+  }, [waitTime, onNext]);
+
+  return (
+    <View style={styles.container}>
+      <ActivityIndicator size="large" color={PingColors.red} style={styles.spinner} />
+      <Text style={styles.message}>{message}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 32,
+    width: '100%',
+  },
+  spinner: {
+    marginBottom: 16,
+  },
+  message: {
+    fontSize: 14,
+    color: PingColors.outline,
+    textAlign: 'center',
+  },
+});

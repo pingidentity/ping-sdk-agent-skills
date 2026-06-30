@@ -1,0 +1,76 @@
+/*
+ * LoginScreen.tsx — OIDC flow
+ *
+ * Entry screen for OIDC authorization code + PKCE flow.
+ * Reads state from OidcProvider via useOidc() (no client arg).
+ * On mount, restores any existing session from secure storage.
+ * Uses navigation.replace() for auth transitions.
+ *
+ * IMPORTANT: restore() is a silent keychain read — it does NOT set state.isLoading.
+ * Use a local `restoring` flag instead of isLoading to show the splash spinner.
+ *
+ * Required: OidcProvider must wrap NavigationContainer in App.tsx.
+ * Required: oidcClient created in App.tsx via useMemo and passed to OidcProvider.
+ */
+
+import React, { useEffect, useState } from 'react';
+import { StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { useOidc } from '@ping-identity/rn-oidc';
+import { PingHeaderView, PingLoadingOverlay, PingPrimaryButton } from '../theme/PingTheme';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const SDK_VERSION: string = require('@ping-identity/rn-oidc/package.json').version;
+
+export function LoginScreen() {
+  const navigation = useNavigation<any>();
+  const [state, actions] = useOidc();
+  const [restoring, setRestoring] = useState(true);
+
+  // Restore session from secure storage on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        await actions.restore();
+      } finally {
+        setRestoring(false);
+      }
+    })();
+  }, []);
+
+  // Navigate once authenticated (after restore or after authorize)
+  useEffect(() => {
+    if (!restoring && state.isAuthenticated) {
+      navigation.replace('Home');
+    }
+  }, [restoring, state.isAuthenticated, navigation]);
+
+  if (restoring) {
+    return <PingLoadingOverlay visible message="Restoring session…" />;
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <PingHeaderView title="Sign In" subtitle={`Browser-based sign in  •  Ping RN SDK v${SDK_VERSION}`} />
+      <SafeAreaView style={styles.content}>
+        <PingPrimaryButton
+          title="Sign In"
+          onPress={() => actions.authorize()}
+          disabled={state.isLoading}
+        />
+      </SafeAreaView>
+      <PingLoadingOverlay visible={state.isLoading} message="Signing in…" />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    padding: 24,
+    justifyContent: 'center',
+  },
+});

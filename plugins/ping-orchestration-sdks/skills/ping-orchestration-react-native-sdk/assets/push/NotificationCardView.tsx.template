@@ -1,0 +1,458 @@
+/*
+ * NotificationCardView.tsx
+ *
+ * Renders the appropriate card for a push notification based on pushType:
+ *   default   — simple Approve / Deny
+ *   challenge — number-matching (tap the number shown on your other device)
+ *   biometric — biometric prompt
+ *
+ * Drop into src/push/NotificationCardView.tsx.
+ * Requires: react-native-vector-icons (MaterialIcons).
+ */
+
+import React, { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  ViewStyle,
+  TextStyle,
+} from 'react-native';
+import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
+import type {
+  PushClient,
+  PushCredential,
+  PushNotification,
+} from '@ping-identity/rn-push';
+import { getNumbersChallenge } from '@ping-identity/rn-push';
+import { PingColors } from '../theme/PingTheme';
+
+type Props = {
+  notification: PushNotification;
+  credential: PushCredential | undefined;
+  pushClient: PushClient;
+  onDone: () => void;
+};
+
+function isExpired(n: PushNotification): boolean {
+  return Date.now() > n.createdAt + n.ttl * 1000;
+}
+
+export default function NotificationCardView({
+  notification: n,
+  credential,
+  pushClient,
+  onDone,
+}: Props) {
+  if (n.pushType === 'challenge') {
+    return (
+      <ChallengeCard n={n} credential={credential} pushClient={pushClient} onDone={onDone} />
+    );
+  }
+  if (n.pushType === 'biometric') {
+    return (
+      <BiometricCard n={n} credential={credential} pushClient={pushClient} onDone={onDone} />
+    );
+  }
+  return (
+    <DefaultCard n={n} credential={credential} pushClient={pushClient} onDone={onDone} />
+  );
+}
+
+function CardHeader({
+  n,
+  iconName,
+  title,
+  credential,
+}: {
+  n: PushNotification;
+  iconName: string;
+  title: string;
+  credential: PushCredential | undefined;
+}) {
+  const expired = isExpired(n);
+  return (
+    <>
+      <View style={styles.header}>
+        <View style={styles.iconBadge}>
+          <MaterialIcon name={iconName} size={20} color={PingColors.white} />
+        </View>
+        <View style={styles.headerText}>
+          <Text style={styles.cardTitle}>{title}</Text>
+          <Text style={styles.timestamp}>{relativeTime(n.createdAt)}</Text>
+        </View>
+        {expired && (
+          <View style={styles.expiredBadge}>
+            <MaterialIcon name="schedule" size={14} color="#FF9500" />
+            <Text style={styles.expiredText}>Expired</Text>
+          </View>
+        )}
+      </View>
+      {credential && (
+        <Text style={styles.credentialText}>
+          {credential.displayIssuer} · {credential.displayAccountName}
+        </Text>
+      )}
+      {n.messageText ? (
+        <Text style={styles.messageText}>{n.messageText}</Text>
+      ) : null}
+    </>
+  );
+}
+
+function DefaultCard({
+  n,
+  credential,
+  pushClient,
+  onDone,
+}: Omit<Props, 'notification'> & { n: PushNotification }) {
+  const [loading, setLoading] = useState(false);
+  const expired = isExpired(n);
+
+  const approve = async () => {
+    setLoading(true);
+    try {
+      await pushClient.approveNotification(n.id);
+    } catch (err) {
+      Alert.alert('Approve Failed', err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoading(false);
+      onDone();
+    }
+  };
+
+  const deny = async () => {
+    setLoading(true);
+    try {
+      await pushClient.denyNotification(n.id);
+    } catch (err) {
+      Alert.alert('Deny Failed', err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoading(false);
+      onDone();
+    }
+  };
+
+  return (
+    <View style={styles.card}>
+      <CardHeader n={n} iconName="touch-app" title="Authentication Request" credential={credential} />
+      {!expired && (
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
+            style={[styles.btn, styles.btnDeny]}
+            onPress={() => void deny()}
+            disabled={loading}
+          >
+            <MaterialIcon name="close" size={18} color={PingColors.white} />
+            <Text style={styles.btnText}>Deny</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.btn, styles.btnApprove]}
+            onPress={() => void approve()}
+            disabled={loading}
+          >
+            <MaterialIcon name="check" size={18} color={PingColors.white} />
+            <Text style={styles.btnText}>Approve</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      {loading && <ActivityIndicator color={PingColors.red} style={styles.spinner} />}
+    </View>
+  );
+}
+
+function ChallengeCard({
+  n,
+  credential,
+  pushClient,
+  onDone,
+}: Omit<Props, 'notification'> & { n: PushNotification }) {
+  const [loading, setLoading] = useState(false);
+  const expired = isExpired(n);
+  const numbers = n.numbersChallenge ? getNumbersChallenge(n) : [];
+
+  const approve = async (response: string) => {
+    setLoading(true);
+    try {
+      await pushClient.approveChallengeNotification(n.id, response);
+    } catch (err) {
+      Alert.alert('Approve Failed', err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoading(false);
+      onDone();
+    }
+  };
+
+  const deny = async () => {
+    setLoading(true);
+    try {
+      await pushClient.denyNotification(n.id);
+    } catch (err) {
+      Alert.alert('Deny Failed', err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoading(false);
+      onDone();
+    }
+  };
+
+  return (
+    <View style={styles.card}>
+      <CardHeader n={n} iconName="pin" title="Challenge Authentication" credential={credential} />
+      {!expired && (
+        <View style={styles.challengeBody}>
+          <Text style={styles.challengePrompt}>
+            Select the number shown on your other device
+          </Text>
+          {numbers.length > 0 ? (
+            <>
+              <View style={styles.numbersRow}>
+                {numbers.map(num => (
+                  <TouchableOpacity
+                    key={num}
+                    style={styles.numberCircle}
+                    onPress={() => void approve(String(num))}
+                    disabled={loading}
+                  >
+                    <Text style={styles.numberText}>{num}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => void deny()}
+                disabled={loading}
+              >
+                <Text style={styles.cancelText}>Cancel Authentication</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <Text style={styles.errorText}>No challenge numbers available</Text>
+              <TouchableOpacity
+                style={[styles.btn, styles.btnDeny, { marginTop: 12 }]}
+                onPress={() => void deny()}
+                disabled={loading}
+              >
+                <MaterialIcon name="close" size={18} color={PingColors.white} />
+                <Text style={styles.btnText}>Close</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      )}
+      {loading && <ActivityIndicator color={PingColors.red} style={styles.spinner} />}
+    </View>
+  );
+}
+
+function BiometricCard({
+  n,
+  credential,
+  pushClient,
+  onDone,
+}: Omit<Props, 'notification'> & { n: PushNotification }) {
+  const [loading, setLoading] = useState(false);
+  const expired = isExpired(n);
+
+  const approve = async () => {
+    setLoading(true);
+    try {
+      await pushClient.approveBiometricNotification(n.id, 'biometric');
+    } catch (err) {
+      Alert.alert('Approve Failed', err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoading(false);
+      onDone();
+    }
+  };
+
+  const deny = async () => {
+    setLoading(true);
+    try {
+      await pushClient.denyNotification(n.id);
+    } catch (err) {
+      Alert.alert('Deny Failed', err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoading(false);
+      onDone();
+    }
+  };
+
+  return (
+    <View style={styles.card}>
+      <CardHeader n={n} iconName="fingerprint" title="Biometric Authentication" credential={credential} />
+      {!expired && (
+        <View style={styles.challengeBody}>
+          <Text style={styles.challengePrompt}>
+            Use biometric authentication to approve this request
+          </Text>
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              style={[styles.btn, styles.btnDeny]}
+              onPress={() => void deny()}
+              disabled={loading}
+            >
+              <MaterialIcon name="close" size={18} color={PingColors.white} />
+              <Text style={styles.btnText}>Deny</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.btn, styles.btnApprove]}
+              onPress={() => void approve()}
+              disabled={loading}
+            >
+              <MaterialIcon name="fingerprint" size={18} color={PingColors.white} />
+              <Text style={styles.btnText}>Authenticate</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+      {loading && <ActivityIndicator color={PingColors.red} style={styles.spinner} />}
+    </View>
+  );
+}
+
+function relativeTime(ts: number): string {
+  const diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff >= 86400) return `${Math.floor(diff / 86400)}d ago`;
+  if (diff >= 3600) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff >= 60) return `${Math.floor(diff / 60)}m ago`;
+  return `${diff}s ago`;
+}
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: PingColors.surface,
+    borderRadius: 12,
+    width: '100%',
+    padding: 20,
+    marginBottom: 20,
+  } as ViewStyle,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    marginBottom: 8,
+  } as ViewStyle,
+  iconBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: PingColors.red,
+    alignItems: 'center',
+    justifyContent: 'center',
+  } as ViewStyle,
+  headerText: {
+    flex: 1,
+    gap: 2,
+  } as ViewStyle,
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: PingColors.onSurface,
+  } as TextStyle,
+  timestamp: {
+    fontSize: 13,
+    color: PingColors.outline,
+  } as TextStyle,
+  expiredBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  } as ViewStyle,
+  expiredText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#FF9500',
+  } as TextStyle,
+  credentialText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: PingColors.onSurface,
+    marginBottom: 4,
+  } as TextStyle,
+  messageText: {
+    fontSize: 14,
+    color: PingColors.onSurface,
+    paddingVertical: 8,
+  } as TextStyle,
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 12,
+  } as ViewStyle,
+  btn: {
+    flex: 1,
+    flexDirection: 'row',
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  } as ViewStyle,
+  btnDeny: {
+    backgroundColor: PingColors.errorText,
+  } as ViewStyle,
+  btnApprove: {
+    backgroundColor: '#1C7C54',
+  } as ViewStyle,
+  btnText: {
+    color: PingColors.white,
+    fontWeight: '600',
+    fontSize: 14,
+  } as TextStyle,
+  challengeBody: {
+    alignItems: 'center',
+    marginTop: 4,
+  } as ViewStyle,
+  challengePrompt: {
+    fontSize: 15,
+    color: PingColors.outline,
+    textAlign: 'center',
+    marginVertical: 12,
+  } as TextStyle,
+  numbersRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 16,
+    marginBottom: 8,
+  } as ViewStyle,
+  numberCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: PingColors.red,
+    alignItems: 'center',
+    justifyContent: 'center',
+  } as ViewStyle,
+  numberText: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: PingColors.red,
+  } as TextStyle,
+  cancelBtn: {
+    borderWidth: 1,
+    borderColor: PingColors.errorText,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginTop: 16,
+    width: '100%',
+    alignItems: 'center',
+  } as ViewStyle,
+  cancelText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: PingColors.errorText,
+  } as TextStyle,
+  errorText: {
+    color: PingColors.errorText,
+    fontSize: 14,
+  } as TextStyle,
+  spinner: {
+    marginTop: 8,
+  },
+});

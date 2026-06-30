@@ -1,0 +1,133 @@
+/*
+ * HomeScreen.tsx — Journey flow (authenticated state)
+ *
+ * Displays the signed-in user's profile and a sign-out button.
+ * Reads session state from JourneyProvider via useJourney() (no client arg).
+ * User info comes from actions.user() — session.userInfo contains the claims.
+ * Uses navigation.replace() to return to Login after logout.
+ *
+ * Required: JourneyProvider must wrap NavigationContainer in App.tsx.
+ */
+
+import React, { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { useJourney, type JourneyUserInfo } from '@ping-identity/rn-journey';
+import {
+  PingColors,
+  PingErrorMessage,
+  PingHeaderView,
+  PingLoadingOverlay,
+  PingPrimaryButton,
+} from '../theme/PingTheme';
+
+export function HomeScreen() {
+  const navigation = useNavigation<any>();
+  const [, { user, logoutUser }] = useJourney();
+  const [userInfo, setUserInfo] = useState<JourneyUserInfo | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const session = await user();
+        setUserInfo(session?.userInfo ?? null);
+      } catch {
+        // Non-fatal — profile section stays hidden
+      }
+    })();
+  }, []);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    setError(null);
+    try {
+      await logoutUser();
+      navigation.replace('Login');
+    } catch (err: any) {
+      setError(err?.message ?? 'Sign out failed.');
+      setLoggingOut(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.flex}>
+      <PingHeaderView
+        title="Welcome"
+        subtitle={String(userInfo?.email ?? userInfo?.name ?? '')}
+      />
+      <ScrollView contentContainerStyle={styles.content}>
+        {userInfo ? (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Profile</Text>
+            {userInfo.name ? (
+              <InfoRow label="Name" value={String(userInfo.name)} />
+            ) : null}
+            {userInfo.email ? (
+              <InfoRow label="Email" value={String(userInfo.email)} />
+            ) : null}
+            {userInfo.sub ? (
+              <InfoRow label="Subject" value={String(userInfo.sub)} />
+            ) : null}
+          </View>
+        ) : null}
+        {error ? <PingErrorMessage message={error} /> : null}
+        <PingPrimaryButton
+          title="Sign Out"
+          onPress={handleLogout}
+          disabled={loggingOut}
+        />
+      </ScrollView>
+      <PingLoadingOverlay visible={loggingOut} message="Signing out…" />
+    </SafeAreaView>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.row}>
+      <Text style={styles.rowLabel}>{label}</Text>
+      <Text style={styles.rowValue}>{value}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  content: {
+    padding: 16,
+    gap: 16,
+  },
+  card: {
+    backgroundColor: PingColors.surface,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: PingColors.textField,
+    gap: 8,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: PingColors.onSurface,
+    marginBottom: 4,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  rowLabel: {
+    fontSize: 13,
+    color: PingColors.outline,
+    fontWeight: '500',
+  },
+  rowValue: {
+    fontSize: 13,
+    color: PingColors.onSurface,
+    flexShrink: 1,
+    textAlign: 'right',
+  },
+});

@@ -1,0 +1,40 @@
+/*
+ * StringAttributeInputCallbackView.tsx — Journey Standard tier
+ *
+ * Collects a string attribute (e.g. email, phone). cb.value is the default.
+ * cb.required comes from the server — see canSubmit notes in CallbackRenderer.
+ * Validation failures arrive as cb.failedPolicies[] on the next node.
+ */
+
+import React, { useEffect, useState } from 'react';
+import type { JourneyCallback } from '@ping-identity/rn-journey';
+import { PingTextField } from '../theme/PingTheme';
+
+type Props = {
+  cb: JourneyCallback;
+  onValueChange: (value: string) => void;
+};
+
+export function StringAttributeInputCallbackView({ cb, onValueChange }: Props) {
+  const [text, setText] = useState(String(cb.value ?? ''));
+
+  useEffect(() => {
+    onValueChange(text);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleChange = (v: string) => {
+    setText(v);
+    onValueChange(v);
+  };
+
+  return (
+    <PingTextField
+      label={String(cb.prompt ?? '')}
+      value={text}
+      onChangeText={handleChange}
+      placeholder={String(cb.prompt ?? '')}
+      autoCapitalize="none"
+    />
+  );
+}

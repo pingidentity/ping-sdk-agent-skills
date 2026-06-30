@@ -1,0 +1,68 @@
+/*
+ * DeviceProfileCallbackView.tsx — Journey integration_required tier
+ *
+ * Requires @ping-identity/rn-device-profile.
+ * Uses useJourney() to call next() directly after collection — bypasses
+ * form.input which does not carry native callback data.
+ * No user input — shows a spinner while collection runs.
+ *
+ * Props: { journey: JourneyClient; typeIndex: number; onNext?: () => void }
+ */
+
+import React, { useEffect, useRef } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import type { JourneyClient } from '@ping-identity/rn-journey';
+import { useJourney } from '@ping-identity/rn-journey';
+import { collectDeviceProfileForJourney } from '@ping-identity/rn-device-profile';
+import { PingColors } from '../theme/PingTheme';
+
+type Props = {
+  journey: JourneyClient;
+  typeIndex: number;
+  onNext?: () => void;
+};
+
+export function DeviceProfileCallbackView({ journey }: Props) {
+  const [, { next }] = useJourney();
+  const started = useRef(false);
+
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+
+    (async () => {
+      try {
+        await collectDeviceProfileForJourney(journey, [
+          'platform',
+          'hardware',
+          'network',
+          'browser',
+        ]);
+      } catch {
+        // Non-fatal — advance regardless; server decides if profile is sufficient.
+      }
+      next();
+    })();
+  }, [journey, next]);
+
+  return (
+    <View style={styles.container}>
+      <ActivityIndicator size="large" color={PingColors.red} />
+      <Text style={styles.label}>Collecting device profile…</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+    gap: 16,
+  },
+  label: {
+    fontSize: 14,
+    color: PingColors.outline,
+    textAlign: 'center',
+  },
+});

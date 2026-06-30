@@ -1,0 +1,145 @@
+/*
+ * HomeScreen.tsx — OIDC flow (authenticated state)
+ *
+ * Displays OIDC user profile and token info.
+ * Reads state from OidcProvider via useOidc() (no client arg).
+ * state.userInfo is populated by actions.userinfo() — call on mount to fetch.
+ * Uses navigation.replace() to return to Login after logout.
+ *
+ * Required: OidcProvider must wrap NavigationContainer in App.tsx.
+ */
+
+import React, { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { useOidc } from '@ping-identity/rn-oidc';
+import {
+  PingColors,
+  PingErrorMessage,
+  PingHeaderView,
+  PingLoadingOverlay,
+  PingPrimaryButton,
+} from '../theme/PingTheme';
+
+export function HomeScreen() {
+  const navigation = useNavigation<any>();
+  const [state, actions] = useOidc();
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        await actions.userinfo(true);
+      } catch {
+        // Non-fatal — profile section stays hidden
+      }
+    })();
+  }, []);
+
+  const handleLogout = async () => {
+    setError(null);
+    try {
+      await actions.logout();
+      navigation.replace('Login');
+    } catch (err: any) {
+      setError(err?.message ?? 'Sign out failed.');
+    }
+  };
+
+  const userInfo = state.userInfo;
+
+  return (
+    <SafeAreaView style={styles.flex}>
+      <PingHeaderView
+        title="Welcome"
+        subtitle={String(userInfo?.email ?? userInfo?.name ?? '')}
+      />
+      <ScrollView contentContainerStyle={styles.content}>
+        {userInfo ? (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Profile</Text>
+            {userInfo.name ? (
+              <InfoRow label="Name" value={String(userInfo.name)} />
+            ) : null}
+            {userInfo.email ? (
+              <InfoRow label="Email" value={String(userInfo.email)} />
+            ) : null}
+            {userInfo.sub ? (
+              <InfoRow label="Subject" value={String(userInfo.sub)} />
+            ) : null}
+          </View>
+        ) : null}
+
+        {state.tokens?.accessToken ? (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Access Token</Text>
+            <Text style={styles.token} numberOfLines={4}>
+              {state.tokens.accessToken}
+            </Text>
+          </View>
+        ) : null}
+
+        {error ? <PingErrorMessage message={error} /> : null}
+        <PingPrimaryButton
+          title="Sign Out"
+          onPress={handleLogout}
+          disabled={state.isLoading}
+        />
+      </ScrollView>
+      <PingLoadingOverlay visible={state.isLoading} message="Signing out…" />
+    </SafeAreaView>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.row}>
+      <Text style={styles.rowLabel}>{label}</Text>
+      <Text style={styles.rowValue}>{value}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  content: {
+    padding: 16,
+    gap: 16,
+  },
+  card: {
+    backgroundColor: PingColors.surface,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: PingColors.textField,
+    gap: 8,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: PingColors.onSurface,
+    marginBottom: 4,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  rowLabel: {
+    fontSize: 13,
+    color: PingColors.outline,
+    fontWeight: '500',
+  },
+  rowValue: {
+    fontSize: 13,
+    color: PingColors.onSurface,
+    flexShrink: 1,
+    textAlign: 'right',
+  },
+  token: {
+    fontSize: 11,
+    color: PingColors.outline,
+    fontFamily: 'monospace',
+  },
+});
