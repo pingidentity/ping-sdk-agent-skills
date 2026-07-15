@@ -17,7 +17,7 @@
  */
 
 import React, { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { JourneyCallback } from '@ping-identity/rn-journey';
 import { PingColors, PingSecureField } from '../theme/PingTheme';
 
@@ -71,26 +71,28 @@ export function KbaCreateCallbackView({ cb, onQuestionChange, onAnswerChange }: 
       {/* Dropdown */}
       {pickerOpen && (
         <View style={styles.dropdown}>
-          {questions.map((q) => (
-            <TouchableOpacity
-              key={q}
-              onPress={() => handleQuestionSelect(q)}
-              style={[
-                styles.dropdownItem,
-                selectedQuestion === q && styles.dropdownItemSelected,
-              ]}
-              activeOpacity={0.7}
-            >
-              <Text
+          <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
+            {questions.map((q) => (
+              <TouchableOpacity
+                key={q}
+                onPress={() => handleQuestionSelect(q)}
                 style={[
-                  styles.dropdownText,
-                  selectedQuestion === q && styles.dropdownTextSelected,
+                  styles.dropdownItem,
+                  selectedQuestion === q && styles.dropdownItemSelected,
                 ]}
+                activeOpacity={0.7}
               >
-                {q}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  style={[
+                    styles.dropdownText,
+                    selectedQuestion === q && styles.dropdownTextSelected,
+                  ]}
+                >
+                  {q}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
       )}
 
@@ -149,7 +151,6 @@ const styles = StyleSheet.create({
     backgroundColor: PingColors.surface,
     marginBottom: 8,
     maxHeight: 200,
-    overflow: 'scroll' as any,
   },
   dropdownItem: {
     paddingHorizontal: 12,

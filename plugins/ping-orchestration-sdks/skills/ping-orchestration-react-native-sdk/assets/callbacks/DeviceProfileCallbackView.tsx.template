@@ -6,7 +6,7 @@
  * form.input which does not carry native callback data.
  * No user input — shows a spinner while collection runs.
  *
- * Props: { journey: JourneyClient; typeIndex: number; onNext?: () => void }
+ * Props: { journey: JourneyClient }
  */
 
 import React, { useEffect, useRef } from 'react';
@@ -18,8 +18,6 @@ import { PingColors } from '../theme/PingTheme';
 
 type Props = {
   journey: JourneyClient;
-  typeIndex: number;
-  onNext?: () => void;
 };
 
 export function DeviceProfileCallbackView({ journey }: Props) {

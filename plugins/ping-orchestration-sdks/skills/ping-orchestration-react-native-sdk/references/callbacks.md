@@ -41,24 +41,24 @@ Discriminate on `cb.type` to render the correct input field.
 | `NumberAttributeInputCallback` | `{ type: 'NumberAttributeInputCallback', value: number }` | Numeric attribute field |
 | `BooleanAttributeInputCallback` | `{ type: 'BooleanAttributeInputCallback', value: boolean }` | Boolean toggle |
 | `TermsAndConditionsCallback` | `{ type: 'TermsAndConditionsCallback', value: boolean }` | Must be `true` to proceed; `cb.terms` is the T&C text |
-| `KbaCreateCallback` | `{ type: 'KbaCreateCallback', value: { selectedQuestion, selectedAnswer, allowUserDefinedQuestions } }` | KBA question + answer; multiple instances use `index` |
+| `KbaCreateCallback` | `{ type: 'KbaCreateCallback', question: string, answer: string, index: number }` | KBA question + answer; multiple instances use `index` |
 | `PollingWaitCallback` | No input — auto-advancing | Poll server; re-call `next({})` after `cb.waitTime` ms |
-| `SelectIdpCallback` | `{ type: 'SelectIdpCallback', value: string }` | Social IdP selector; provider id string; requires `@ping-identity/rn-external-idp` |
 | `DeviceProfileCallback` | No input — auto-advancing | Collect device profile; requires `@ping-identity/rn-device-profile` |
 | `DeviceBindingCallback` | No input — integration-required | Device binding; requires `@ping-identity/rn-binding` |
 | `DeviceSigningVerifierCallback` | No input — integration-required | Device signing; requires `@ping-identity/rn-binding` |
 | `FidoRegistrationCallback` | No input — integration-required | FIDO2 registration; requires `@ping-identity/rn-fido` |
 | `FidoAuthenticationCallback` | No input — integration-required | FIDO2 authentication; requires `@ping-identity/rn-fido` |
-| `PingOneProtectInitializeCallback` | No input — auto-advancing | Initialize Protect SDK |
-| `PingOneProtectEvaluationCallback` | No input — auto-advancing | Evaluate Protect risk signal |
+| `PingOneProtectInitializeCallback` | No input — auto-advancing | Initialize Protect SDK; ⚠️ not yet supported in `@ping-identity/rn-*` — render `UnsupportedCallbackView` |
+| `PingOneProtectEvaluationCallback` | No input — auto-advancing | Evaluate Protect risk signal; ⚠️ not yet supported in `@ping-identity/rn-*` — render `UnsupportedCallbackView` |
 | `ConsentMappingCallback` | `{ type: 'ConsentMappingCallback', value: boolean }` | Consent grant |
 
 ### Full Tier — social login
 
 | Callback type | Notes |
 |---|---|
-| `IdpCallback` | External IdP redirect; requires `@ping-identity/rn-external-idp` |
-| `ReCaptchaEnterpriseCallback` | reCAPTCHA Enterprise token; requires third-party reCAPTCHA SDK |
+| `SelectIdpCallback` | Social IdP selector; `value` is the provider id string; requires `@ping-identity/rn-external-idp` |
+| `IdpCallback` | Handles the OAuth redirect after IdP selection; always paired with `SelectIdpCallback`; requires `@ping-identity/rn-external-idp` |
+| `ReCaptchaEnterpriseCallback` | reCAPTCHA Enterprise token; ⚠️ not yet supported in `@ping-identity/rn-*` — render `UnsupportedCallbackView` |
 
 ---
 
@@ -75,14 +75,15 @@ When building a callback renderer, callbacks fall into four execution modes:
 
 **Auto-capable callbacks** (auto-advance after native op or timeout):
 - `PollingWaitCallback` — wait `cb.waitTime` ms, then call `next({})`
-- `PingOneProtectInitializeCallback` — initialize, then `next({})`
-- `PingOneProtectEvaluationCallback` — evaluate, then `next({})`
+- `PingOneProtectInitializeCallback` — initialize, then `next({})` ⚠️ not yet supported in `@ping-identity/rn-*`
+- `PingOneProtectEvaluationCallback` — evaluate, then `next({})` ⚠️ not yet supported in `@ping-identity/rn-*`
 
 **Integration-required callbacks** (call native SDK first, then `next({})`):
 - `FidoRegistrationCallback` — `fidoClient.registerForJourney(...)`
 - `FidoAuthenticationCallback` — `fidoClient.authenticateForJourney(...)`
 - `DeviceProfileCallback` — device-profile collection
 - `DeviceBindingCallback` / `DeviceSigningVerifierCallback` — binding SDK ops
+- `SelectIdpCallback` / `IdpCallback` — external IdP OAuth redirect; requires `@ping-identity/rn-external-idp`
 
 ---
 

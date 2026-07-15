@@ -42,9 +42,16 @@ Options:
   D) Something else                       — let me describe what I need
 ```
 
-- **A/B** → Step W2
+- **A/B** → Step W1b
 - **C** → display the integration guide from "Ping SDK for React Native — Integration Guide" onward. Stop.
 - **D** → follow-up free-text question, route accordingly.
+
+**Step W1b — Journey export offer** (options A and B only).
+
+Ask: "Do you have a Journey export JSON? If so, paste it and I'll analyse it to identify the exact callbacks your Journey uses and pre-populate the callback tier."
+
+- If provided: run Section 7 (Journey Export Analysis, [references/journey-export-analysis.md](references/journey-export-analysis.md)) before Step W2. Pre-populate `journeyName` and `callbackTier` from the analysis. Ask Step W2.5 (callback mode) as usual — `callbackMode` cannot be inferred from the export and must still be asked.
+- If not provided: continue to Step W2 as normal.
 
 **Step W2 — Flow type** using `AskUserQuestion`:
 
@@ -171,11 +178,11 @@ Options:
    - `assets/callbacks/ChoiceCallbackView.tsx.template` → `src/callbacks/ChoiceCallbackView.tsx`
    - `assets/callbacks/ConfirmationCallbackView.tsx.template` → `src/callbacks/ConfirmationCallbackView.tsx`
    - `assets/callbacks/TermsAndConditionsCallbackView.tsx.template` → `src/callbacks/TermsAndConditionsCallbackView.tsx`
-   - `assets/callbacks/ConsentMappingCallbackView.tsx.template` → `src/callbacks/ConsentMappingCallbackView.tsx`
    - `assets/callbacks/KbaCreateCallbackView.tsx.template` → `src/callbacks/KbaCreateCallbackView.tsx`
    - `assets/callbacks/PollingWaitCallbackView.tsx.template` → `src/callbacks/PollingWaitCallbackView.tsx`
 
    **Callback components — Standard tier** (write these when `callbackTier = standard` or `full`):
+   - `assets/callbacks/ConsentMappingCallbackView.tsx.template` → `src/callbacks/ConsentMappingCallbackView.tsx`
    - `assets/callbacks/FidoRegistrationCallbackView.tsx.template` → `src/callbacks/FidoRegistrationCallbackView.tsx`
    - `assets/callbacks/FidoAuthenticationCallbackView.tsx.template` → `src/callbacks/FidoAuthenticationCallbackView.tsx`
    - `assets/callbacks/DeviceBindingCallbackView.tsx.template` → `src/callbacks/DeviceBindingCallbackView.tsx`
@@ -210,7 +217,7 @@ Options:
    **These files are still generated** (they contain user-supplied config values):
    - `<projectDir>/src/<AppName>JourneyClient.ts` (or `OidcClient.ts` for OIDC)
 
-4. Overwrite `<projectDir>/App.tsx` with a React Navigation stack. **All Ping providers must wrap the single `NavigationContainer`** — never use multiple `NavigationContainer` instances or nest providers inside screen components. A single flat stack gives every screen a back button automatically.
+5. Overwrite `<projectDir>/App.tsx` with a React Navigation stack. **All Ping providers must wrap the single `NavigationContainer`** — never use multiple `NavigationContainer` instances or nest providers inside screen components. A single flat stack gives every screen a back button automatically.
 
    **Journey flow:**
    ```tsx
@@ -349,16 +356,6 @@ Options:
    manifestPlaceholders = [appRedirectUriScheme: "<redirectUri-scheme>"]
    ```
    where `<redirectUri-scheme>` is the scheme portion of your `redirectUri` (e.g. `com.example.app` for `com.example.app://oauth2redirect`). Without this the build fails with "no value for &lt;appRedirectUriScheme&gt; is provided".
-
-   Also add the intent filter to `android/app/src/main/AndroidManifest.xml` inside `<activity android:name=".MainActivity">`:
-   ```xml
-   <intent-filter android:autoVerify="true">
-     <action android:name="android.intent.action.VIEW" />
-     <category android:name="android.intent.category.DEFAULT" />
-     <category android:name="android.intent.category.BROWSABLE" />
-     <data android:scheme="<redirectUri-scheme>" />
-   </intent-filter>
-   ```
 
    **iOS (OIDC flow only)** — register the redirect URI scheme in `ios/<AppName>/Info.plist`:
    ```xml
@@ -831,17 +828,12 @@ actions.clear();
 
 ### 4.5 — Android redirect URI wiring
 
-In `android/app/src/main/AndroidManifest.xml`:
+`rn-oidc` uses AppAuth's `RedirectUriReceiverActivity` (declared in the library's own manifest) to catch the redirect. The `appRedirectUriScheme` manifest placeholder wires the scheme automatically — **do not** add an additional `<intent-filter>` to `MainActivity`. Doing so causes `MainActivity` to intercept the callback URL before AppAuth can complete the token exchange, leaving the app stuck after browser login.
 
-```xml
-<activity android:name=".MainActivity" ...>
-  <intent-filter android:autoVerify="true">
-    <action android:name="android.intent.action.VIEW" />
-    <category android:name="android.intent.category.DEFAULT" />
-    <category android:name="android.intent.category.BROWSABLE" />
-    <data android:scheme="com.example.app" />
-  </intent-filter>
-</activity>
+Only the placeholder is needed — in `android/app/build.gradle` inside `defaultConfig`:
+
+```groovy
+manifestPlaceholders = [appRedirectUriScheme: "com.example.app"]
 ```
 
 ### 4.6 — iOS redirect URI wiring
@@ -909,6 +901,30 @@ await fidoClient.authenticateForJourney(journey, { index: field.ref.typeIndex })
 
 After calling register/authenticate, call `next({})` to advance the node.
 
+## 5 — Push MFA Integration
+
+Push MFA can be layered on top of any Journey or OIDC flow after the core auth is working.
+
+**Install:**
+```bash
+npm install @ping-identity/rn-push
+cd ios && pod install
+```
+
+**Copy templates:**
+- `assets/push/PushNotificationProvider.tsx.template` → `src/PushNotificationProvider.tsx`
+- `assets/push/NotificationCardView.tsx.template` → `src/screens/NotificationCardView.tsx`
+
+**Android:** Copy `assets/push/PushMessagingService.kt.template` → `android/app/src/main/java/<package>/PushMessagingService.kt`. Register the service in `AndroidManifest.xml` (with the `MESSAGING_EVENT` intent filter) and add the FCM Google Services dependency.
+
+**iOS:** Copy `assets/push/AppDelegate.push.swift.template` → `ios/<AppName>/AppDelegate.swift`. Enable the Push Notifications capability in Xcode and register for remote notifications.
+
+See [references/callbacks.md](references/callbacks.md#push-mfa) for the full `usePush` hook API, `PushProvider`, push notification shapes, and `PushClient` methods.
+
+## UnsupportedCallbackView
+
+`UnsupportedCallbackView` is the standard fallback for any callback with `executionMode === 'integration_required'` or `'unsupported'` that the app does not yet handle (e.g. `PingOneProtectInitializeCallback`, `ReCaptchaEnterpriseCallback`). All form-managed `CallbackRenderer` variants generate it automatically. Manual-mode renderers should also include it as the `default` branch in their callback switch.
+
 ## 6 — Common Pitfalls
 
 - **Client created inside component** — `createJourneyClient` / `createOidcClient` must be called at module scope or in a stable ref. Creating inside a component body causes a new native instance on every render.
@@ -921,6 +937,10 @@ After calling register/authenticate, call `next({})` to advance the node.
 - **`isLoading` does not track `restore()`** — `restore()` is a silent keychain read and does not set `isLoading`. Gate the initial restore spinner with local `restoring` state + async/await as shown in section 4.2, not with `state.isLoading`. `isLoading` only covers `authorize`, `token`, `refresh`, `userinfo`, `revoke`, and `logout`.
 - **`dispose()` on unmount** — call `client.dispose()` when the client is no longer needed to release native resources. For long-lived clients, dispose on app teardown or user switch.
 
+## 7 — Journey Export Analysis
+
+When the user provides a Journey export JSON (Step W1b), run the full analysis in [references/journey-export-analysis.md](references/journey-export-analysis.md) (steps A1–A8) before writing any code.
+
 ## Reference Files
 
 - [references/journey-client.md](references/journey-client.md) — Full `createJourneyClient` config, `JourneyConfig`, all hook actions, `JourneyNextInput`
@@ -928,3 +948,4 @@ After calling register/authenticate, call `next({})` to advance the node.
 - [references/oidc-client.md](references/oidc-client.md) — Full `OidcClientConfig`, `createOidcWebClient`, all `useOidc` actions, error codes
 - [references/common-mistakes.md](references/common-mistakes.md) — RN-specific gotchas: client scope, navigation, callback index, OIDC redirect, platform minimums
 - [references/oath.md](references/oath.md) — `createOathClient`, TOTP/HOTP credential management, policy evaluator, error codes
+- [references/journey-export-analysis.md](references/journey-export-analysis.md) — Journey export JSON analysis steps (A1–A8), node→callback mapping table

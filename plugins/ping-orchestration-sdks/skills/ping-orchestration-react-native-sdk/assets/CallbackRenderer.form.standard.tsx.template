@@ -10,7 +10,7 @@
  */
 
 import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import type { JourneyNode, JourneyClient, JourneyNextInput, JourneyCallbackType } from '@ping-identity/rn-journey';
 import { useJourneyForm } from '@ping-identity/rn-journey';
 import {
@@ -59,7 +59,8 @@ export function CallbackRenderer({ node, journeyClient, onSubmit }: Props) {
   const hasManualSubmit = meta.hasManual || (visibleFields.length === 0 && fields.length > 0);
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       {fields.map((field) => {
         const cb = field.raw;
 
@@ -154,7 +155,8 @@ export function CallbackRenderer({ node, journeyClient, onSubmit }: Props) {
           <PingPrimaryButton title="Next" onPress={handleNext} disabled={!canSubmit} />
         </View>
       ) : null}
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
