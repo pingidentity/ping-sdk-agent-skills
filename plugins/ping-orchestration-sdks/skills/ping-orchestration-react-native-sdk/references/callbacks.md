@@ -35,13 +35,13 @@ Discriminate on `cb.type` to render the correct input field.
 
 | Callback type | Input to `next()` | Notes |
 |---|---|---|
-| `ValidatedUsernameCallback` | `{ type: 'ValidatedUsernameCallback', value: string }` | Policy-validated username; property is `username` not `value` in native |
-| `ValidatedPasswordCallback` | `{ type: 'ValidatedPasswordCallback', value: string }` | Policy-validated password |
+| `ValidatedCreateUsernameCallback` | `{ type: 'ValidatedCreateUsernameCallback', value: string }` | Policy-validated username |
+| `ValidatedCreatePasswordCallback` | `{ type: 'ValidatedCreatePasswordCallback', value: string }` | Policy-validated password |
 | `StringAttributeInputCallback` | `{ type: 'StringAttributeInputCallback', value: string }` | Single string attribute field |
 | `NumberAttributeInputCallback` | `{ type: 'NumberAttributeInputCallback', value: number }` | Numeric attribute field |
 | `BooleanAttributeInputCallback` | `{ type: 'BooleanAttributeInputCallback', value: boolean }` | Boolean toggle |
 | `TermsAndConditionsCallback` | `{ type: 'TermsAndConditionsCallback', value: boolean }` | Must be `true` to proceed; `cb.terms` is the T&C text |
-| `KbaCreateCallback` | `{ type: 'KbaCreateCallback', question: string, answer: string, index: number }` | KBA question + answer; multiple instances use `index` |
+| `KbaCreateCallback` | `{ type: 'KbaCreateCallback', value: { selectedQuestion: string, selectedAnswer: string, allowUserDefinedQuestions: boolean }, index: number }` | KBA question + answer pair; `index` differentiates multiple instances on the same node |
 | `PollingWaitCallback` | No input — auto-advancing | Poll server; re-call `next({})` after `cb.waitTime` ms |
 | `DeviceProfileCallback` | No input — auto-advancing | Collect device profile; requires `@ping-identity/rn-device-profile` |
 | `DeviceBindingCallback` | No input — integration-required | Device binding; requires `@ping-identity/rn-binding` |

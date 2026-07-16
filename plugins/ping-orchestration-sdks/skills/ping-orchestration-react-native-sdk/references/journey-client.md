@@ -234,11 +234,10 @@ try {
 
 ```ts
 type JourneyUserSession = {
-  accessToken?:  string;
-  idToken?:      string;
+  accessToken:   string;
   refreshToken?: string;
-  tokenType?:    string;
-  scope?:        string;
+  expiresIn?:    number;
+  userInfo?:     Record<string, unknown>;
 };
 
 type JourneyUserInfo = Record<string, unknown>; // userinfo endpoint payload

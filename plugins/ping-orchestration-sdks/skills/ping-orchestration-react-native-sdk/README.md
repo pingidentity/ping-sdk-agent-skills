@@ -151,5 +151,5 @@ Full list in `references/common-mistakes.md`.
 2. For **OIDC on Android**: confirm `appRedirectUriScheme` in `android/app/build.gradle` matches your redirect URI scheme.
 3. For **FIDO / Passkeys**: register your app's origin / associated domain in the PingOne AIC console.
 4. For **Device Binding**: ensure the AIC journey has a Device Binding node with biometric authentication type.
-5. For **Push Notifications**: add `google-services.json` (Android) and configure APNs (iOS) — see `src/push/` templates.
+5. For **Push Notifications**: add `google-services.json` (Android) and configure APNs (iOS). See SKILL.md "5 — Push MFA Integration" or ask the skill to scaffold Push for step-by-step instructions.
 6. Run `pod install` in `ios/` after `npm install`.

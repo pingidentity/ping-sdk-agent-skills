@@ -18,21 +18,21 @@ import {
   PingPrimaryButton,
   PingSecureField,
   PingTextField,
-} from './theme/PingTheme';
-import { TextOutputCallbackView } from './callbacks/TextOutputCallbackView';
-import { SuspendedTextOutputCallbackView } from './callbacks/SuspendedTextOutputCallbackView';
-import { ChoiceCallbackView } from './callbacks/ChoiceCallbackView';
-import { ConfirmationCallbackView } from './callbacks/ConfirmationCallbackView';
-import { TermsAndConditionsCallbackView } from './callbacks/TermsAndConditionsCallbackView';
-import { ConsentMappingCallbackView } from './callbacks/ConsentMappingCallbackView';
-import { KbaCreateCallbackView } from './callbacks/KbaCreateCallbackView';
-import { PollingWaitCallbackView } from './callbacks/PollingWaitCallbackView';
-import { FidoRegistrationCallbackView } from './callbacks/FidoRegistrationCallbackView';
-import { FidoAuthenticationCallbackView } from './callbacks/FidoAuthenticationCallbackView';
-import { DeviceBindingCallbackView } from './callbacks/DeviceBindingCallbackView';
-import { DeviceSigningVerifierCallbackView } from './callbacks/DeviceSigningVerifierCallbackView';
-import { DeviceProfileCallbackView } from './callbacks/DeviceProfileCallbackView';
-import { UnsupportedCallbackView } from './callbacks/UnsupportedCallbackView';
+} from '../theme/PingTheme';
+import { TextOutputCallbackView } from '../callbacks/TextOutputCallbackView';
+import { SuspendedTextOutputCallbackView } from '../callbacks/SuspendedTextOutputCallbackView';
+import { ChoiceCallbackView } from '../callbacks/ChoiceCallbackView';
+import { ConfirmationCallbackView } from '../callbacks/ConfirmationCallbackView';
+import { TermsAndConditionsCallbackView } from '../callbacks/TermsAndConditionsCallbackView';
+import { ConsentMappingCallbackView } from '../callbacks/ConsentMappingCallbackView';
+import { KbaCreateCallbackView } from '../callbacks/KbaCreateCallbackView';
+import { PollingWaitCallbackView } from '../callbacks/PollingWaitCallbackView';
+import { FidoRegistrationCallbackView } from '../callbacks/FidoRegistrationCallbackView';
+import { FidoAuthenticationCallbackView } from '../callbacks/FidoAuthenticationCallbackView';
+import { DeviceBindingCallbackView } from '../callbacks/DeviceBindingCallbackView';
+import { DeviceSigningVerifierCallbackView } from '../callbacks/DeviceSigningVerifierCallbackView';
+import { DeviceProfileCallbackView } from '../callbacks/DeviceProfileCallbackView';
+import { UnsupportedCallbackView } from '../callbacks/UnsupportedCallbackView';
 
 type Props = {
   node: JourneyNode;
@@ -71,7 +71,7 @@ export function CallbackRenderer({ node, journeyClient, onSubmit }: Props) {
         // DeviceProfileCallback is output_only (no user input) but requires native data collection,
         // not a static text view — intercept before the generic output_only branch.
         if (field.ref.type === 'DeviceProfileCallback') {
-          return <DeviceProfileCallbackView key={field.id} journey={journeyClient} typeIndex={field.ref.typeIndex} onNext={() => { onSubmit(form.input); }} />;
+          return <DeviceProfileCallbackView key={field.id} journey={journeyClient} />;
         }
 
         // PollingWaitCallback is output_only (no user input) but needs timer-based auto-advance,

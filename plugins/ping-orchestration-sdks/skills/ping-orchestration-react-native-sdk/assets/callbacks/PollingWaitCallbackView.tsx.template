@@ -11,7 +11,7 @@
  * cb.message    — optional user-facing status message
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import type { JourneyCallback } from '@ping-identity/rn-journey';
 import { PingColors } from '../theme/PingTheme';
@@ -28,12 +28,15 @@ export function PollingWaitCallbackView({ cb, onNext }: Props) {
   const waitTime: number = poll.waitTime ?? 2000;
   const message: string = poll.message ?? 'Please wait…';
 
+  const onNextRef = useRef(onNext);
+  useEffect(() => { onNextRef.current = onNext; });
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      onNext();
+      onNextRef.current();
     }, waitTime);
     return () => clearTimeout(timer);
-  }, [waitTime, onNext]);
+  }, [waitTime]);
 
   return (
     <View style={styles.container}>

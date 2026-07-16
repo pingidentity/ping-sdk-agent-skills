@@ -18,16 +18,16 @@ import {
   PingPrimaryButton,
   PingSecureField,
   PingTextField,
-} from './theme/PingTheme';
-import { TextOutputCallbackView } from './callbacks/TextOutputCallbackView';
-import { SuspendedTextOutputCallbackView } from './callbacks/SuspendedTextOutputCallbackView';
-import { ChoiceCallbackView } from './callbacks/ChoiceCallbackView';
-import { ConfirmationCallbackView } from './callbacks/ConfirmationCallbackView';
-import { TermsAndConditionsCallbackView } from './callbacks/TermsAndConditionsCallbackView';
-import { ConsentMappingCallbackView } from './callbacks/ConsentMappingCallbackView';
-import { KbaCreateCallbackView } from './callbacks/KbaCreateCallbackView';
-import { PollingWaitCallbackView } from './callbacks/PollingWaitCallbackView';
-import { UnsupportedCallbackView } from './callbacks/UnsupportedCallbackView';
+} from '../theme/PingTheme';
+import { TextOutputCallbackView } from '../callbacks/TextOutputCallbackView';
+import { SuspendedTextOutputCallbackView } from '../callbacks/SuspendedTextOutputCallbackView';
+import { ChoiceCallbackView } from '../callbacks/ChoiceCallbackView';
+import { ConfirmationCallbackView } from '../callbacks/ConfirmationCallbackView';
+import { TermsAndConditionsCallbackView } from '../callbacks/TermsAndConditionsCallbackView';
+import { ConsentMappingCallbackView } from '../callbacks/ConsentMappingCallbackView';
+import { KbaCreateCallbackView } from '../callbacks/KbaCreateCallbackView';
+import { PollingWaitCallbackView } from '../callbacks/PollingWaitCallbackView';
+import { UnsupportedCallbackView } from '../callbacks/UnsupportedCallbackView';
 
 type Props = {
   node: JourneyNode;
