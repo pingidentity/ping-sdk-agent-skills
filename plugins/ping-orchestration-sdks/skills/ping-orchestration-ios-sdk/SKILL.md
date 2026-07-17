@@ -141,9 +141,9 @@ Present `callbackTier` options (Journey and DaVinci only):
 3. **Journey export offer** — if the flow type is `journey`, no manifest was loaded, and the user has not provided an export, ask:
    > "Do you have a Journey export JSON? I can analyse it and tailor the sample to exactly the callbacks your Journey uses."
    If provided, run Section 13 before proceeding. Use its output to determine `callbackTier` and screens.
-3. **Ask one clarifying question** only if the flow type is genuinely ambiguous. Collect required parameters for the detected flow type (see W2 table) in a single `AskUserQuestion` with an explicit "I can use placeholders" option.
-4. **Resolve the app name** from `app-name` or use `"MyApp"`.
-5. **Generate** using the template files in `assets/`. Substitute all `PLACEHOLDER_*` tokens (see table below). Use `@Observable @MainActor` ViewModels — never `ObservableObject`/`@Published`. Apply Ping Identity branding (Section 11).
+4. **Ask one clarifying question** only if the flow type is genuinely ambiguous. Collect required parameters for the detected flow type (see W2 table) in a single `AskUserQuestion` with an explicit "I can use placeholders" option.
+5. **Resolve the app name** from `app-name` or use `"MyApp"`.
+6. **Generate** using the template files in `assets/`. Substitute all `PLACEHOLDER_*` tokens (see table below). Use `@Observable @MainActor` ViewModels — never `ObservableObject`/`@Published`. Apply Ping Identity branding (Section 11).
 
    **OIDC Web flow** — read and substitute:
    `App.swift.oidc.template`, `AppOidc.swift.template`, `OidcLoginViewModel.swift.template`, `ContentView.swift.oidc.template`, `LoginView.swift.oidc.template`, `AuthenticatedView.swift.oidc.template`, `Theme.swift.template`
@@ -168,7 +168,7 @@ Present `callbackTier` options (Journey and DaVinci only):
 
    In `CollectorNodeView.swift.davinci.template`, replace `// PLACEHOLDER_COLLECTOR_CASES` with the appropriate `switch` cases for the tier, and replace `// PLACEHOLDER_TIER_IMPORTS` and `// PLACEHOLDER_SELF_ADVANCING_TYPES` accordingly.
 
-6. **Deliver:**
+7. **Deliver:**
    - With `output-path`: read `assets/project-scaffolding.md` and follow Steps 0–G exactly. For SPM products per flow type, see Step C in that document.
    - Without `output-path`: print every file inline with a `// --- <Filename>.swift ---` header.
 
