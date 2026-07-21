@@ -3,7 +3,7 @@
  *
  * Covers: Name, Password, TextInput, StringAttribute, NumberAttribute,
  * BooleanAttribute, TextOutput, SuspendedTextOutput, Choice, Confirmation,
- * TermsAndConditions, ConsentMapping, KbaCreate, PollingWait.
+ * TermsAndConditions, KbaCreate, PollingWait.
  *
  * No FIDO, device binding, device profile, or external IdP dependencies.
  * Requires only @ping-identity/rn-journey.
@@ -11,7 +11,7 @@
 
 import React from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
-import type { JourneyNode, JourneyNextInput } from '@ping-identity/rn-journey';
+import type { JourneyNode, JourneyClient, JourneyNextInput } from '@ping-identity/rn-journey';
 import { useJourneyForm } from '@ping-identity/rn-journey';
 import {
   PingErrorMessage,
@@ -24,13 +24,13 @@ import { SuspendedTextOutputCallbackView } from '../callbacks/SuspendedTextOutpu
 import { ChoiceCallbackView } from '../callbacks/ChoiceCallbackView';
 import { ConfirmationCallbackView } from '../callbacks/ConfirmationCallbackView';
 import { TermsAndConditionsCallbackView } from '../callbacks/TermsAndConditionsCallbackView';
-import { ConsentMappingCallbackView } from '../callbacks/ConsentMappingCallbackView';
 import { KbaCreateCallbackView } from '../callbacks/KbaCreateCallbackView';
 import { PollingWaitCallbackView } from '../callbacks/PollingWaitCallbackView';
 import { UnsupportedCallbackView } from '../callbacks/UnsupportedCallbackView';
 
 type Props = {
   node: JourneyNode;
+  journeyClient?: JourneyClient;
   onSubmit: (input: JourneyNextInput) => Promise<unknown>;
 };
 
@@ -74,8 +74,6 @@ export function CallbackRenderer({ node, onSubmit }: Props) {
         switch (field.ref.type) {
           case 'TermsAndConditionsCallback':
             return <TermsAndConditionsCallbackView key={field.id} cb={cb} onValueChange={(v) => setValue(field.id, v)} />;
-          case 'ConsentMappingCallback':
-            return <ConsentMappingCallbackView key={field.id} cb={cb} onValueChange={(v) => setValue(field.id, v)} />;
           case 'KbaCreateCallback':
             return (
               <KbaCreateCallbackView

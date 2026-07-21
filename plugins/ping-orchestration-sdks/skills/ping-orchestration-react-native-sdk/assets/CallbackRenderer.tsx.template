@@ -48,7 +48,6 @@ const AUTO_ADVANCE_TYPES = new Set([
   'FidoAuthenticationCallback',
   'DeviceBindingCallback',
   'DeviceSigningVerifierCallback',
-  'IdpCallback',
   'SelectIdpCallback',
   'SelectIdPCallback',
 ]);
@@ -232,6 +231,7 @@ export function CallbackRenderer({ node, journeyClient, onSubmit }: Props) {
             );
           case 'DeviceProfileCallback':
             return <DeviceProfileCallbackView key={i} journey={journeyClient} />;
+          case 'IdpCallback':
           case 'SelectIdpCallback':
           case 'SelectIdPCallback':
             return (

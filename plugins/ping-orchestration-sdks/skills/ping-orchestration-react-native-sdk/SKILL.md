@@ -180,6 +180,7 @@ Options:
    - `assets/callbacks/TermsAndConditionsCallbackView.tsx.template` → `src/callbacks/TermsAndConditionsCallbackView.tsx`
    - `assets/callbacks/KbaCreateCallbackView.tsx.template` → `src/callbacks/KbaCreateCallbackView.tsx`
    - `assets/callbacks/PollingWaitCallbackView.tsx.template` → `src/callbacks/PollingWaitCallbackView.tsx`
+   - `assets/callbacks/UnsupportedCallbackView.tsx.template` → `src/callbacks/UnsupportedCallbackView.tsx`
 
    **Callback components — Standard tier** (write these when `callbackTier = standard` or `full`):
    - `assets/callbacks/ConsentMappingCallbackView.tsx.template` → `src/callbacks/ConsentMappingCallbackView.tsx`
@@ -216,6 +217,13 @@ Options:
 
    **These files are still generated** (they contain user-supplied config values):
    - `<projectDir>/src/<AppName>JourneyClient.ts` (or `OidcClient.ts` for OIDC)
+
+   **Full tier only** — also export `idpClient` from the Journey client file:
+   ```ts
+   import { createExternalIdpClient } from '@ping-identity/rn-external-idp';
+   export const idpClient = createExternalIdpClient();
+   ```
+   `SelectIdpCallbackView` imports `idpClient` from this file.
 
 5. Overwrite `<projectDir>/App.tsx` with a React Navigation stack. **All Ping providers must wrap the single `NavigationContainer`** — never use multiple `NavigationContainer` instances or nest providers inside screen components. A single flat stack gives every screen a back button automatically.
 
@@ -334,8 +342,8 @@ Options:
    # Journey — Standard tier (adds FIDO, binding, device profile)
    cd <projectDir> && npm install @ping-identity/rn-core@1.0.0 @ping-identity/rn-journey@1.0.0 @ping-identity/rn-fido@1.0.0 @ping-identity/rn-binding@1.0.0 @ping-identity/rn-device-profile@1.0.0 @react-navigation/native @react-navigation/native-stack react-native-screens react-native-safe-area-context
 
-   # Journey — Full tier (adds external IdP, logger, storage, device-id, oath on top of Standard)
-   cd <projectDir> && npm install @ping-identity/rn-core@1.0.0 @ping-identity/rn-journey@1.0.0 @ping-identity/rn-fido@1.0.0 @ping-identity/rn-binding@1.0.0 @ping-identity/rn-device-profile@1.0.0 @ping-identity/rn-external-idp@1.0.0 @ping-identity/rn-logger@1.0.0 @ping-identity/rn-storage@1.0.0 @ping-identity/rn-device-id@1.0.0 @ping-identity/rn-oath@1.0.0 @react-navigation/native @react-navigation/native-stack react-native-screens react-native-safe-area-context
+   # Journey — Full tier (adds external IdP, logger, storage, device-id, oath, device-client on top of Standard)
+   cd <projectDir> && npm install @ping-identity/rn-core@1.0.0 @ping-identity/rn-journey@1.0.0 @ping-identity/rn-fido@1.0.0 @ping-identity/rn-binding@1.0.0 @ping-identity/rn-device-profile@1.0.0 @ping-identity/rn-external-idp@1.0.0 @ping-identity/rn-logger@1.0.0 @ping-identity/rn-storage@1.0.0 @ping-identity/rn-device-id@1.0.0 @ping-identity/rn-oath@1.0.0 @ping-identity/rn-device-client@1.0.0 @react-navigation/native @react-navigation/native-stack react-native-screens react-native-safe-area-context
 
    # OIDC flow
    cd <projectDir> && npm install @ping-identity/rn-core@1.0.0 @ping-identity/rn-oidc@1.0.0 @react-navigation/native @react-navigation/native-stack react-native-screens react-native-safe-area-context
@@ -485,7 +493,7 @@ Install only what your flow needs:
 | `@ping-identity/rn-fido` | FIDO2 / passkey registration and authentication callbacks |
 | `@ping-identity/rn-binding` | Device binding and signing callbacks |
 | `@ping-identity/rn-device-profile` | Device profile collection callback |
-| `@ping-identity/rn-device-client` | Device registration/authentication collectors |
+| `@ping-identity/rn-device-client` | Unified device management bridge (OATH/Push/Bound/WebAuthn/Profile) — install when building custom device flows beyond what the Journey callbacks cover |
 | `@ping-identity/rn-external-idp` | Social / external IdP callbacks |
 | `@ping-identity/rn-push` | Push MFA |
 | `@ping-identity/rn-oath` | TOTP / HOTP MFA |
@@ -907,15 +915,20 @@ Push MFA can be layered on top of any Journey or OIDC flow after the core auth i
 
 **Install:**
 ```bash
-npm install @ping-identity/rn-push
+npm install @ping-identity/rn-push @ping-identity/rn-logger @ping-identity/rn-storage react-native-vector-icons
 cd ios && pod install
 ```
+Note: `@ping-identity/rn-logger` and `@ping-identity/rn-storage` are already installed if using Full tier. `react-native-vector-icons` requires native linking — follow its setup guide for iOS (add to Podfile) and Android (auto-linked in RN >= 0.60).
 
 **Copy templates:**
 - `assets/push/PushNotificationProvider.tsx.template` → `src/PushNotificationProvider.tsx`
 - `assets/push/NotificationCardView.tsx.template` → `src/screens/NotificationCardView.tsx`
 
-**Android:** Copy `assets/push/PushMessagingService.kt.template` → `android/app/src/main/java/<package>/PushMessagingService.kt`. Register the service in `AndroidManifest.xml` (with the `MESSAGING_EVENT` intent filter) and add the FCM Google Services dependency.
+**Android:**
+- Copy `assets/push/PushMessagingService.kt.template` → `android/app/src/main/java/<package>/PushMessagingService.kt`. Register the service in `AndroidManifest.xml` (with the `MESSAGING_EVENT` intent filter) and add the FCM Google Services dependency.
+- Copy `assets/push/strings.ping_push.xml.template` → `android/app/src/main/res/values/strings.ping_push.xml` (required — `PushMessagingService` references these string resources at runtime).
+- Copy `assets/push/colors.ping_push.xml.template` → `android/app/src/main/res/values/colors.ping_push.xml` (required — provides the notification accent color).
+- Copy `assets/push/ping_push_notification_icon.xml.template` → `android/app/src/main/res/drawable/ping_push_notification_icon.xml` (optional — falls back to system info icon if absent).
 
 **iOS:** Copy `assets/push/AppDelegate.push.swift.template` → `ios/<AppName>/AppDelegate.swift`. Enable the Push Notifications capability in Xcode and register for remote notifications.
 

@@ -100,7 +100,7 @@ function PushNotificationModal({ children }: Props) {
     });
 
     return unsub;
-  }, [data, refresh, show]);
+  }, [data?.client, show]);
 
   const dismiss = useCallback(() => {
     if (activeNotification) dismissedIds.current.add(activeNotification.id);

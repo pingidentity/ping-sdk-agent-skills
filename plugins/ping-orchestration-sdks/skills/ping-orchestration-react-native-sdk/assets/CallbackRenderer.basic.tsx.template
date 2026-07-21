@@ -3,7 +3,7 @@
  *
  * Covers: Name, Password, TextInput, StringAttribute, NumberAttribute,
  * BooleanAttribute, TextOutput, SuspendedTextOutput, Choice, Confirmation,
- * TermsAndConditions, ConsentMapping, KbaCreate, PollingWait.
+ * TermsAndConditions, KbaCreate, PollingWait.
  *
  * No FIDO, device binding, device profile, or external IdP dependencies.
  * Requires only @ping-identity/rn-journey.
@@ -26,7 +26,6 @@ import { SuspendedTextOutputCallbackView } from '../callbacks/SuspendedTextOutpu
 import { ChoiceCallbackView } from '../callbacks/ChoiceCallbackView';
 import { ConfirmationCallbackView } from '../callbacks/ConfirmationCallbackView';
 import { TermsAndConditionsCallbackView } from '../callbacks/TermsAndConditionsCallbackView';
-import { ConsentMappingCallbackView } from '../callbacks/ConsentMappingCallbackView';
 import { KbaCreateCallbackView } from '../callbacks/KbaCreateCallbackView';
 import { PollingWaitCallbackView } from '../callbacks/PollingWaitCallbackView';
 import { UnsupportedCallbackView } from '../callbacks/UnsupportedCallbackView';
@@ -115,8 +114,6 @@ export function CallbackRenderer({ node, onSubmit }: Props) {
               return <ConfirmationCallbackView key={i} cb={cb} onValueChange={(v) => updateValue(i, v)} />;
             case 'TermsAndConditionsCallback':
               return <TermsAndConditionsCallbackView key={i} cb={cb} onValueChange={(v) => updateValue(i, v)} />;
-            case 'ConsentMappingCallback':
-              return <ConsentMappingCallbackView key={i} cb={cb} onValueChange={(v) => updateValue(i, v)} />;
             case 'KbaCreateCallback':
               return (
                 <KbaCreateCallbackView

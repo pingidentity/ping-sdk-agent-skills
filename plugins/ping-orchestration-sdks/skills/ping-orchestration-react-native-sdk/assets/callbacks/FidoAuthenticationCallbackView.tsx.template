@@ -11,7 +11,7 @@
  *   onNext     — called after successful authentication to advance the node
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { createFidoClient } from '@ping-identity/rn-fido';
 import type { JourneyClient } from '@ping-identity/rn-journey';
@@ -47,8 +47,11 @@ export function FidoAuthenticationCallbackView({ journey, typeIndex, onNext }: P
     }
   }, [journey, typeIndex, onNext]);
 
-  // Auto-trigger on mount
+  const started = useRef(false);
+
   useEffect(() => {
+    if (started.current) return;
+    started.current = true;
     handleAuthenticate();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
