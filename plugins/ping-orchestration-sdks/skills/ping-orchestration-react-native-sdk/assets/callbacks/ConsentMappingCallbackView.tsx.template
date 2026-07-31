@@ -1,0 +1,102 @@
+/*
+ * ConsentMappingCallbackView.tsx — Journey Standard tier
+ *
+ * Displays a consent form with displayName, message, and fields list.
+ * cb.required (server-sent) gates canSubmit when using useJourneyForm.
+ * onValueChange receives true when accepted, false when unchecked.
+ */
+
+import React, { useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import type { JourneyCallback } from '@ping-identity/rn-journey';
+import { PingColors } from '../theme/PingTheme';
+
+type Props = {
+  cb: JourneyCallback;
+  onValueChange: (value: boolean) => void;
+};
+
+type ConsentMappingCallback = { accepted?: boolean; displayName?: string; message?: string; fields?: string[] };
+
+export function ConsentMappingCallbackView({ cb, onValueChange }: Props) {
+  const consent = cb as unknown as ConsentMappingCallback;
+  const [accepted, setAccepted] = useState(Boolean(consent.accepted));
+  const displayName: string = consent.displayName ?? '';
+  const message: string = consent.message ?? '';
+  const fields: string[] = consent.fields ?? [];
+
+  const toggle = () => {
+    const next = !accepted;
+    setAccepted(next);
+    onValueChange(next);
+  };
+
+  return (
+    <View style={styles.container}>
+      {displayName ? <Text style={styles.title}>{displayName}</Text> : null}
+      {message ? <Text style={styles.message}>{message}</Text> : null}
+      {fields.length > 0 ? (
+        <Text style={styles.fields}>Fields: {fields.join(', ')}</Text>
+      ) : null}
+      <TouchableOpacity onPress={toggle} style={styles.checkRow} activeOpacity={0.7}>
+        <View style={[styles.checkbox, accepted && styles.checkboxChecked]}>
+          {accepted ? <Text style={styles.checkmark}>✓</Text> : null}
+        </View>
+        <Text style={styles.checkLabel}>I consent to this data mapping</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    marginBottom: 12,
+    gap: 8,
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: PingColors.onSurface,
+  },
+  message: {
+    fontSize: 13,
+    color: PingColors.outline,
+    lineHeight: 18,
+  },
+  fields: {
+    fontSize: 12,
+    color: PingColors.outline,
+  },
+  checkRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginTop: 4,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: PingColors.outline,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  checkboxChecked: {
+    backgroundColor: PingColors.red,
+    borderColor: PingColors.red,
+  },
+  checkmark: {
+    color: PingColors.white,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  checkLabel: {
+    fontSize: 13,
+    color: PingColors.onSurface,
+    flex: 1,
+    lineHeight: 18,
+  },
+});

@@ -1,0 +1,46 @@
+/*
+ * NumberAttributeInputCallbackView.tsx — Journey Standard tier
+ *
+ * Collects a numeric attribute. cb.value is the default (number).
+ * Sends onValueChange with the parsed number; filters non-numeric input locally.
+ */
+
+import React, { useEffect, useState } from 'react';
+import type { JourneyCallback } from '@ping-identity/rn-journey';
+import { PingTextField } from '../theme/PingTheme';
+
+type Props = {
+  cb: JourneyCallback;
+  onValueChange: (value: number) => void;
+};
+
+export function NumberAttributeInputCallbackView({ cb, onValueChange }: Props) {
+  const [text, setText] = useState(cb.value != null ? String(cb.value) : '');
+
+  useEffect(() => {
+    const parsed = parseFloat(text);
+    if (!Number.isNaN(parsed)) {
+      onValueChange(parsed);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleChange = (v: string) => {
+    const filtered = v.replace(/[^0-9.]/g, '');
+    setText(filtered);
+    const parsed = parseFloat(filtered);
+    if (!Number.isNaN(parsed)) {
+      onValueChange(parsed);
+    }
+  };
+
+  return (
+    <PingTextField
+      label={String(cb.prompt ?? '')}
+      value={text}
+      onChangeText={handleChange}
+      placeholder={String(cb.prompt ?? '')}
+      keyboardType="decimal-pad"
+    />
+  );
+}

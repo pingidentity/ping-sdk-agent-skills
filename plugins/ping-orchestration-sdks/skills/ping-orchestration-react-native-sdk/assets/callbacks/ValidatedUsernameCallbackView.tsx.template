@@ -1,0 +1,41 @@
+/*
+ * ValidatedUsernameCallbackView.tsx — Journey Standard tier
+ *
+ * Bridge alias: ValidatedCreateUsernameCallback (renamed from ValidatedUsernameCallback).
+ * Same UI as NameCallbackView. cb.value holds the current username.
+ * Validation failures arrive as cb.failedPolicies[] on the next node — not client-side.
+ */
+
+import React, { useEffect, useState } from 'react';
+import type { JourneyCallback } from '@ping-identity/rn-journey';
+import { PingTextField } from '../theme/PingTheme';
+
+type Props = {
+  cb: JourneyCallback;
+  onValueChange: (value: string) => void;
+};
+
+export function ValidatedUsernameCallbackView({ cb, onValueChange }: Props) {
+  const [text, setText] = useState(String(cb.value ?? ''));
+
+  useEffect(() => {
+    onValueChange(text);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleChange = (v: string) => {
+    setText(v);
+    onValueChange(v);
+  };
+
+  return (
+    <PingTextField
+      label={String(cb.prompt ?? 'Username')}
+      value={text}
+      onChangeText={handleChange}
+      placeholder={String(cb.prompt ?? 'Enter username')}
+      autoCapitalize="none"
+      keyboardType="email-address"
+    />
+  );
+}

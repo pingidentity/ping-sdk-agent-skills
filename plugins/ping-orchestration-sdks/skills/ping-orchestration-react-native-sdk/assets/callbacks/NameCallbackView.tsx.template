@@ -1,0 +1,42 @@
+/*
+ * NameCallbackView.tsx — Journey Basic tier
+ *
+ * Renders a username / email text input for NameCallback.
+ * Use cb.value for the default; submit via onValueChange.
+ */
+
+import React, { useEffect, useState } from 'react';
+import type { JourneyCallback } from '@ping-identity/rn-journey';
+import { PingTextField } from '../theme/PingTheme';
+
+type Props = {
+  cb: JourneyCallback;
+  onValueChange: (value: string) => void;
+};
+
+export function NameCallbackView({ cb, onValueChange }: Props) {
+  const [text, setText] = useState(String(cb.value ?? ''));
+
+  // Emit initial value on mount so CallbackRenderer.values is seeded even if the
+  // user never types (server often sends cb.value = '' for a pre-filled default).
+  useEffect(() => {
+    onValueChange(text);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleChange = (v: string) => {
+    setText(v);
+    onValueChange(v);
+  };
+
+  return (
+    <PingTextField
+      label={cb.prompt ?? 'Username'}
+      value={text}
+      onChangeText={handleChange}
+      placeholder={cb.prompt ?? 'Enter username'}
+      autoCapitalize="none"
+      keyboardType="email-address"
+    />
+  );
+}

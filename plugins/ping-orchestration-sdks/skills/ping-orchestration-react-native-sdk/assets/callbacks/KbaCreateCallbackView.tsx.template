@@ -1,0 +1,172 @@
+/*
+ * KbaCreateCallbackView.tsx — Journey Basic tier
+ *
+ * Renders a KBA (Knowledge Based Authentication) question-and-answer pair for
+ * KbaCreateCallback. The user selects a predefined question and enters an answer.
+ *
+ * cb.predefinedQuestions is an array of question strings.
+ * cb.question is the currently selected question (or empty string).
+ * cb.answer is the current answer value.
+ *
+ * onValueChange receives the question string when the user picks a question,
+ * and the answer string when the user types their answer.
+ *
+ * IMPORTANT: When multiple KbaCreateCallbacks exist on the same node, each
+ * renders its own KbaCreateCallbackView. Pass `index` from the parent's per-type
+ * counter so the JourneyNextInput includes the correct index field.
+ */
+
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import type { JourneyCallback } from '@ping-identity/rn-journey';
+import { PingColors, PingSecureField } from '../theme/PingTheme';
+
+type Props = {
+  cb: JourneyCallback;
+  onQuestionChange: (question: string) => void;
+  onAnswerChange: (answer: string) => void;
+};
+
+type KbaCreateCallback = { predefinedQuestions?: string[]; selectedQuestion?: string; selectedAnswer?: string; allowUserDefinedQuestions?: boolean };
+
+export function KbaCreateCallbackView({ cb, onQuestionChange, onAnswerChange }: Props) {
+  const kba = cb as unknown as KbaCreateCallback;
+  const questions: string[] = kba.predefinedQuestions ?? [];
+  const [selectedQuestion, setSelectedQuestion] = useState<string>(
+    kba.selectedQuestion ?? '',
+  );
+  const [answer, setAnswer] = useState('');
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const handleQuestionSelect = (q: string) => {
+    setSelectedQuestion(q);
+    setPickerOpen(false);
+    onQuestionChange(q);
+  };
+
+  const handleAnswerChange = (v: string) => {
+    setAnswer(v);
+    onAnswerChange(v);
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.label}>Security Question</Text>
+
+      {/* Question picker trigger */}
+      <TouchableOpacity
+        onPress={() => setPickerOpen((v) => !v)}
+        style={styles.pickerTrigger}
+        activeOpacity={0.75}
+      >
+        <Text
+          style={[styles.pickerText, !selectedQuestion && styles.pickerPlaceholder]}
+          numberOfLines={2}
+        >
+          {selectedQuestion || 'Select a question…'}
+        </Text>
+        <Text style={styles.chevron}>{pickerOpen ? '▲' : '▼'}</Text>
+      </TouchableOpacity>
+
+      {/* Dropdown */}
+      {pickerOpen && (
+        <View style={styles.dropdown}>
+          <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
+            {questions.map((q) => (
+              <TouchableOpacity
+                key={q}
+                onPress={() => handleQuestionSelect(q)}
+                style={[
+                  styles.dropdownItem,
+                  selectedQuestion === q && styles.dropdownItemSelected,
+                ]}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.dropdownText,
+                    selectedQuestion === q && styles.dropdownTextSelected,
+                  ]}
+                >
+                  {q}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
+      {/* Answer field — only shown once a question is selected */}
+      {selectedQuestion ? (
+        <PingSecureField
+          label="Your Answer"
+          value={answer}
+          onChangeText={handleAnswerChange}
+          placeholder="Enter your answer"
+        />
+      ) : null}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    marginBottom: 12,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: PingColors.onSurface,
+    marginBottom: 6,
+  },
+  pickerTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: PingColors.textField,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: PingColors.surface,
+    marginBottom: 4,
+  },
+  pickerText: {
+    flex: 1,
+    fontSize: 14,
+    color: PingColors.onSurface,
+  },
+  pickerPlaceholder: {
+    color: PingColors.outline,
+  },
+  chevron: {
+    fontSize: 12,
+    color: PingColors.outline,
+    marginLeft: 8,
+  },
+  dropdown: {
+    borderWidth: 1,
+    borderColor: PingColors.textField,
+    borderRadius: 8,
+    backgroundColor: PingColors.surface,
+    marginBottom: 8,
+    maxHeight: 200,
+  },
+  dropdownItem: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: PingColors.background,
+  },
+  dropdownItemSelected: {
+    backgroundColor: '#FFF5F4',
+  },
+  dropdownText: {
+    fontSize: 14,
+    color: PingColors.onSurface,
+  },
+  dropdownTextSelected: {
+    color: PingColors.red,
+    fontWeight: '500',
+  },
+});

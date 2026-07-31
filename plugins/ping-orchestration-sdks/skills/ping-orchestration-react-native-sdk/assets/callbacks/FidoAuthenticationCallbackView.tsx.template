@@ -1,0 +1,98 @@
+/*
+ * FidoAuthenticationCallbackView.tsx — Journey integration_required tier
+ *
+ * Handles FIDO2/WebAuthn passkey authentication using @ping-identity/rn-fido.
+ * Auto-triggers the biometric prompt on mount for seamless UX.
+ * After authentication, onNext() signals the parent to advance the Journey.
+ *
+ * Props:
+ *   journey    — JourneyClient from useJourney()
+ *   typeIndex  — field.ref.typeIndex from useJourneyForm, or 0 for manual renderer
+ *   onNext     — called after successful authentication to advance the node
+ */
+
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { createFidoClient } from '@ping-identity/rn-fido';
+import type { JourneyClient } from '@ping-identity/rn-journey';
+import {
+  PingColors,
+  PingErrorMessage,
+  PingLoadingOverlay,
+  PingPrimaryButton,
+} from '../theme/PingTheme';
+
+const fidoClient = createFidoClient();
+
+type Props = {
+  journey: JourneyClient;
+  typeIndex: number;
+  onNext: () => void;
+};
+
+export function FidoAuthenticationCallbackView({ journey, typeIndex, onNext }: Props) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleAuthenticate = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await fidoClient.authenticateForJourney(journey, { index: typeIndex });
+      onNext();
+    } catch (err: any) {
+      setError(err?.message ?? 'Biometric authentication failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, [journey, typeIndex, onNext]);
+
+  const started = useRef(false);
+
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    handleAuthenticate();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Verify Your Identity</Text>
+      <Text style={styles.description}>
+        Authenticate using your registered passkey (Face ID, Touch ID, or device PIN).
+      </Text>
+      {error ? (
+        <>
+          <PingErrorMessage message={error} />
+          <PingPrimaryButton
+            title="Try Again"
+            onPress={handleAuthenticate}
+            disabled={loading}
+          />
+        </>
+      ) : null}
+      <PingLoadingOverlay visible={loading} message="Authenticating…" />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    alignItems: 'center',
+    gap: 16,
+    paddingVertical: 8,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: PingColors.onSurface,
+    textAlign: 'center',
+  },
+  description: {
+    fontSize: 14,
+    color: PingColors.outline,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+});

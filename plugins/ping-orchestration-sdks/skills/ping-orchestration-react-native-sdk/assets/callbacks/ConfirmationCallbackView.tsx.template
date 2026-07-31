@@ -1,0 +1,94 @@
+/*
+ * ConfirmationCallbackView.tsx — Journey Basic tier
+ *
+ * Renders a yes/no toggle for ConfirmationCallback.
+ * cb.options typically contains ["Yes", "No"] or custom labels.
+ * onValueChange receives the selected option index as a number.
+ */
+
+import React, { useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import type { JourneyCallback } from '@ping-identity/rn-journey';
+import { PingColors } from '../theme/PingTheme';
+
+type Props = {
+  cb: JourneyCallback;
+  prompt?: string;
+  onValueChange: (value: number) => void;
+};
+
+type ConfirmationCallback = { options?: string[]; prompt?: string };
+
+export function ConfirmationCallbackView({ cb, prompt, onValueChange }: Props) {
+  const conf = cb as unknown as ConfirmationCallback;
+  const options: string[] = conf.options ?? ['Yes', 'No'];
+  const [selected, setSelected] = useState<number | null>(null);
+
+  const handleSelect = (index: number) => {
+    setSelected(index);
+    onValueChange(index);
+  };
+
+  return (
+    <View style={styles.container}>
+      {(prompt ?? conf.prompt) ? <Text style={styles.label}>{prompt ?? conf.prompt}</Text> : null}
+      <View style={styles.row}>
+        {options.map((option, index) => (
+          <TouchableOpacity
+            key={index}
+            onPress={() => handleSelect(index)}
+            style={[styles.button, selected === index && styles.buttonSelected]}
+            activeOpacity={0.75}
+          >
+            <Text
+              style={[
+                styles.buttonText,
+                selected === index && styles.buttonTextSelected,
+              ]}
+            >
+              {option}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    marginBottom: 12,
+  },
+  label: {
+    fontSize: 14,
+    color: PingColors.onSurface,
+    marginBottom: 10,
+    lineHeight: 20,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: PingColors.textField,
+    alignItems: 'center',
+    backgroundColor: PingColors.surface,
+  },
+  buttonSelected: {
+    borderColor: PingColors.red,
+    backgroundColor: PingColors.red,
+  },
+  buttonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: PingColors.onSurface,
+  },
+  buttonTextSelected: {
+    color: PingColors.white,
+  },
+});

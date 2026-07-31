@@ -1,0 +1,88 @@
+/*
+ * LoginScreen.tsx — Journey flow
+ *
+ * Starts a Journey on mount and renders callbacks via CallbackRenderer.
+ * Reads session state from JourneyProvider via useJourney() (no client arg).
+ * Uses navigation.replace() for auth transitions so back button is not exposed.
+ *
+ * Required: JourneyProvider must wrap NavigationContainer in App.tsx.
+ * Required: journeyClient created at module scope in <AppName>JourneyClient.ts.
+ * Required: JOURNEY_NAME constant matches the AM/PingOne journey name exactly.
+ */
+
+import React, { useEffect } from 'react';
+import { StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { useJourney } from '@ping-identity/rn-journey';
+import { PingErrorCard, PingHeaderView, PingLoadingOverlay } from '../theme/PingTheme';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const SDK_VERSION: string = require('@ping-identity/rn-journey/package.json').version;
+import { CallbackRenderer } from '../screens/CallbackRenderer';
+import { journeyClient } from '../<AppName>JourneyClient';
+
+const JOURNEY_NAME = 'Login'; // Replace with your AM/PingOne journey name
+
+export function LoginScreen() {
+  const navigation = useNavigation<any>();
+  const [node, { start, next }] = useJourney();
+  const [nodeKey, setNodeKey] = React.useState(0);
+  useEffect(() => { setNodeKey((k) => k + 1); }, [node]);
+
+  // Start the journey on mount
+  useEffect(() => {
+    start(JOURNEY_NAME);
+  }, []);
+
+  // Navigate on terminal states
+  useEffect(() => {
+    if (node?.type === 'SuccessNode') {
+      navigation.replace('Home');
+    }
+  }, [node, navigation]);
+
+  if (!node || node.type === 'SuccessNode' || (node.type === 'ContinueNode' && !node.callbacks)) {
+    return <PingLoadingOverlay visible message="Starting…" />;
+  }
+
+  if (node.type === 'FailureNode') {
+    return (
+      <SafeAreaView style={styles.flex}>
+        <PingHeaderView title="Sign In" subtitle="Authentication failed" />
+        <PingErrorCard
+          message={node.cause ?? 'Authentication failed.'}
+          onRetry={() => start(JOURNEY_NAME)}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (node.type === 'ErrorNode') {
+    return (
+      <SafeAreaView style={styles.flex}>
+        <PingHeaderView title="Sign In" subtitle="An error occurred" />
+        <PingErrorCard
+          message={node.message ?? 'An unexpected error occurred.'}
+          onRetry={() => start(JOURNEY_NAME)}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.flex}>
+      <PingHeaderView title="Sign In" subtitle={`Welcome back  •  Ping RN SDK v${SDK_VERSION}`} />
+      <CallbackRenderer
+        key={nodeKey}
+        node={node}
+        journeyClient={journeyClient}
+        onSubmit={next}
+      />
+      <PingLoadingOverlay visible={node.type !== 'ContinueNode'} message="Signing in…" />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+});

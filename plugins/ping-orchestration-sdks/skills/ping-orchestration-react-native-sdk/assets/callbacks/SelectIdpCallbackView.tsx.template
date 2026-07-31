@@ -1,0 +1,116 @@
+/*
+ * SelectIdpCallbackView.tsx — Journey integration_required tier
+ *
+ * Requires @ping-identity/rn-external-idp.
+ * Reads providers dynamically from the callback's output array (AM format)
+ * or normalized SDK property. idpClient.selectProviderForJourney() handles
+ * the redirect — calling journey.next() directly throws MissingIntegrationException.
+ *
+ * Create idpClient at module scope:
+ *   const idpClient = createExternalIdpClient({ redirectUri: 'yourscheme://callback' });
+ *
+ * Props: { cb: JourneyCallback; journey: JourneyClient; typeIndex: number; onNext: () => void }
+ */
+
+import React, { useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import type { JourneyCallback, JourneyClient } from '@ping-identity/rn-journey';
+import { PingColors, PingErrorMessage } from '../theme/PingTheme';
+import { idpClient } from '../<AppName>JourneyClient';
+
+type Props = {
+  cb: JourneyCallback;
+  journey: JourneyClient;
+  typeIndex: number;
+  onNext: () => void;
+};
+
+type IdpProvider = { provider: string };
+
+function getProviders(cb: JourneyCallback): string[] {
+  const raw = cb as any;
+  if (Array.isArray(raw.providers)) {
+    return raw.providers.map((p: IdpProvider) => p.provider ?? p);
+  }
+  const outputEntry = raw.output?.find((o: any) => o.name === 'providers');
+  if (Array.isArray(outputEntry?.value)) {
+    return outputEntry.value.map((p: IdpProvider) => p.provider ?? p);
+  }
+  return [];
+}
+
+export function SelectIdpCallbackView({ cb, journey, typeIndex, onNext }: Props) {
+  const [error, setError] = useState<string | null>(null);
+  const providers = getProviders(cb);
+
+  const handleSelect = async (provider: string) => {
+    setError(null);
+    try {
+      await idpClient.selectProviderForJourney(journey, provider, { index: typeIndex });
+      onNext();
+    } catch (err: any) {
+      setError(err?.message ?? 'Provider selection failed.');
+    }
+  };
+
+  if (providers.length === 0) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.empty}>No identity providers configured.</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.heading}>Sign in with</Text>
+      {providers.map((provider) => (
+        <TouchableOpacity
+          key={provider}
+          style={styles.button}
+          onPress={() => handleSelect(provider)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.buttonText}>
+            {provider.charAt(0).toUpperCase() + provider.slice(1)}
+          </Text>
+        </TouchableOpacity>
+      ))}
+      {error ? <PingErrorMessage message={error} /> : null}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    gap: 12,
+    paddingVertical: 8,
+  },
+  heading: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: PingColors.onSurface,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  button: {
+    backgroundColor: PingColors.surface,
+    borderWidth: 1,
+    borderColor: PingColors.outline,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  buttonText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: PingColors.onSurface,
+  },
+  empty: {
+    fontSize: 14,
+    color: PingColors.outline,
+    textAlign: 'center',
+    paddingVertical: 16,
+  },
+});

@@ -1,0 +1,109 @@
+/*
+ * ChoiceCallbackView.tsx — Journey Basic tier
+ *
+ * Renders a single-select choice list for ChoiceCallback.
+ * cb.choices is an array of option strings; cb.value is the selected index.
+ * onValueChange receives the selected index as a number.
+ */
+
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import type { JourneyCallback } from '@ping-identity/rn-journey';
+import { PingColors } from '../theme/PingTheme';
+
+type Props = {
+  cb: JourneyCallback;
+  prompt?: string;
+  onValueChange: (value: number) => void;
+};
+
+type ChoiceCallback = { choices?: string[]; value?: number; prompt?: string };
+
+export function ChoiceCallbackView({ cb, prompt, onValueChange }: Props) {
+  const choice = cb as unknown as ChoiceCallback;
+  const choices: string[] = choice.choices ?? [];
+  const [selected, setSelected] = useState<number>(
+    typeof choice.value === 'number' ? choice.value : 0,
+  );
+
+  useEffect(() => {
+    onValueChange(selected);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSelect = (index: number) => {
+    setSelected(index);
+    onValueChange(index);
+  };
+
+  return (
+    <View style={styles.container}>
+      {(prompt ?? choice.prompt) ? <Text style={styles.label}>{prompt ?? choice.prompt}</Text> : null}
+      {choices.map((label, index) => (
+        <TouchableOpacity
+          key={index}
+          onPress={() => handleSelect(index)}
+          style={[styles.option, selected === index && styles.optionSelected]}
+          activeOpacity={0.75}
+        >
+          <View style={[styles.radio, selected === index && styles.radioSelected]}>
+            {selected === index && <View style={styles.radioDot} />}
+          </View>
+          <Text style={styles.optionText}>{label}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    marginBottom: 12,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: PingColors.onSurface,
+    marginBottom: 8,
+  },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: PingColors.textField,
+    marginBottom: 6,
+    backgroundColor: PingColors.surface,
+  },
+  optionSelected: {
+    borderColor: PingColors.red,
+    backgroundColor: '#FFF5F4',
+  },
+  radio: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: PingColors.outline,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  radioSelected: {
+    borderColor: PingColors.red,
+  },
+  radioDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: PingColors.red,
+  },
+  optionText: {
+    fontSize: 14,
+    color: PingColors.onSurface,
+    flexShrink: 1,
+  },
+});

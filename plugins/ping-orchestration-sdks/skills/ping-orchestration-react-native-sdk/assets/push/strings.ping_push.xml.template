@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ping_push_notification_title">Authentication Request</string>
+    <string name="ping_push_notification_body">Tap to respond to this authentication request.</string>
+    <string name="ping_push_channel_name">Authentication Requests</string>
+    <string name="ping_push_channel_description">Push notifications for Ping Identity authentication requests</string>
+</resources>

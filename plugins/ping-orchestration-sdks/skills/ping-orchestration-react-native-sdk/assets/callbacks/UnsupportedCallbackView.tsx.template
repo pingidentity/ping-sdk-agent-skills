@@ -1,0 +1,60 @@
+/*
+ * UnsupportedCallbackView.tsx — Journey fallback for unhandled callbacks
+ *
+ * Shown when a callback's executionMode is 'integration_required' with no
+ * registered native handler, or when executionMode is 'unsupported'.
+ */
+
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { PingColors } from '../theme/PingTheme';
+
+type Props = {
+  executionMode: string;
+  callbackType?: string;
+};
+
+export function UnsupportedCallbackView({ executionMode, callbackType }: Props) {
+  const message =
+    executionMode === 'integration_required'
+      ? 'Requires additional native integration.'
+      : 'Unsupported callback type.';
+  return (
+    <View style={styles.container}>
+      <View style={styles.accentBar} />
+      <View style={styles.body}>
+        {callbackType ? <Text style={styles.type}>{callbackType}</Text> : null}
+        <Text style={styles.message}>{message}</Text>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    backgroundColor: PingColors.background,
+    borderRadius: 8,
+    overflow: 'hidden',
+    width: '100%',
+    marginBottom: 8,
+  },
+  accentBar: {
+    width: 4,
+    backgroundColor: '#E65100',
+  },
+  body: {
+    flex: 1,
+    padding: 12,
+    gap: 4,
+  },
+  type: {
+    fontSize: 12,
+    color: PingColors.outline,
+  },
+  message: {
+    fontSize: 14,
+    color: PingColors.onSurface,
+    lineHeight: 20,
+  },
+});

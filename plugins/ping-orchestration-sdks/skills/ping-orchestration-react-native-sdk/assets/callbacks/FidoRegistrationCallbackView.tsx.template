@@ -1,0 +1,97 @@
+/*
+ * FidoRegistrationCallbackView.tsx — Journey integration_required tier
+ *
+ * Handles FIDO2/WebAuthn passkey registration using @ping-identity/rn-fido.
+ * Shows a device-name text field (required by the SDK) then triggers registration.
+ * After registration completes, onNext() signals the parent to advance the Journey.
+ *
+ * Props:
+ *   journey    — JourneyClient from useJourney()
+ *   typeIndex  — field.ref.typeIndex from useJourneyForm, or 0 for manual renderer
+ *   onNext     — called after successful registration to advance the node
+ */
+
+import React, { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { createFidoClient } from '@ping-identity/rn-fido';
+import type { JourneyClient } from '@ping-identity/rn-journey';
+import {
+  PingColors,
+  PingErrorMessage,
+  PingLoadingOverlay,
+  PingPrimaryButton,
+  PingTextField,
+} from '../theme/PingTheme';
+
+const fidoClient = createFidoClient();
+
+type Props = {
+  journey: JourneyClient;
+  typeIndex: number;
+  onNext: () => void;
+};
+
+export function FidoRegistrationCallbackView({ journey, typeIndex, onNext }: Props) {
+  const [deviceName, setDeviceName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleRegister = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await fidoClient.registerForJourney(journey, {
+        index: typeIndex,
+        deviceName: deviceName.trim() || undefined,
+      });
+      onNext();
+    } catch (err: any) {
+      setError(err?.message ?? 'FIDO registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Register Biometrics</Text>
+      <Text style={styles.description}>
+        Use Face ID, Touch ID, or your device PIN to register a passkey for faster sign-in.
+      </Text>
+      <PingTextField
+        label="Device Name (optional)"
+        value={deviceName}
+        onChangeText={setDeviceName}
+        placeholder="My iPhone"
+      />
+      {error ? <PingErrorMessage message={error} /> : null}
+      <PingPrimaryButton
+        title="Register Passkey"
+        onPress={handleRegister}
+        disabled={loading}
+      />
+      <PingLoadingOverlay visible={loading} message="Registering…" />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    alignItems: 'center',
+    gap: 16,
+    paddingVertical: 8,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: PingColors.onSurface,
+    textAlign: 'center',
+  },
+  description: {
+    fontSize: 14,
+    color: PingColors.outline,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+});

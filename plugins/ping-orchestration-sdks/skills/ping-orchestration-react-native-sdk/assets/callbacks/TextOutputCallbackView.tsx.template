@@ -1,0 +1,59 @@
+/*
+ * TextOutputCallbackView.tsx — Journey output_only tier
+ *
+ * Renders a read-only message from TextOutputCallback.
+ * Checks messageType for visual differentiation: INFO, WARNING, ERROR.
+ * messageType may be a string ("INFO", "WARNING", "ERROR") or numeric (0=INFO, 1=WARNING, 2=ERROR).
+ */
+
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import type { JourneyCallback } from '@ping-identity/rn-journey';
+import { PingColors } from '../theme/PingTheme';
+
+type Props = {
+  cb: JourneyCallback;
+};
+
+type TextOutputCallback = { message?: string; prompt?: string; messageType?: string | number };
+
+function resolveAccentColor(messageType: string | number | undefined): string {
+  const mt = typeof messageType === 'number' ? messageType : String(messageType ?? '').toUpperCase();
+  if (mt === 'WARNING' || mt === 1) return '#E65100';
+  if (mt === 'ERROR' || mt === 2) return PingColors.errorText;
+  return '#1976D2'; // INFO / INFORMATION / default
+}
+
+export function TextOutputCallbackView({ cb }: Props) {
+  const toc = cb as unknown as TextOutputCallback;
+  const text = toc.message ?? toc.prompt ?? '';
+  if (!text) return null;
+  const accentColor = resolveAccentColor(toc.messageType);
+  return (
+    <View style={styles.container}>
+      <View style={[styles.accent, { backgroundColor: accentColor }]} />
+      <Text style={styles.message}>{text}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    backgroundColor: PingColors.background,
+    borderRadius: 8,
+    overflow: 'hidden',
+    width: '100%',
+    marginBottom: 8,
+  },
+  accent: {
+    width: 4,
+  },
+  message: {
+    flex: 1,
+    color: PingColors.onSurface,
+    fontSize: 14,
+    lineHeight: 20,
+    padding: 12,
+  },
+});

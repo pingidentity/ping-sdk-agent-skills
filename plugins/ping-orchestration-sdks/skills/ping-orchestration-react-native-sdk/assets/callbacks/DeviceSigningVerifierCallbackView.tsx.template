@@ -1,0 +1,100 @@
+/*
+ * DeviceSigningVerifierCallbackView.tsx — Journey integration_required tier
+ *
+ * Handles device signing (authentication) for a previously bound device.
+ * Auto-triggers signForJourney on mount — no user input required.
+ * After signing, onNext() signals the parent to advance the Journey.
+ *
+ * PIN collection is handled natively by the SDK — no pinCollector needed.
+ *
+ * Props:
+ *   journey    — JourneyClient from useJourney()
+ *   typeIndex  — field.ref.typeIndex from useJourneyForm, or 0 for manual renderer
+ *   onNext     — called after successful signing to advance the node
+ */
+
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { createBindingClient } from '@ping-identity/rn-binding';
+import type { JourneyClient } from '@ping-identity/rn-journey';
+import {
+  PingColors,
+  PingErrorMessage,
+  PingLoadingOverlay,
+  PingPrimaryButton,
+} from '../theme/PingTheme';
+
+const bindingClient = createBindingClient();
+
+type Props = {
+  journey: JourneyClient;
+  typeIndex: number;
+  onNext: () => void;
+};
+
+export function DeviceSigningVerifierCallbackView({ journey, typeIndex, onNext }: Props) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const started = useRef(false);
+
+  const handleSign = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await bindingClient.signForJourney(journey, { index: typeIndex });
+      onNext();
+    } catch (err: any) {
+      setError(err?.message ?? 'Device authentication failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, [journey, typeIndex, onNext]);
+
+  // Auto-trigger on mount — guard prevents double-fire in Strict Mode
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    handleSign();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Verifying Device</Text>
+      <Text style={styles.description}>
+        Confirming your device signature…
+      </Text>
+      {error ? (
+        <>
+          <PingErrorMessage message={error} />
+          <PingPrimaryButton
+            title="Try Again"
+            onPress={handleSign}
+            disabled={loading}
+          />
+        </>
+      ) : null}
+      <PingLoadingOverlay visible={loading} message="Verifying…" />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    alignItems: 'center',
+    gap: 16,
+    paddingVertical: 8,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: PingColors.onSurface,
+    textAlign: 'center',
+  },
+  description: {
+    fontSize: 14,
+    color: PingColors.outline,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+});

@@ -1,0 +1,147 @@
+/*
+ * CallbackRenderer.tsx — Manual variant, Basic tier
+ *
+ * Covers: Name, Password, TextInput, StringAttribute, NumberAttribute,
+ * BooleanAttribute, TextOutput, SuspendedTextOutput, Choice, Confirmation,
+ * TermsAndConditions, KbaCreate, PollingWait.
+ *
+ * No FIDO, device binding, device profile, or external IdP dependencies.
+ * Requires only @ping-identity/rn-journey.
+ */
+
+import React, { useRef, useState } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import type { JourneyNode, JourneyClient, JourneyNextInput } from '@ping-identity/rn-journey';
+import { PingPrimaryButton } from '../theme/PingTheme';
+import { NameCallbackView } from '../callbacks/NameCallbackView';
+import { ValidatedUsernameCallbackView } from '../callbacks/ValidatedUsernameCallbackView';
+import { PasswordCallbackView } from '../callbacks/PasswordCallbackView';
+import { ValidatedPasswordCallbackView } from '../callbacks/ValidatedPasswordCallbackView';
+import { TextInputCallbackView } from '../callbacks/TextInputCallbackView';
+import { StringAttributeInputCallbackView } from '../callbacks/StringAttributeInputCallbackView';
+import { NumberAttributeInputCallbackView } from '../callbacks/NumberAttributeInputCallbackView';
+import { BooleanAttributeInputCallbackView } from '../callbacks/BooleanAttributeInputCallbackView';
+import { TextOutputCallbackView } from '../callbacks/TextOutputCallbackView';
+import { SuspendedTextOutputCallbackView } from '../callbacks/SuspendedTextOutputCallbackView';
+import { ChoiceCallbackView } from '../callbacks/ChoiceCallbackView';
+import { ConfirmationCallbackView } from '../callbacks/ConfirmationCallbackView';
+import { TermsAndConditionsCallbackView } from '../callbacks/TermsAndConditionsCallbackView';
+import { KbaCreateCallbackView } from '../callbacks/KbaCreateCallbackView';
+import { PollingWaitCallbackView } from '../callbacks/PollingWaitCallbackView';
+import { UnsupportedCallbackView } from '../callbacks/UnsupportedCallbackView';
+
+const AUTO_ADVANCE_TYPES = new Set([
+  'PollingWaitCallback',
+]);
+
+// TextOutput callbacks carry display-only content; never include in the submit payload.
+const OUTPUT_ONLY = new Set(['TextOutputCallback', 'SuspendedTextOutputCallback', 'MetadataCallback']);
+
+type Props = {
+  node: JourneyNode;
+  journeyClient: JourneyClient;
+  onSubmit: (input: JourneyNextInput) => Promise<unknown>;
+};
+
+export function CallbackRenderer({ node, onSubmit }: Props) {
+  const [values, setValues] = useState<Record<number, any>>(() =>
+    Object.fromEntries(node.callbacks!.map((cb, i) => [i, cb.value])),
+  );
+
+  const typeCounters = useRef<Record<string, number>>({});
+
+  const updateValue = (index: number, value: any) => {
+    setValues((prev) => ({ ...prev, [index]: value }));
+  };
+
+  const hasAutoAdvance = node.callbacks!.some((cb) => AUTO_ADVANCE_TYPES.has(cb.type));
+
+  const handleNext = async () => {
+    let kbaIndex = 0;
+    const callbacks = node.callbacks!
+      .map((cb, i) => {
+        if (OUTPUT_ONLY.has(cb.type)) return null;
+        const value = values[i];
+        if (value === undefined || value === null) return null;
+        const entry: any = { type: cb.type, value };
+        if (cb.type === 'KbaCreateCallback') { entry.index = kbaIndex; kbaIndex += 1; }
+        return entry as JourneyNextInput;
+      })
+      .filter(Boolean) as JourneyNextInput[];
+    await onSubmit({ callbacks });
+  };
+
+  typeCounters.current = {};
+  const getTypeIndex = (type: string): number => {
+    const idx = typeCounters.current[type] ?? 0;
+    typeCounters.current[type] = idx + 1;
+    return idx;
+  };
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 24}
+    >
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        {node.callbacks!.map((cb, i) => {
+          getTypeIndex(cb.type);
+          switch (cb.type) {
+            case 'NameCallback':
+              return <NameCallbackView key={i} cb={cb} onValueChange={(v) => updateValue(i, v)} />;
+            case 'ValidatedCreateUsernameCallback':
+              return <ValidatedUsernameCallbackView key={i} cb={cb} onValueChange={(v) => updateValue(i, v)} />;
+            case 'PasswordCallback':
+              return <PasswordCallbackView key={i} cb={cb} onValueChange={(v) => updateValue(i, v)} />;
+            case 'ValidatedCreatePasswordCallback':
+              return <ValidatedPasswordCallbackView key={i} cb={cb} onValueChange={(v) => updateValue(i, v)} />;
+            case 'TextInputCallback':
+              return <TextInputCallbackView key={i} cb={cb} onValueChange={(v) => updateValue(i, v)} />;
+            case 'StringAttributeInputCallback':
+              return <StringAttributeInputCallbackView key={i} cb={cb} onValueChange={(v) => updateValue(i, v)} />;
+            case 'NumberAttributeInputCallback':
+              return <NumberAttributeInputCallbackView key={i} cb={cb} onValueChange={(v) => updateValue(i, v)} />;
+            case 'BooleanAttributeInputCallback':
+              return <BooleanAttributeInputCallbackView key={i} cb={cb} onValueChange={(v) => updateValue(i, v)} />;
+            case 'TextOutputCallback':
+              return <TextOutputCallbackView key={i} cb={cb} />;
+            case 'SuspendedTextOutputCallback':
+              return <SuspendedTextOutputCallbackView key={i} cb={cb} />;
+            case 'ChoiceCallback':
+              return <ChoiceCallbackView key={i} cb={cb} onValueChange={(v) => updateValue(i, v)} />;
+            case 'ConfirmationCallback':
+              return <ConfirmationCallbackView key={i} cb={cb} onValueChange={(v) => updateValue(i, v)} />;
+            case 'TermsAndConditionsCallback':
+              return <TermsAndConditionsCallbackView key={i} cb={cb} onValueChange={(v) => updateValue(i, v)} />;
+            case 'KbaCreateCallback':
+              return (
+                <KbaCreateCallbackView
+                  key={i}
+                  cb={cb}
+                  onQuestionChange={(q) => updateValue(i, { selectedQuestion: q, selectedAnswer: (values[i] as any)?.selectedAnswer ?? '', allowUserDefinedQuestions: false })}
+                  onAnswerChange={(a) => updateValue(i, { selectedQuestion: (values[i] as any)?.selectedQuestion ?? '', selectedAnswer: a, allowUserDefinedQuestions: false })}
+                />
+              );
+            case 'PollingWaitCallback':
+              return <PollingWaitCallbackView key={i} cb={cb} onNext={() => { onSubmit({ callbacks: [] }); }} />;
+            default:
+              return <UnsupportedCallbackView key={i} executionMode="unsupported" callbackType={cb.type} />;
+          }
+        })}
+
+        {!hasAutoAdvance && (
+          <View style={styles.buttonRow}>
+            <PingPrimaryButton title="Next" onPress={handleNext} />
+          </View>
+        )}
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  container: { padding: 16, gap: 4 },
+  buttonRow: { marginTop: 16 },
+});

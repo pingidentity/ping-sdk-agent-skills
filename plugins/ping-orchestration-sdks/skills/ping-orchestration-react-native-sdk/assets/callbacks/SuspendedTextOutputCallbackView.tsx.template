@@ -1,0 +1,66 @@
+/*
+ * SuspendedTextOutputCallbackView.tsx — Journey output_only tier
+ *
+ * Displays a server message while the journey is suspended (e.g. waiting for email verification).
+ * cb.message contains the user-facing text; cb.messageType indicates INFO/WARNING/ERROR.
+ * No user input — output only.
+ */
+
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import type { JourneyCallback } from '@ping-identity/rn-journey';
+import { PingColors } from '../theme/PingTheme';
+
+type Props = {
+  cb: JourneyCallback;
+};
+
+type SuspendedTextOutputCallback = { message?: string; messageType?: 'INFO' | 'WARNING' | 'ERROR' };
+
+export function SuspendedTextOutputCallbackView({ cb }: Props) {
+  const suspended = cb as unknown as SuspendedTextOutputCallback;
+  const message: string = suspended.message ?? '';
+  const messageType: string = suspended.messageType ?? 'INFO';
+
+  const isError = messageType === 'ERROR';
+  const isWarning = messageType === 'WARNING';
+
+  return (
+    <View style={[styles.container, isError && styles.error, isWarning && styles.warning]}>
+      <Text style={[styles.text, isError && styles.errorText, isWarning && styles.warningText]}>
+        {message}
+      </Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: PingColors.surface,
+    borderWidth: 1,
+    borderColor: PingColors.textField,
+    marginBottom: 8,
+  },
+  error: {
+    backgroundColor: '#FFF0F0',
+    borderColor: '#FF4444',
+  },
+  warning: {
+    backgroundColor: '#FFFBE6',
+    borderColor: '#FFAA00',
+  },
+  text: {
+    fontSize: 14,
+    color: PingColors.onSurface,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  errorText: {
+    color: '#CC0000',
+  },
+  warningText: {
+    color: '#AA6600',
+  },
+});

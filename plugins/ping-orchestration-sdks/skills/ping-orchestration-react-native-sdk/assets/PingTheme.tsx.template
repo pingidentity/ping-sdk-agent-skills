@@ -1,0 +1,380 @@
+/*
+ * PingTheme.tsx
+ *
+ * Ping Identity design system for React Native — color tokens and branded components.
+ * Drop this file into src/theme/PingTheme.tsx in any Ping sample app.
+ * Requires: src/assets/ping_logo.png (copy from skill assets/ping_logo.png)
+ */
+
+import React from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  ImageStyle,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TextStyle,
+  TouchableOpacity,
+  View,
+  ViewStyle,
+} from 'react-native';
+
+// ---------------------------------------------------------------------------
+// Color tokens
+// ---------------------------------------------------------------------------
+
+export const PingColors = {
+  red:          '#A31300',   // RGB 163, 19, 0 — primary brand red
+  redDark:      '#991A1A',   // gradient end
+  textField:    '#DCE6E6',   // input field border (unfocused)
+  white:        '#FFFFFF',
+  black:        '#000000',
+  errorText:    '#B00020',
+  surface:      '#FFFFFF',
+  background:   '#F5F5F5',
+  onSurface:    '#1C1B1F',
+  outline:      '#79747E',
+  overlayBg:    'rgba(0,0,0,0.35)',
+} as const;
+
+// ---------------------------------------------------------------------------
+// Primary action button
+// ---------------------------------------------------------------------------
+
+type PingPrimaryButtonProps = {
+  title:    string;
+  onPress:  () => void;
+  disabled?: boolean;
+};
+
+export function PingPrimaryButton({ title, onPress, disabled = false }: PingPrimaryButtonProps) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={disabled}
+      activeOpacity={0.85}
+      style={[styles.primaryButton, disabled && styles.primaryButtonDisabled]}
+    >
+      <Text style={styles.primaryButtonText}>{title}</Text>
+    </TouchableOpacity>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Branded header (gradient-like background + logo + title + subtitle)
+// ---------------------------------------------------------------------------
+
+type PingHeaderViewProps = {
+  title:    string;
+  subtitle: string;
+};
+
+export function PingHeaderView({ title, subtitle }: PingHeaderViewProps) {
+  return (
+    <View style={styles.header}>
+      <Image
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        source={require('../assets/ping_logo.png')}
+        style={styles.logo as ImageStyle}
+        resizeMode="contain"
+      />
+      <Text style={styles.headerTitle}>{title}</Text>
+      <Text style={styles.headerSubtitle}>{subtitle}</Text>
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Branded text field
+// ---------------------------------------------------------------------------
+
+type PingTextFieldProps = {
+  value:         string;
+  onChangeText:  (text: string) => void;
+  placeholder?:  string;
+  label?:        string;
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
+};
+
+export function PingTextField({
+  value,
+  onChangeText,
+  placeholder,
+  label,
+  autoCapitalize = 'none',
+  keyboardType = 'default',
+}: PingTextFieldProps) {
+  return (
+    <View style={styles.fieldContainer}>
+      {label ? <Text style={styles.fieldLabel}>{label}</Text> : null}
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        autoCapitalize={autoCapitalize}
+        keyboardType={keyboardType}
+        style={styles.textInput}
+        placeholderTextColor={PingColors.outline}
+      />
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Branded secure field (password)
+// ---------------------------------------------------------------------------
+
+type PingSecureFieldProps = {
+  value:        string;
+  onChangeText: (text: string) => void;
+  placeholder?: string;
+  label?:       string;
+};
+
+export function PingSecureField({ value, onChangeText, placeholder, label }: PingSecureFieldProps) {
+  const [visible, setVisible] = React.useState(false);
+  return (
+    <View style={styles.fieldContainer}>
+      {label ? <Text style={styles.fieldLabel}>{label}</Text> : null}
+      <View style={styles.secureRow}>
+        <TextInput
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          secureTextEntry={!visible}
+          autoCapitalize="none"
+          style={[styles.textInput, styles.secureInput]}
+          placeholderTextColor={PingColors.outline}
+        />
+        <TouchableOpacity onPress={() => setVisible((v) => !v)} style={styles.eyeButton}>
+          <Text style={styles.eyeIcon}>{visible ? 'Hide' : 'Show'}</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Inline error message
+// ---------------------------------------------------------------------------
+
+type PingErrorMessageProps = {
+  message: string;
+};
+
+export function PingErrorMessage({ message }: PingErrorMessageProps) {
+  return (
+    <View style={styles.errorRow}>
+      <Text style={styles.errorIcon}>⚠</Text>
+      <Text style={styles.errorText}>{message}</Text>
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Full-screen error card (unrecoverable / failure state)
+// ---------------------------------------------------------------------------
+
+type PingErrorCardProps = {
+  message:  string;
+  onRetry?: () => void;
+};
+
+export function PingErrorCard({ message, onRetry }: PingErrorCardProps) {
+  return (
+    <View style={styles.errorCard}>
+      <Text style={styles.errorCardIcon}>⚠</Text>
+      <Text style={styles.errorCardTitle}>Something went wrong</Text>
+      <Text style={styles.errorCardMessage}>{message}</Text>
+      {onRetry ? (
+        <PingPrimaryButton title="Try Again" onPress={onRetry} />
+      ) : null}
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Loading overlay (full-screen blocking spinner)
+// ---------------------------------------------------------------------------
+
+type PingLoadingOverlayProps = {
+  visible:   boolean;
+  message?:  string;
+};
+
+export function PingLoadingOverlay({ visible, message = 'Loading…' }: PingLoadingOverlayProps) {
+  return (
+    <Modal transparent animationType="fade" visible={visible}>
+      <View style={styles.overlayBg}>
+        <View style={styles.overlayCard}>
+          <ActivityIndicator size="large" color={PingColors.red} />
+          <Text style={styles.overlayMessage}>{message}</Text>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Styles
+// ---------------------------------------------------------------------------
+
+const styles = StyleSheet.create({
+  // PingPrimaryButton
+  primaryButton: {
+    backgroundColor: PingColors.red,
+    borderRadius: 15,
+    height: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    shadowColor: PingColors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  } as ViewStyle,
+  primaryButtonDisabled: {
+    opacity: 0.5,
+  } as ViewStyle,
+  primaryButtonText: {
+    color: PingColors.white,
+    fontSize: 16,
+    fontWeight: '600',
+  } as TextStyle,
+
+  // PingHeaderView
+  header: {
+    backgroundColor: PingColors.red,
+    width: '100%',
+    alignItems: 'center',
+    paddingVertical: 32,
+    paddingHorizontal: 16,
+  } as ViewStyle,
+  logo: {
+    width: 80,
+    height: 80,
+  },
+  headerTitle: {
+    color: PingColors.white,
+    fontSize: 24,
+    fontWeight: '700',
+    marginTop: 12,
+  } as TextStyle,
+  headerSubtitle: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 14,
+    fontWeight: '500',
+    marginTop: 4,
+  } as TextStyle,
+
+  // PingTextField / PingSecureField
+  fieldContainer: {
+    width: '100%',
+    marginBottom: 12,
+  } as ViewStyle,
+  fieldLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: PingColors.onSurface,
+    marginBottom: 4,
+  } as TextStyle,
+  textInput: {
+    borderWidth: 1,
+    borderColor: PingColors.textField,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: PingColors.onSurface,
+    backgroundColor: PingColors.surface,
+  } as TextStyle,
+  secureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  } as ViewStyle,
+  secureInput: {
+    flex: 1,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+  } as TextStyle,
+  eyeButton: {
+    borderWidth: 1,
+    borderColor: PingColors.textField,
+    borderLeftWidth: 0,
+    borderTopRightRadius: 8,
+    borderBottomRightRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: PingColors.surface,
+  } as ViewStyle,
+  eyeIcon: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: PingColors.red,
+  } as TextStyle,
+
+  // PingErrorMessage
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    marginTop: 4,
+  } as ViewStyle,
+  errorIcon: {
+    color: PingColors.errorText,
+    fontSize: 14,
+    marginRight: 4,
+  } as TextStyle,
+  errorText: {
+    color: PingColors.errorText,
+    fontSize: 12,
+    flexShrink: 1,
+  } as TextStyle,
+
+  // PingErrorCard
+  errorCard: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+    gap: 16,
+  } as ViewStyle,
+  errorCardIcon: {
+    fontSize: 48,
+    color: PingColors.red,
+  } as TextStyle,
+  errorCardTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: PingColors.onSurface,
+  } as TextStyle,
+  errorCardMessage: {
+    fontSize: 14,
+    color: PingColors.outline,
+    textAlign: 'center',
+  } as TextStyle,
+
+  // PingLoadingOverlay
+  overlayBg: {
+    flex: 1,
+    backgroundColor: PingColors.overlayBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  } as ViewStyle,
+  overlayCard: {
+    backgroundColor: PingColors.surface,
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    gap: 12,
+    opacity: 0.95,
+  } as ViewStyle,
+  overlayMessage: {
+    fontSize: 14,
+    color: PingColors.onSurface,
+  } as TextStyle,
+});

@@ -1,0 +1,100 @@
+/*
+ * DeviceBindingCallbackView.tsx — Journey integration_required tier
+ *
+ * Handles device binding registration using @ping-identity/rn-binding.
+ * Shows an optional device-name text field then calls bindForJourney.
+ * After binding completes, onNext() signals the parent to advance the Journey.
+ *
+ * PIN collection is handled natively by the SDK — no pinCollector needed.
+ *
+ * Props:
+ *   journey    — JourneyClient from useJourney()
+ *   typeIndex  — field.ref.typeIndex from useJourneyForm, or 0 for manual renderer
+ *   onNext     — called after successful binding to advance the node
+ */
+
+import React, { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { createBindingClient } from '@ping-identity/rn-binding';
+import type { JourneyClient } from '@ping-identity/rn-journey';
+import {
+  PingColors,
+  PingErrorMessage,
+  PingLoadingOverlay,
+  PingPrimaryButton,
+  PingTextField,
+} from '../theme/PingTheme';
+
+const bindingClient = createBindingClient();
+
+type Props = {
+  journey: JourneyClient;
+  typeIndex: number;
+  onNext: () => void;
+};
+
+export function DeviceBindingCallbackView({ journey, typeIndex, onNext }: Props) {
+  const [deviceName, setDeviceName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleBind = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await bindingClient.bindForJourney(journey, {
+        index: typeIndex,
+        ...(deviceName.trim() ? { deviceName: deviceName.trim() } : {}),
+      });
+      onNext();
+    } catch (err: any) {
+      setError(err?.message ?? 'Device binding failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Bind This Device</Text>
+      <Text style={styles.description}>
+        Registering this device creates a secure keypair that enables faster, stronger
+        authentication on future sign-ins.
+      </Text>
+      <PingTextField
+        label="Device Name (optional)"
+        value={deviceName}
+        onChangeText={setDeviceName}
+        placeholder="My iPhone"
+      />
+      {error ? <PingErrorMessage message={error} /> : null}
+      <PingPrimaryButton
+        title="Bind Device"
+        onPress={handleBind}
+        disabled={loading}
+      />
+      <PingLoadingOverlay visible={loading} message="Binding device…" />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    alignItems: 'center',
+    gap: 16,
+    paddingVertical: 8,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: PingColors.onSurface,
+    textAlign: 'center',
+  },
+  description: {
+    fontSize: 14,
+    color: PingColors.outline,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+});

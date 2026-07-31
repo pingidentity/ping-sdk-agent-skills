@@ -1,0 +1,38 @@
+/*
+ * TextInputCallbackView.tsx — Journey Basic tier
+ *
+ * Generic text input for TextInputCallback.
+ * cb.prompt is the field label.
+ */
+
+import React, { useEffect, useState } from 'react';
+import type { JourneyCallback } from '@ping-identity/rn-journey';
+import { PingTextField } from '../theme/PingTheme';
+
+type Props = {
+  cb: JourneyCallback;
+  onValueChange: (value: string) => void;
+};
+
+export function TextInputCallbackView({ cb, onValueChange }: Props) {
+  const [text, setText] = useState(String(cb.value ?? ''));
+
+  useEffect(() => {
+    onValueChange(text);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleChange = (v: string) => {
+    setText(v);
+    onValueChange(v);
+  };
+
+  return (
+    <PingTextField
+      label={cb.prompt}
+      value={text}
+      onChangeText={handleChange}
+      placeholder={cb.prompt}
+    />
+  );
+}
