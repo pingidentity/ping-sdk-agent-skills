@@ -29,6 +29,8 @@ Inner trees appear as separate top-level entries in `trees` and are linked via `
 |---|---|
 | `UsernameCollectorNode` | `NameCallback` |
 | `PasswordCollectorNode` | `PasswordCallback` |
+| `ValidatedUsernameNode` / `ValidatedUsernameNodeV2` | **Purpose-dependent** — `NameCallback` in **authentication** trees; `ValidatedCreateUsernameCallback` + `ValidatedUsernameCallback` in **registration** trees. Derive purpose from journey name / context. **Never assume `ValidatedUsernameCallback` for a login journey.** |
+| `ValidatedPasswordNode` | **Purpose-dependent** — `PasswordCallback` in **authentication** trees; `ValidatedCreatePasswordCallback` + `ValidatedPasswordCallback` in **registration / password-reset** trees. |
 | `DataStoreDecisionNode` | No UI — server-side credential validation |
 | `SessionDataNode` | No UI — reads session token into shared state |
 | `WebAuthnRegistrationNode` | `FidoRegistrationCallback` |

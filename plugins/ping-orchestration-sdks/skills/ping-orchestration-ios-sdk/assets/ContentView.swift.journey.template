@@ -28,16 +28,13 @@ struct ContentView: View {
                     onNext: {}
                 )
             case let errorNode as ErrorNode:
+                // ErrorNode has no continueNode in SDK 2.x — show the message and offer restart
                 LoginView(
-                    continueNode: errorNode.continueNode,
+                    continueNode: nil,
                     isLoading: journeyLoginViewModel.isLoading,
                     errorMessage: errorNode.message.isEmpty ? "An error occurred." : errorNode.message,
                     onStart: { Task { await journeyLoginViewModel.start() } },
-                    onNext: {
-                        if let next = errorNode.continueNode {
-                            Task { await journeyLoginViewModel.next(continueNode: next) }
-                        }
-                    }
+                    onNext: {}
                 )
             case let continueNode as ContinueNode:
                 LoginView(
