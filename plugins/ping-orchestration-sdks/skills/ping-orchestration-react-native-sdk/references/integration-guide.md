@@ -6,6 +6,8 @@
 
 **OIDC Web** — launches the system browser (ASWebAuthenticationSession on iOS, Custom Tabs on Android). No in-app credential UI. Works with any OIDC provider including PingOne.
 
+**DaVinci** — orchestrated PingOne flows via `@ping-identity/rn-davinci`. Authentication UI rendered in-app with your own components; sign-in is resolved through the flow itself (no browser redirect), and collector values submit key-indexed by `collector.key` via `next()`. Runs against DaVinci flows configured in PingOne.
+
 ## Package Map
 
 Install only what your flow needs:
@@ -14,6 +16,7 @@ Install only what your flow needs:
 |---|---|
 | `@ping-identity/rn-journey` | Journey flows — `createJourneyClient`, `useJourney`, `useJourneyForm`, `JourneyProvider` |
 | `@ping-identity/rn-oidc` | OIDC Web flows — `createOidcClient`, `createOidcWebClient`, `useOidc`, `OidcProvider` |
+| `@ping-identity/rn-davinci` | DaVinci orchestrated flows — `createDaVinciClient`, `useDaVinci`, `useDaVinciForm`, `DaVinciProvider` |
 | `@ping-identity/rn-fido` | FIDO2 / passkey registration and authentication callbacks |
 | `@ping-identity/rn-binding` | Device binding and signing callbacks |
 | `@ping-identity/rn-device-profile` | Device profile collection callback |
@@ -38,8 +41,8 @@ Pin the version explicitly:
 ```json
 {
   "dependencies": {
-    "@ping-identity/rn-journey": "1.0.0",
-    "@ping-identity/rn-oidc":    "1.0.0"
+    "@ping-identity/rn-journey": "1.1.0",
+    "@ping-identity/rn-oidc":    "1.1.0"
   }
 }
 ```
@@ -362,59 +365,25 @@ actions.clear();
 
 `rn-oidc` uses AppAuth's `RedirectUriReceiverActivity` (declared in the library's own manifest) to catch the redirect. The `appRedirectUriScheme` manifest placeholder wires the scheme automatically — **do not** add an additional `<intent-filter>` to `MainActivity`. Doing so causes `MainActivity` to intercept the callback URL before AppAuth can complete the token exchange, leaving the app stuck after browser login.
 
-Only the placeholder is needed — in `android/app/build.gradle` inside `defaultConfig`:
-
-```groovy
-manifestPlaceholders = [appRedirectUriScheme: "com.example.app"]
-```
+Only the manifest placeholder is needed — the exact snippet is in the OIDC section of [platform-setup.md](platform-setup.md). Do not copy the library's `CustomTabActivity` intent filter into the app manifest; it merges in from the library automatically.
 
 ### 4.6 — iOS redirect URI wiring
 
-In `ios/<AppName>/Info.plist`, add a URL scheme entry:
+Register the scheme under `CFBundleURLTypes` in `ios/<AppName>/Info.plist`; the exact snippet is in the OIDC section of [platform-setup.md](platform-setup.md).
 
-```xml
-<key>CFBundleURLTypes</key>
-<array>
-  <dict>
-    <key>CFBundleURLSchemes</key>
-    <array>
-      <string>com.example.app</string>
-    </array>
-  </dict>
-</array>
-```
+### 4.7: Both flows (flow picker)
+
+When scaffolding both Journey and OIDC, use a single stack with a `FlowPicker` screen as the initial route. Both providers sit above the single `NavigationContainer`. The `OidcProvider` client is created in `useMemo` at the `App` level, never inside a screen component. The complete `App.tsx`, the flow-specific screen names, and the route renames are in [journey-oidc-scaffold.md](journey-oidc-scaffold.md).
+
+### 4.8 — DaVinci flow
+
+DaVinci flows are orchestrated by PingOne DaVinci and have their own client, hooks, and collector model; the Journey and OIDC sections above do not apply to them. For full detail see [davinci-client.md](davinci-client.md) (config, hooks, node shapes), [davinci-collectors.md](davinci-collectors.md) (collector-to-payload mapping and integration collectors), and [davinci-scaffold.md](davinci-scaffold.md) (scaffold procedure).
 
 ## 5 — FIDO / Passkeys (Journey)
 
-See [callbacks.md](callbacks.md) for `FidoRegistrationCallback` and `FidoAuthenticationCallback` patterns. Add `@ping-identity/rn-fido`:
+**Native requirements (Digital Asset Links, Associated Domains, `NSFaceIDUsageDescription`, Play Services dependencies):** see the FIDO section of [platform-setup.md](platform-setup.md) — passkeys silently fail without them.
 
-```bash
-npm install @ping-identity/rn-fido
-cd ios && pod install
-```
-
-**iOS native requirements (required — passkeys will silently fail without these):**
-
-1. Add `NSFaceIDUsageDescription` to `ios/<AppName>/Info.plist`:
-   ```xml
-   <key>NSFaceIDUsageDescription</key>
-   <string>Used to authenticate with a passkey</string>
-   ```
-
-2. Add an Associated Domains entitlement for `webcredentials` in `ios/<AppName>/<AppName>.entitlements` (create the file if it does not exist, then link it in Xcode under Signing & Capabilities → Associated Domains):
-   ```xml
-   <?xml version="1.0" encoding="UTF-8"?>
-   <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-   <plist version="1.0">
-   <dict>
-     <key>com.apple.developer.associated-domains</key>
-     <array>
-       <string>webcredentials:yourdomain.com</string>
-     </array>
-   </dict>
-   </plist>
-   ```
-   Replace `yourdomain.com` with the domain configured in your PingAM/AIC FIDO service. Your server must host `https://yourdomain.com/.well-known/apple-app-site-association` with the `webcredentials` section pointing to your app's Team ID + Bundle ID.
+**Journey usage** — callback patterns and the `useJourneyForm` integration live in [callbacks.md](callbacks.md); the core call shapes:
 
 ```tsx
 import { createFidoClient } from '@ping-identity/rn-fido';
@@ -468,6 +437,8 @@ See [callbacks.md](callbacks.md#push-mfa) for the full `usePush` hook API, `Push
 - **Multiple `NavigationContainer` instances kill the back button** — never render two `NavigationContainer` elements (e.g. one per flow). There must be exactly one in the tree. Use a flat stack with a `FlowPicker` initial screen instead of switching containers via React state.
 - **`OidcProvider` inside a screen component loses state on re-render** — create the OIDC client in `useMemo` at the `App` level and place `OidcProvider` above `NavigationContainer`, same as `JourneyProvider`.
 - **`isLoading` does not track `restore()`** — `restore()` is a silent keychain read and does not set `isLoading`. Gate the initial restore spinner with local `restoring` state + async/await as shown in section 4.2, not with `state.isLoading`. `isLoading` only covers `authorize`, `token`, `refresh`, `userinfo`, `revoke`, and `logout`.
+- **DaVinci `next()` payloads are key-indexed, not type+indexed** — Journey submits `{ callbacks: [{ type, value, index? }] }`, where entries are addressed by callback `type` (plus a per-type `index` when a type repeats). DaVinci submits `{ collectors: [{ key, value }] }`, where entries are addressed by the `collector.key` from the active `ContinueNode`; a key that is not on the node throws `DAVINCI_COLLECTOR_APPLY_ERROR`. Do not reuse the Journey payload shape for DaVinci. See [davinci-client.md](davinci-client.md).
+- **DaVinci flow collectors bypass the form** — `ACTION`, `FLOW_BUTTON`, and `FLOW_LINK` advance the flow by their own key as a single-entry payload and ignore every other field value on the node. `useDaVinciForm.setValue` auto-submits when given a flow key, and `form.submitFlow(key)` is the explicit variant; do not merge them into a full-form payload. See [davinci-collectors.md](davinci-collectors.md).
 - **`dispose()` on unmount** — call `client.dispose()` when the client is no longer needed to release native resources. For long-lived clients, dispose on app teardown or user switch.
 
 ## 8 — Journey Export Analysis

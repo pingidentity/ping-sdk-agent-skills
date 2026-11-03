@@ -1,0 +1,118 @@
+/*
+ * BooleanCollectorView.tsx: DaVinci core collector
+ *
+ * Renders a checkbox or switch for a SINGLE_CHECKBOX collector, following
+ * collector.appearance ('CHECKBOX' or 'SWITCH').
+ * Submit key: collector.key. Payload value: boolean.
+ * collector.errorMessage is shown while a required collector is unchecked.
+ */
+
+import React from 'react';
+import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import type {
+  BooleanCollector,
+  DaVinciFormValue,
+} from '@ping-identity/rn-davinci';
+import { PingColors } from '../theme/PingTheme';
+import { RichText } from './LabelCollectorView';
+
+type Props = {
+  collector: BooleanCollector;
+  value: DaVinciFormValue | undefined;
+  onChange: (value: boolean) => void;
+};
+
+/**
+ * Renders a checkbox or switch for a SINGLE_CHECKBOX collector.
+ *
+ * @returns The boolean control element.
+ */
+export function BooleanCollectorView({
+  collector,
+  value,
+  onChange,
+}: Props): React.ReactElement {
+  const checked = typeof value === 'boolean' ? value : collector.value;
+  const showError = collector.required && !checked && collector.errorMessage;
+
+  const label = (
+    <RichText
+      text={collector.required ? `${collector.label} *` : collector.label}
+      richContent={collector.richContent}
+      style={styles.labelText}
+    />
+  );
+
+  return (
+    <View style={styles.container}>
+      {collector.appearance === 'SWITCH' ? (
+        <View style={styles.row}>
+          <View style={styles.label}>{label}</View>
+          <Switch
+            value={checked}
+            onValueChange={onChange}
+            accessibilityLabel={collector.label}
+          />
+        </View>
+      ) : (
+        <Pressable
+          style={styles.row}
+          onPress={() => onChange(!checked)}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked }}
+          accessibilityLabel={collector.label}
+        >
+          <View style={[styles.box, checked && styles.boxChecked]}>
+            {checked ? <Text style={styles.checkmark}>✓</Text> : null}
+          </View>
+          <View style={styles.label}>{label}</View>
+        </Pressable>
+      )}
+      {showError ? (
+        <Text style={styles.error}>{collector.errorMessage}</Text>
+      ) : null}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    marginBottom: 12,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  label: {
+    flex: 1,
+  },
+  labelText: {
+    fontSize: 14,
+    color: PingColors.onSurface,
+  },
+  box: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: PingColors.outline,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  boxChecked: {
+    borderColor: PingColors.red,
+    backgroundColor: PingColors.red,
+  },
+  checkmark: {
+    color: PingColors.white,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  error: {
+    marginTop: 4,
+    fontSize: 12,
+    color: PingColors.errorText,
+  },
+});

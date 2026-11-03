@@ -1,0 +1,37 @@
+/*
+ * SubmitCollectorView.tsx: DaVinci core collector
+ *
+ * Renders the button for a SUBMIT_BUTTON collector. Pressing it submits the
+ * whole form. The renderer shell, not this view, builds the payload: the first
+ * SUBMIT_BUTTON on the node is added as { key, value: key } so the native SDK
+ * can set actionKey and eventType.
+ */
+
+import React from 'react';
+import type { SubmitCollector } from '@ping-identity/rn-davinci';
+import { PingPrimaryButton } from '../theme/PingTheme';
+
+type Props = {
+  collector: SubmitCollector;
+  disabled?: boolean;
+  onSubmit: () => void;
+};
+
+/**
+ * Renders the submit button of a SUBMIT_BUTTON collector.
+ *
+ * @returns The button element.
+ */
+export function SubmitCollectorView({
+  collector,
+  disabled = false,
+  onSubmit,
+}: Props): React.ReactElement {
+  return (
+    <PingPrimaryButton
+      title={collector.label || 'Submit'}
+      onPress={onSubmit}
+      disabled={disabled}
+    />
+  );
+}

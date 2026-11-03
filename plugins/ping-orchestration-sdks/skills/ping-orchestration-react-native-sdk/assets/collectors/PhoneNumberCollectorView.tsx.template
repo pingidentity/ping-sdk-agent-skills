@@ -1,0 +1,107 @@
+/*
+ * PhoneNumberCollectorView.tsx: DaVinci core collector
+ *
+ * Renders country code and phone number inputs (plus an extension input when
+ * collector.showExtension is true) for a PHONE_NUMBER collector.
+ * Submit key: collector.key. Payload value: { countryCode, phoneNumber, extension? }.
+ * countryCode is an ISO country code such as "US". The bridge always seeds
+ * countryCode (empty string when the server sends none), which would override
+ * defaultCountryCode and make the native payload() drop the whole phone entry,
+ * so the view applies defaultCountryCode to both the displayed value and the
+ * form value (seeded once on mount).
+ */
+
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import type {
+  DaVinciFormValue,
+  PhoneNumberCollector,
+} from '@ping-identity/rn-davinci';
+import { PingTextField } from '../theme/PingTheme';
+
+type PhoneValue = {
+  countryCode: string;
+  phoneNumber: string;
+  extension?: string;
+};
+
+type Props = {
+  collector: PhoneNumberCollector;
+  value: DaVinciFormValue | undefined;
+  onChange: (value: PhoneValue) => void;
+};
+
+/**
+ * Renders country code, phone number, and optional extension inputs for a PHONE_NUMBER collector.
+ *
+ * @returns The phone inputs element.
+ */
+export function PhoneNumberCollectorView({
+  collector,
+  value,
+  onChange,
+}: Props): React.ReactElement {
+  const stored =
+    value !== null && typeof value === 'object' && 'countryCode' in value
+      ? value
+      : undefined;
+
+  const current: PhoneValue = {
+    countryCode:
+      stored?.countryCode ||
+      collector.countryCode ||
+      collector.defaultCountryCode,
+    phoneNumber: stored?.phoneNumber ?? collector.phoneNumber,
+    extension: stored?.extension ?? collector.extension ?? '',
+  };
+
+  // The empty-string default from the bridge must not reach the native payload,
+  // so seed the form value with the resolved default once on mount (same
+  // mount-seed pattern the Journey text view uses).
+  const [seeded, setSeeded] = useState(false);
+  useEffect(() => {
+    if (seeded) {
+      return;
+    }
+    setSeeded(true);
+    if (stored === undefined || !stored.countryCode) {
+      onChange(current);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seeded]);
+
+  const label = collector.required ? `${collector.label} *` : collector.label;
+
+  return (
+    <View style={styles.container}>
+      <PingTextField
+        label={`${label} (country code)`}
+        value={current.countryCode}
+        onChangeText={(countryCode) => onChange({ ...current, countryCode })}
+        placeholder="US"
+        autoCapitalize="characters"
+      />
+      <PingTextField
+        label={label}
+        value={current.phoneNumber}
+        onChangeText={(phoneNumber) => onChange({ ...current, phoneNumber })}
+        placeholder={collector.label}
+        keyboardType="phone-pad"
+      />
+      {collector.showExtension ? (
+        <PingTextField
+          label={collector.extensionLabel}
+          value={current.extension ?? ''}
+          onChangeText={(extension) => onChange({ ...current, extension })}
+          keyboardType="phone-pad"
+        />
+      ) : null}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+  },
+});

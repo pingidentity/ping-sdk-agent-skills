@@ -5,7 +5,7 @@ OATH is a standalone credential manager for software TOTP and HOTP tokens. It is
 ## Install
 
 ```bash
-npm install @ping-identity/rn-oath@1.0.0
+npm install @ping-identity/rn-oath@1.1.0
 cd ios && pod install
 ```
 

@@ -68,12 +68,31 @@ Quick reference for RN-specific gotchas. Check this when debugging unexpected be
 
 ---
 
+## DaVinci
+
+| Mistake | Fix |
+|---|---|
+| Submitting Journey's `{ callbacks: [{ type, value, index? }] }` payload to DaVinci `next()` | DaVinci does not use that shape: it is key-indexed — `{ collectors: [{ key, value }] }`, where `key` is the `collector.key` from the active `ContinueNode`. An unknown key throws `DAVINCI_COLLECTOR_APPLY_ERROR`. |
+| Expecting `ACTION`/`FLOW_BUTTON`/`FLOW_LINK` to submit the form | They advance the flow by their own key as a single-entry payload and bypass all other field values. Use `form.submitFlow(key)` (or `setValue` on the flow key, which auto-submits). |
+| Omitting the first `SUBMIT_BUTTON` from a manually built payload | `buildNextInput` adds it once as `{ key, value: key }`; the native POST needs `actionKey`/`eventType` from that value. Manual payloads must include it. |
+| Treating `validate()` as a pure check | It writes the value onto the live collector — the value will be submitted by the next `next()`. An empty result can also mean the collector has no validator. |
+| Waiting for `pollStatus` to advance the flow | It never calls `next()`; advance explicitly on a terminal status (`complete`, `timedOut`, `expired`, `error`). The unsubscribe function stops local delivery only — the native poll cannot be cancelled. |
+| `useDaVinciForm(node)` outside `DaVinciProvider` calling `submitFlow` | Pass `next` from `useDaVinci(client)` via `options.next`. Without it, `submitFlow` and FlowCollector auto-submit throw `DaVinciError`. |
+| Passing `client={...}` to `DaVinciProvider` | `DaVinciProvider` takes `config={DaVinciConfig}` and builds the client internally. |
+| Creating a second client with `createDaVinciClient` in a provider-based app | Get the existing client via `useDaVinciContext()?.client`; integration calls (`collectProtect`, `registerForDaVinci`, `authenticateForDaVinci`, `authorizeForDaVinci`) must target the same native instance the flow runs on. |
+| `createDaVinciClient` inside a component (client-based apps) | Create at module scope — same rule as the other clients. Pick one pattern per app: provider-based or client-based, not both. |
+| Adding `manifestPlaceholders`/`CFBundleURLTypes` for a plain DaVinci flow | Unnecessary — DaVinci resolves sign-in through the flow itself, no browser redirect. Redirect wiring is only needed for the Social Login integration (`rn-external-idp`: `appRedirectUriScheme` + `CFBundleURLTypes`). |
+
+---
+
 ## Platform & build
 
 | Mistake | Fix |
 |---|---|
 | `pod install` not run after `npm install` | Native modules require CocoaPods linking on iOS. Always run `pod install` from `ios/` after adding or updating packages. |
 | Android `minSdkVersion` below 29 | The SDK requires API 29+. Set `minSdkVersion = 29` in `android/build.gradle`. |
-| iOS deployment target below 16.0 | The SDK requires iOS 16.0+. Set `IPHONEOS_DEPLOYMENT_TARGET = 16.0` in Xcode or `Podfile`. |
+| Google/Facebook login does nothing on iOS: the provider page opens, the redirect lands, but no handler fires and the flow stalls | The open-URL routing was written into the wrong lifecycle. If `ios/<AppName>/Info.plist` declares `UIApplicationSceneManifest` with `UISceneDelegateClassName` (RN 0.88+ template), iOS never calls `application(_:open:options:)` in the AppDelegate; the routing must live in the scene delegate's `scene(_:openURLContexts:)` (and `connectionOptions.urlContexts` for cold starts). See the Social login section of `platform-setup.md`. |
+| `The iOS Simulator deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 9.0/12.0, but the range of supported deployment target versions is 15.0 to ...` (in targets from project 'Pods') | A pod target sits below the Xcode minimum: pods are built at their podspec's target, not at the Podfile `platform` line, and RN 0.80's own `post_install` skips the `-Privacy` resource-bundle targets. Add the post_install raise loop from the Baseline section of `platform-setup.md` and re-run `pod install`. |
+| iOS deployment target below 16.0 | The SDK requires iOS 16.0+. Three settings: the `platform :ios, '16.0'` line in the `Podfile` (resolution), the post_install raise loop (pod build targets), and every `IPHONEOS_DEPLOYMENT_TARGET` in `project.pbxproj` at 16.0+ (app target). The Podfile never changes the app target; CocoaPods does not edit the app project. See the Baseline section of `platform-setup.md`. |
 | Metro bundler caches stale native module paths | Run `npx react-native start --reset-cache` after changing native dependencies. |
 | "has not been registered" error on launch | Metro is running from a different project directory. Kill all Metro instances (`pkill -f "react-native start"`), then restart from the correct project root before relaunching the app. |

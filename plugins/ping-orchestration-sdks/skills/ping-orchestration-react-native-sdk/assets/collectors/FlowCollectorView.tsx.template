@@ -1,0 +1,74 @@
+/*
+ * FlowCollectorView.tsx: DaVinci core collector
+ *
+ * Renders ACTION, FLOW_BUTTON and FLOW_LINK collectors. Activating one advances
+ * the flow by its own key and bypasses every other field value on the node:
+ * onFlow(key) must submit only { collectors: [{ key, value: key }] }.
+ * FLOW_LINK renders as a text link; ACTION and FLOW_BUTTON render as a button.
+ */
+
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import type { FlowCollector } from '@ping-identity/rn-davinci';
+import { PingColors } from '../theme/PingTheme';
+
+type Props = {
+  collector: FlowCollector;
+  disabled?: boolean;
+  onFlow: (flowKey: string) => void;
+};
+
+/**
+ * Renders the trigger of an ACTION, FLOW_BUTTON or FLOW_LINK collector.
+ *
+ * @returns The flow control element.
+ */
+export function FlowCollectorView({
+  collector,
+  disabled = false,
+  onFlow,
+}: Props): React.ReactElement {
+  const label = collector.label || collector.key;
+  const isLink = collector.type === 'FLOW_LINK';
+
+  return (
+    <TouchableOpacity
+      onPress={() => onFlow(collector.key)}
+      disabled={disabled}
+      activeOpacity={0.75}
+      accessibilityRole={isLink ? 'link' : 'button'}
+      style={isLink ? styles.link : styles.button}
+    >
+      <Text style={isLink ? styles.linkText : styles.buttonText}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+const styles = StyleSheet.create({
+  button: {
+    width: '100%',
+    height: 50,
+    marginBottom: 12,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: PingColors.red,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: PingColors.surface,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: PingColors.red,
+  },
+  link: {
+    alignSelf: 'center',
+    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  linkText: {
+    fontSize: 14,
+    color: PingColors.red,
+    textDecorationLine: 'underline',
+  },
+});

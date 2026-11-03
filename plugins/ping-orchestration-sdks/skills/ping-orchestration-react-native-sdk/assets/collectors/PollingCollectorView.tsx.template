@@ -1,0 +1,116 @@
+/*
+ * PollingCollectorView.tsx: DaVinci core collector
+ *
+ * Renders the live status of a POLLING collector. Output only: it never
+ * contributes to the next() payload.
+ *
+ * Subscribes on mount through onPollStatus and unsubscribes on unmount. The
+ * parent owns the pollStatus(onStatus, { key }) call and must call
+ * next({ collectors: [] }) on any status other than 'continue': pollStatus does
+ * not advance the flow, and unsubscribing stops local delivery only.
+ */
+
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import type {
+  PollingCollector,
+  PollingStatus,
+} from '@ping-identity/rn-davinci';
+import { PingColors } from '../theme/PingTheme';
+
+type Props = {
+  collector: PollingCollector;
+  onPollStatus: (
+    collector: PollingCollector,
+    onStatus: (status: PollingStatus) => void,
+  ) => Promise<() => void>;
+};
+
+function describeStatus(status: PollingStatus): string {
+  switch (status.status) {
+    case 'continue':
+      return `Waiting (${status.retryCount}/${status.maxRetries})…`;
+    case 'complete':
+      return 'Complete.';
+    case 'timedOut':
+      return 'Timed out.';
+    case 'expired':
+      return 'Expired.';
+    case 'error':
+      return status.error.message;
+  }
+}
+
+/**
+ * Renders the live status of a POLLING collector while subscribed to pollStatus.
+ *
+ * @returns The polling status element.
+ */
+export function PollingCollectorView({
+  collector,
+  onPollStatus,
+}: Props): React.ReactElement {
+  const [status, setStatus] = useState<PollingStatus | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let unsubscribe: (() => void) | undefined;
+
+    onPollStatus(collector, (nextStatus) => {
+      if (!cancelled) {
+        setStatus(nextStatus);
+      }
+    })
+      .then((unsub) => {
+        if (cancelled) {
+          unsub();
+        } else {
+          unsubscribe = unsub;
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setStatus({
+            status: 'error',
+            error: {
+              message: error instanceof Error ? error.message : String(error),
+            },
+          });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collector.key]);
+
+  const isTerminal = status !== null && status.status !== 'continue';
+
+  return (
+    <View style={styles.container}>
+      {isTerminal ? null : (
+        <ActivityIndicator size="small" color={PingColors.red} />
+      )}
+      <Text style={styles.message}>
+        {status ? describeStatus(status) : 'Waiting…'}
+      </Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    width: '100%',
+  },
+  message: {
+    fontSize: 14,
+    color: PingColors.outline,
+  },
+});

@@ -23,6 +23,7 @@ npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdk
 npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-sdk-router
 npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-reactjs-journey-sdk
 npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-reactjs-davinci-sdk
+npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/ping-orchestration-react-native-sdk
 npx skills add pingidentity/ping-sdk-agent-skills/plugins/ping-orchestration-sdks/skills/forgerock-to-ping-journey-migration
 ```
 
@@ -52,6 +53,7 @@ Or specify a particular skill:
 - `ping-orchestration-ios-sdk` - iOS (Journey, DaVinci, OIDC)
 - `ping-orchestration-android-sdk` - Android (Journey, DaVinci, OIDC)
 - `ping-orchestration-javascript-sdk` - JavaScript/React (Journey, DaVinci, OIDC)
+- `ping-orchestration-react-native-sdk` - React Native (Journey, DaVinci, OIDC)
 - `ping-orchestration-sdk-router` - Auto-detect platform and route to the right skill
 
 **Migration:**
@@ -68,12 +70,13 @@ Or specify a particular skill:
 | [ping-orchestration-javascript-sdk](skills/ping-orchestration-javascript-sdk) | Implements authentication in web apps using the Ping Orchestration JavaScript SDK (`@forgerock/journey-client`, `@forgerock/davinci-client`, `@forgerock/oidc-client`) — React + Vite, Journey callbacks, DaVinci collectors, OIDC centralized login. Delegates Journey and DaVinci to specialized skills; handles OIDC centralized login inline. Covers both sample app creation and existing app integration. | [SKILL.md](skills/ping-orchestration-javascript-sdk/SKILL.md) |
 | [ping-orchestration-reactjs-journey-sdk](skills/ping-orchestration-reactjs-journey-sdk) | Implements authentication in ReactJS SPAs using the Ping Orchestration JavaScript SDK (`@forgerock/journey-client`). Covers Journey client configuration, OIDC token exchange, dynamic callback rendering, protected routes, user profile display, and full scaffold generation. Supports both sample app creation and existing app integration. | [SKILL.md](skills/ping-orchestration-reactjs-journey-sdk/SKILL.md) |
 | [ping-orchestration-reactjs-davinci-sdk](skills/ping-orchestration-reactjs-davinci-sdk) | Implements authentication in ReactJS SPAs using the Ping Orchestration JavaScript SDK (`@forgerock/davinci-client`). Covers DaVinci client configuration, OIDC setup, collector handling (text, password, social login, MFA, FIDO2, PingOne Protect), and full scaffold generation. | [SKILL.md](skills/ping-orchestration-reactjs-davinci-sdk/SKILL.md) |
+| [ping-orchestration-react-native-sdk](skills/ping-orchestration-react-native-sdk) | Implements authentication in React Native apps using the Ping Identity React Native SDK (`@ping-identity/rn-*`) — Journey flows with `createJourneyClient`/`useJourney`/`JourneyProvider`, callback rendering, `useJourneyForm` submit planning, DaVinci flows with `createDaVinciClient`/`useDaVinci`/`DaVinciProvider`, collector rendering, key-indexed submit, OIDC Web flows with `createOidcClient`/`createOidcWebClient`/`useOidc`/`OidcProvider`, FIDO/passkeys, and both iOS and Android redirect URI wiring. | [SKILL.md](skills/ping-orchestration-react-native-sdk/SKILL.md) |
 
 ### Routing Skills
 
 | Skill | Description | Documentation |
 |-------|-------------|---------------|
-| [ping-orchestration-sdk-router](skills/ping-orchestration-sdk-router) | First point of contact for vague Ping SDK requests. Probes the user's working directory for Android, iOS, JavaScript, or React Native projects (and ForgeRock SDK references), asks if ambiguous, and routes to the matching umbrella skill (`ping-orchestration-android-sdk`, `ping-orchestration-ios-sdk`, `ping-orchestration-javascript-sdk`; React Native on the roadmap) or to `forgerock-to-ping-journey-migration`. Designed for easy expansion via a platform registry. | [SKILL.md](skills/ping-orchestration-sdk-router/SKILL.md) |
+| [ping-orchestration-sdk-router](skills/ping-orchestration-sdk-router) | First point of contact for vague Ping SDK requests. Probes the user's working directory for Android, iOS, JavaScript, or React Native projects (and ForgeRock SDK references), asks if ambiguous, and routes to the matching umbrella skill (`ping-orchestration-android-sdk`, `ping-orchestration-ios-sdk`, `ping-orchestration-javascript-sdk`, `ping-orchestration-react-native-sdk`) or to `forgerock-to-ping-journey-migration`. Designed for easy expansion via a platform registry. | [SKILL.md](skills/ping-orchestration-sdk-router/SKILL.md) |
 
 ### Migration Skills
 

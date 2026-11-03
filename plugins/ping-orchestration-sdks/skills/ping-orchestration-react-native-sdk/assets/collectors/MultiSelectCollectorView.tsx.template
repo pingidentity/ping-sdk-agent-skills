@@ -1,0 +1,119 @@
+/*
+ * MultiSelectCollectorView.tsx: DaVinci core collector
+ *
+ * Renders a multi-choice list for MULTI_SELECT, COMBOBOX and CHECKBOX collectors.
+ * Submit key: collector.key. Payload value: string[] of the selected option values.
+ */
+
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import type {
+  DaVinciFormValue,
+  MultiSelectCollector,
+} from '@ping-identity/rn-davinci';
+import { PingColors } from '../theme/PingTheme';
+
+type Props = {
+  collector: MultiSelectCollector;
+  value: DaVinciFormValue | undefined;
+  onChange: (value: string[]) => void;
+};
+
+/**
+ * Renders a multi-choice list for a MULTI_SELECT, COMBOBOX or CHECKBOX collector.
+ *
+ * @returns The option list element.
+ */
+export function MultiSelectCollectorView({
+  collector,
+  value,
+  onChange,
+}: Props): React.ReactElement {
+  const selected = Array.isArray(value) ? value : collector.value;
+
+  const toggle = (optionValue: string) => {
+    onChange(
+      selected.includes(optionValue)
+        ? selected.filter((item) => item !== optionValue)
+        : [...selected, optionValue],
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.label}>
+        {collector.required ? `${collector.label} *` : collector.label}
+      </Text>
+      {collector.options.map((option) => {
+        const isSelected = selected.includes(option.value);
+        return (
+          <TouchableOpacity
+            key={option.value}
+            onPress={() => toggle(option.value)}
+            style={[styles.option, isSelected && styles.optionSelected]}
+            activeOpacity={0.75}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: isSelected }}
+          >
+            <View style={[styles.box, isSelected && styles.boxSelected]}>
+              {isSelected && <Text style={styles.checkmark}>✓</Text>}
+            </View>
+            <Text style={styles.optionText}>{option.label}</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    marginBottom: 12,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: PingColors.onSurface,
+    marginBottom: 8,
+  },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: PingColors.textField,
+    marginBottom: 6,
+    backgroundColor: PingColors.surface,
+  },
+  optionSelected: {
+    borderColor: PingColors.red,
+    backgroundColor: '#FFF5F4',
+  },
+  box: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: PingColors.outline,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  boxSelected: {
+    borderColor: PingColors.red,
+    backgroundColor: PingColors.red,
+  },
+  checkmark: {
+    color: PingColors.white,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  optionText: {
+    fontSize: 14,
+    color: PingColors.onSurface,
+    flexShrink: 1,
+  },
+});
