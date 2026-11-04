@@ -1,0 +1,16 @@
+/*
+ * ProtectCollectorView.tsx: DaVinci integration collector (@ping-identity/rn-protect)
+ *
+ * A PROTECT collector has no visible control, so the view renders nothing,
+ * matching the sample app's PROTECT branch. Protect has no ceremony to trigger:
+ * the renderer shell calls collectProtect(client) once per node that contains
+ * a PROTECT collector before it submits (see DaVinciCollectorRenderer).
+ *
+ * protectReady comes from the config module; the renderer's
+ * prepareIntegrations() awaits it before start(), because the PROTECT type is
+ * registered only after startProtect() resolves.
+ */
+
+export function ProtectCollectorView(): null {
+  return null;
+}

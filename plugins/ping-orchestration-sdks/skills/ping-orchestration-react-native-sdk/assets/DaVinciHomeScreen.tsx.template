@@ -1,0 +1,140 @@
+/*
+ * DaVinciHomeScreen.tsx: DaVinci flow (authenticated state)
+ *
+ * Shows the signed-in session and a sign-out button.
+ * Reads session state from DaVinciProvider via useDaVinci() (no client arg).
+ * Sign-out goes through useDaVinci().logoutUser so the hook clears its node;
+ * calling client.logoutUser() directly would leave the previous SuccessNode in
+ * the hook and the login screen would navigate straight back here.
+ * Uses navigation.replace() to return to the login screen after sign-out.
+ *
+ * Required: DaVinciProvider must wrap NavigationContainer in App.tsx.
+ */
+
+import React, { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../../App';
+import { useDaVinci } from '@ping-identity/rn-davinci';
+import type { DaVinciUserSession } from '@ping-identity/rn-davinci';
+import {
+  PingColors,
+  PingErrorMessage,
+  PingHeaderView,
+  PingLoadingOverlay,
+  PingPrimaryButton,
+} from '../theme/PingTheme';
+
+type ScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+/**
+ * Shows the signed-in session and a sign-out button.
+ *
+ * @returns The home screen element.
+ */
+export function DaVinciHomeScreen(): React.ReactElement {
+  const navigation = useNavigation<ScreenNavigationProp>();
+  const { user, logoutUser } = useDaVinci();
+  const [session, setSession] = useState<DaVinciUserSession | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setSession(await user());
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    setError(null);
+    try {
+      await logoutUser();
+      navigation.replace('DaVinciLogin');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setLoggingOut(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.flex}>
+      <PingHeaderView title="Welcome" subtitle="You are signed in" />
+      <ScrollView contentContainerStyle={styles.content}>
+        {session ? (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Session</Text>
+            <InfoRow
+              label="Access token"
+              value={`${session.accessToken.slice(0, 8)}…`}
+            />
+            {session.expiresIn !== undefined ? (
+              <InfoRow label="Expires in" value={`${session.expiresIn}s`} />
+            ) : null}
+          </View>
+        ) : null}
+        {error ? <PingErrorMessage message={error} /> : null}
+        <PingPrimaryButton
+          title="Sign Out"
+          onPress={handleLogout}
+          disabled={loggingOut}
+        />
+      </ScrollView>
+      <PingLoadingOverlay visible={loggingOut} message="Signing out…" />
+    </SafeAreaView>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.row}>
+      <Text style={styles.rowLabel}>{label}</Text>
+      <Text style={styles.rowValue}>{value}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  content: {
+    padding: 16,
+    gap: 16,
+  },
+  card: {
+    backgroundColor: PingColors.surface,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: PingColors.textField,
+    gap: 8,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: PingColors.onSurface,
+    marginBottom: 4,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  rowLabel: {
+    fontSize: 13,
+    color: PingColors.outline,
+    fontWeight: '500',
+  },
+  rowValue: {
+    fontSize: 13,
+    color: PingColors.onSurface,
+    flexShrink: 1,
+    textAlign: 'right',
+  },
+});

@@ -1,0 +1,145 @@
+/*
+ * DaVinciLoginScreen.tsx: DaVinci flow
+ *
+ * Starts the DaVinci flow on mount and renders each ContinueNode through
+ * DaVinciCollectorRenderer. The flow entry point is determined by the discovery
+ * endpoint in the config, so start() takes no flow name.
+ * Reads flow state from DaVinciProvider via useDaVinci() (no client arg).
+ * Uses navigation.replace() for auth transitions so back button is not exposed.
+ *
+ * Required: DaVinciProvider must wrap NavigationContainer in App.tsx.
+ */
+
+import React, { useCallback, useEffect, useState } from 'react';
+import { StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../../App';
+import { useDaVinci } from '@ping-identity/rn-davinci';
+import {
+  PingErrorCard,
+  PingHeaderView,
+  PingLoadingOverlay,
+} from '../theme/PingTheme';
+import SDK_VERSION from '@ping-identity/rn-davinci/package.json';
+import {
+  DaVinciCollectorRenderer,
+  prepareIntegrations,
+} from './DaVinciCollectorRenderer';
+
+type ScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+/**
+ * Starts the DaVinci flow and renders each ContinueNode through the collector
+ * renderer until a terminal node is reached.
+ *
+ * @returns The login screen element.
+ */
+export function DaVinciLoginScreen(): React.ReactElement {
+  const navigation = useNavigation<ScreenNavigationProp>();
+  const { node, loading, error, start, next, pollStatus } = useDaVinci();
+  const [startError, setStartError] = useState<string | null>(null);
+  // True while prepareIntegrations()+start() are in flight, including retries
+  // from a retained failure node: the hook keeps the old node when start()
+  // rejects, so restart state must be tracked independently of it.
+  const [restarting, setRestarting] = useState(true);
+  // Per-node renderer key, adjusted during render so the remount lands in the
+  // same commit as the new node. An effect-based bump would render the old key
+  // once, remounting PollingCollectorView (subscribe, unsubscribe, subscribe)
+  // after the node is on screen.
+  const [nodeKey, setNodeKey] = useState(0);
+  const [lastNode, setLastNode] = useState(node);
+  if (node !== lastNode) {
+    setLastNode(node);
+    setNodeKey((k) => k + 1);
+  }
+
+  const begin = useCallback(async () => {
+    setStartError(null);
+    setRestarting(true);
+    try {
+      await prepareIntegrations();
+      await start();
+    } catch (err) {
+      setStartError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setRestarting(false);
+    }
+  }, [start]);
+
+  // Start the flow on mount
+  useEffect(() => {
+    begin();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Navigate on terminal states
+  useEffect(() => {
+    if (node?.type === 'SuccessNode') {
+      navigation.replace('DaVinciHome');
+    }
+  }, [node, navigation]);
+
+  if (restarting) {
+    return <PingLoadingOverlay visible message="Starting…" />;
+  }
+
+  if (!node) {
+    const failure = startError ?? error?.message ?? null;
+    if (failure) {
+      return (
+        <SafeAreaView style={styles.flex}>
+          <PingHeaderView title="Sign In" subtitle="Unable to start" />
+          <PingErrorCard message={failure} onRetry={begin} />
+        </SafeAreaView>
+      );
+    }
+    return <PingLoadingOverlay visible message="Starting…" />;
+  }
+
+  if (node.type === 'SuccessNode') {
+    return <PingLoadingOverlay visible message="Signing in…" />;
+  }
+
+  if (node.type === 'FailureNode') {
+    return (
+      <SafeAreaView style={styles.flex}>
+        <PingHeaderView title="Sign In" subtitle="Authentication failed" />
+        <PingErrorCard
+          message={startError ?? node.cause ?? node.message}
+          onRetry={begin}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (node.type === 'ErrorNode') {
+    return (
+      <SafeAreaView style={styles.flex}>
+        <PingHeaderView title="Sign In" subtitle="An error occurred" />
+        <PingErrorCard message={startError ?? node.message} onRetry={begin} />
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.flex}>
+      <PingHeaderView
+        title="Sign In"
+        subtitle={`Ping RN SDK v${SDK_VERSION.version}`}
+      />
+      <DaVinciCollectorRenderer
+        key={nodeKey}
+        node={node}
+        next={next}
+        pollStatus={pollStatus}
+      />
+      <PingLoadingOverlay visible={loading} message="Working…" />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+});

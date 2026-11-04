@@ -1,0 +1,123 @@
+/*
+ * SocialLoginCollectorView.tsx: DaVinci integration collector (@ping-identity/rn-external-idp)
+ *
+ * Renders one button for a SOCIAL_LOGIN_BUTTON collector and runs the
+ * authorization itself, then advances the flow through the parent-supplied
+ * onNext, mirroring the Journey integration-view pattern (view owns the
+ * operation and its busy state).
+ *
+ * Flow: authorizeForDaVinci, then onNext(). The collector key is never part of
+ * a payload. typeIndex is this collector's position among all
+ * SOCIAL_LOGIN_BUTTON collectors on the node.
+ *
+ * idpClient comes from the config module so createExternalIdpClient() has
+ * registered the SOCIAL_LOGIN_BUTTON type and the native serializer before the
+ * first start().
+ */
+
+import React, { useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import type { IdpCollector } from '@ping-identity/rn-external-idp';
+import type { DaVinciInstance } from '@ping-identity/rn-types';
+import { PingColors, PingErrorMessage } from '../theme/PingTheme';
+import { idpClient } from '../<AppName>DaVinciConfig';
+
+type Props = {
+  collector: IdpCollector;
+  /** DaVinci client from useDaVinciContext(); the authorization targets its flow. */
+  client: DaVinciInstance | null;
+  /** Zero-based position of this collector among SOCIAL_LOGIN_BUTTON collectors. */
+  typeIndex: number;
+  /**
+   * Runs an async operation inside the renderer's shared single-flight guard,
+   * which also covers submit, flow taps, and the polling advance. The whole
+   * authorization plus the advancing onNext must run through it.
+   */
+  onPerform: (action: () => Promise<void>) => Promise<void>;
+  /** True while the renderer's single-flight guard holds another operation. */
+  disabled?: boolean;
+  /** Awaits the parent's flow advance after the authorization completes. */
+  onNext: () => Promise<void>;
+};
+
+/**
+ * Runs the IdP authorization for a SOCIAL_LOGIN_BUTTON collector, then
+ * advances the flow.
+ *
+ * @returns The social login button element.
+ */
+export function SocialLoginCollectorView({
+  collector,
+  client,
+  typeIndex,
+  onPerform,
+  disabled = false,
+  onNext,
+}: Props): React.ReactElement {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handlePress = async () => {
+    setBusy(true);
+    setError(null);
+    // Authorization + advancing onNext acquire the renderer's shared guard.
+    // The outer finally clears busy even when the guard declines execution.
+    try {
+      await onPerform(async () => {
+        try {
+          if (!client) {
+            throw new Error('No DaVinci client is available for social login.');
+          }
+          await idpClient.authorizeForDaVinci(client, { index: typeIndex });
+          await onNext();
+        } catch (err) {
+          setError(err instanceof Error ? err.message : String(err));
+        }
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <TouchableOpacity
+        onPress={handlePress}
+        disabled={busy || disabled || !collector.idpEnabled}
+        activeOpacity={0.75}
+        accessibilityRole="button"
+        style={[styles.button, !collector.idpEnabled && styles.buttonDisabled]}
+      >
+        <Text style={styles.buttonText}>
+          {collector.label || collector.idpType}
+        </Text>
+      </TouchableOpacity>
+      {error ? <PingErrorMessage message={error} /> : null}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+  },
+  button: {
+    width: '100%',
+    height: 50,
+    marginBottom: 12,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: PingColors.textField,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: PingColors.surface,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: PingColors.onSurface,
+  },
+});

@@ -1,0 +1,60 @@
+/*
+ * QRCodeCollectorView.tsx: DaVinci core collector
+ *
+ * Renders a QR_CODE collector. collector.content is the full
+ * data:image/...;base64, URI; collector.fallbackText is shown when the content
+ * is empty or the image fails to load. Output only: it never contributes to the
+ * next() payload. On Android the collector key is an empty string, so the
+ * renderer shells build React keys from the list index as well.
+ */
+
+import React, { useState } from 'react';
+import { Image, StyleSheet, Text, View } from 'react-native';
+import type { QRCodeCollector } from '@ping-identity/rn-davinci';
+import { PingColors } from '../theme/PingTheme';
+
+type Props = {
+  collector: QRCodeCollector;
+};
+
+/**
+ * Renders the QR image of a QR_CODE collector, or its fallback text.
+ *
+ * @returns The QR element.
+ */
+export function QRCodeCollectorView({ collector }: Props): React.ReactElement {
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <View style={styles.container}>
+      {failed || !collector.content ? (
+        <Text style={styles.fallback}>{collector.fallbackText}</Text>
+      ) : (
+        <Image
+          source={{ uri: collector.content }}
+          style={styles.image}
+          resizeMode="contain"
+          onError={() => setFailed(true)}
+          accessibilityLabel={collector.fallbackText}
+        />
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  image: {
+    width: 220,
+    height: 220,
+  },
+  fallback: {
+    fontSize: 14,
+    color: PingColors.onSurface,
+    textAlign: 'center',
+  },
+});

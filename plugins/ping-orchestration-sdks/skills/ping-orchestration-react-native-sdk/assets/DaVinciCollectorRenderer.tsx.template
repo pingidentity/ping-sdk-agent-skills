@@ -1,0 +1,415 @@
+/*
+ * DaVinciCollectorRenderer.tsx: Manual variant (useDaVinci only)
+ *
+ * Owns the field values itself, keyed by collector.key, and builds the submit
+ * payload in buildPayload(). Iterates the normalised collectors of the node and
+ * dispatches each to its view under ../collectors, mirroring the Journey
+ * renderer's explicit branches.
+ *
+ * DaVinci submits are key-indexed: { collectors: [{ key, value }] }.
+ *   - The first SUBMIT_BUTTON on the node must be in the payload as
+ *     { key, value: key }, otherwise the native request has no actionKey or
+ *     eventType.
+ *   - LABEL, READ_ONLY_TEXT, POLLING and QR_CODE are output only: never submitted.
+ *   - ACTION, FLOW_BUTTON and FLOW_LINK advance the flow by their own key and
+ *     bypass every other field value: onFlow submits a single-entry payload.
+ *
+ * Every flow-advancing call goes through the `next` prop (the login screen's
+ * useDaVinci().next). Calling client.next directly advances the native flow but
+ * leaves the screen rendering the previous node.
+ *
+ * Integration views run their own operation and advance through the parent
+ * onNext (like the Journey integration views). Everything tier-specific lives
+ * in the three PLACEHOLDER regions, which the scaffold fills per tier and then
+ * removes: integration view imports and cases (PLACEHOLDER_INTEGRATION_*),
+ * and the prepareIntegrations body with the handledCollectorTypes entries
+ * PLACEHOLDER_TIER_STATEMENTS). Basic leaves all
+ * of them empty. A type with no filled case falls through to
+ * IntegrationCollectorView.
+ *
+ * Props:
+ *   node: ContinueNode from useDaVinci()
+ *   next: next() from useDaVinci()
+ *   pollStatus: pollStatus() from useDaVinci()
+ *
+ * Also exports prepareIntegrations(), awaited by the login screen before start().
+ */
+
+import React, { useMemo, useRef, useState } from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+} from 'react-native';
+import { normalizeCollectors } from '@ping-identity/rn-davinci';
+import type {
+  ContinueNode,
+  DaVinciFormValue,
+  DaVinciFormValues,
+  DaVinciNextInput,
+  DaVinciNode,
+  DaVinciNormalizedCollector,
+  DaVinciPollStatusOptions,
+  PollingCollector,
+  PollingStatus,
+} from '@ping-identity/rn-davinci';
+import { PingErrorMessage, PingPrimaryButton } from '../theme/PingTheme';
+import { TextCollectorView } from '../collectors/TextCollectorView';
+import { PasswordCollectorView } from '../collectors/PasswordCollectorView';
+import { SingleSelectCollectorView } from '../collectors/SingleSelectCollectorView';
+import { MultiSelectCollectorView } from '../collectors/MultiSelectCollectorView';
+import { PhoneNumberCollectorView } from '../collectors/PhoneNumberCollectorView';
+import { BooleanCollectorView } from '../collectors/BooleanCollectorView';
+import { LabelCollectorView } from '../collectors/LabelCollectorView';
+import { ReadOnlyTextCollectorView } from '../collectors/ReadOnlyTextCollectorView';
+import { DeviceRegistrationCollectorView } from '../collectors/DeviceRegistrationCollectorView';
+import { DeviceAuthenticationCollectorView } from '../collectors/DeviceAuthenticationCollectorView';
+import { SubmitCollectorView } from '../collectors/SubmitCollectorView';
+import { FlowCollectorView } from '../collectors/FlowCollectorView';
+import { PollingCollectorView } from '../collectors/PollingCollectorView';
+import { QRCodeCollectorView } from '../collectors/QRCodeCollectorView';
+import { IntegrationCollectorView } from '../collectors/IntegrationCollectorView';
+// PLACEHOLDER_INTEGRATION_IMPORTS
+
+/**
+ * Awaits the tier's startup initialisation. The login screen awaits this
+ * before start(), so setup that must precede the first node (for example
+ * startProtect) finishes in time.
+ *
+ * @returns A promise resolving when tier initialisation has finished.
+ */
+export async function prepareIntegrations(): Promise<void> {
+  // PLACEHOLDER_TIER_STATEMENTS
+}
+
+function buildPayload(
+  fields: DaVinciNormalizedCollector[],
+  values: DaVinciFormValues,
+): DaVinciNextInput {
+  const collectors: Array<{ key: string; value: unknown }> = [];
+  let submitAdded = false;
+
+  for (const field of fields) {
+    if (field.kind === 'integration' || field.kind === 'unknown') {
+      continue;
+    }
+    if (field.type === 'SUBMIT_BUTTON') {
+      if (!submitAdded) {
+        collectors.push({ key: field.key, value: field.key });
+        submitAdded = true;
+      }
+      continue;
+    }
+    if (
+      field.executionMode === 'output_only' ||
+      field.type === 'ACTION' ||
+      field.type === 'FLOW_BUTTON' ||
+      field.type === 'FLOW_LINK'
+    ) {
+      continue;
+    }
+    const value: DaVinciFormValue | undefined =
+      values[field.key] ??
+      (field.kind === 'device' ? undefined : field.defaultValue);
+    if (value !== undefined) {
+      collectors.push({ key: field.key, value });
+    }
+  }
+
+  return { collectors };
+}
+
+type Props = {
+  node: ContinueNode;
+  next: (input: DaVinciNextInput) => Promise<DaVinciNode>;
+  pollStatus: (
+    onStatus: (status: PollingStatus) => void,
+    options?: DaVinciPollStatusOptions,
+  ) => Promise<() => void>;
+};
+
+/**
+ * Renders the active node's fields with state managed by useDaVinciForm and
+ * dispatches each to its collector view.
+ *
+ * @param props - Node and the hook actions from useDaVinci().
+ * @returns The managed renderer element.
+ */
+export function DaVinciCollectorRenderer({
+  node,
+  next,
+  pollStatus,
+}: Props): React.ReactElement {
+  // PLACEHOLDER_CLIENT_STATEMENT
+  const fields = useMemo(() => normalizeCollectors(node.collectors), [node]);
+  const [values, setValues] = useState<DaVinciFormValues>({});
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const setValue = (key: string, value: DaVinciFormValue) => {
+    setValues((previous) => ({ ...previous, [key]: value }));
+  };
+
+  // Single-flight for every flow-advancing action. The guard must be a ref:
+  // integration ceremonies and Protect collection run before
+  // useDaVinci().loading turns true, so state alone would let a double tap
+  // through and duplicate both the operation and the next() call.
+  const busyRef = useRef(false);
+  const [busy, setBusy] = useState(false);
+
+  // Terminal polling events arrive exactly once: pollStatus removes its
+  // listener before delivering a terminal status and the native poll cannot
+  // be replayed. When one lands while an operation is in flight, park it and
+  // drain after that operation settles: a failed operation left the node in
+  // place, so the parked advance proceeds; a successful one already advanced
+  // the flow, so the parked advance is dropped rather than issuing a
+  // duplicate next().
+  const pendingPollAdvanceRef = useRef(false);
+
+  const run = async (action: () => Promise<unknown>) => {
+    if (busyRef.current) {
+      return;
+    }
+    busyRef.current = true;
+    setBusy(true);
+    setActionError(null);
+    let failed = false;
+    try {
+      await action();
+    } catch (error) {
+      failed = true;
+      setActionError(error instanceof Error ? error.message : String(error));
+    } finally {
+      busyRef.current = false;
+      setBusy(false);
+      if (pendingPollAdvanceRef.current) {
+        pendingPollAdvanceRef.current = false;
+        if (failed) {
+          next({ collectors: [] }).catch(() => {
+            // `error` is already updated by the hook.
+          });
+        }
+      }
+    }
+  };
+
+  const handleSubmit = () =>
+    run(async () => {
+      // PLACEHOLDER_PRE_SUBMIT
+      await next(buildPayload(fields, values));
+    });
+
+  const handleFlow = (flowKey: string) =>
+    run(() => next({ collectors: [{ key: flowKey, value: flowKey }] }));
+
+  const handlePollStatus = (
+    collector: PollingCollector,
+    onStatus: (status: PollingStatus) => void,
+  ) =>
+    pollStatus(
+      (status) => {
+        onStatus(status);
+        if (status.status !== 'continue') {
+          if (busyRef.current) {
+            pendingPollAdvanceRef.current = true;
+          } else {
+            next({ collectors: [] }).catch(() => {
+              // `error` is already updated by the hook.
+            });
+          }
+        }
+      },
+      { key: collector.key },
+    );
+
+  const renderField = (field: DaVinciNormalizedCollector, index: number) => {
+    const reactKey = `${index}-${field.key}`;
+    const value = values[field.key];
+
+    // Integration collectors first: the early return also narrows the union
+    // so the literal cases below discriminate correctly.
+    if (field.kind === 'integration' || field.kind === 'unknown') {
+      // PLACEHOLDER_INTEGRATION_CASES
+      return <IntegrationCollectorView key={reactKey} collector={field} />;
+    }
+
+    switch (field.type) {
+      case 'TEXT':
+        return (
+          <TextCollectorView
+            key={reactKey}
+            collector={field}
+            value={value}
+            onChange={(updated) => {
+              setValue(field.key, updated);
+            }}
+          />
+        );
+      case 'PASSWORD':
+      case 'PASSWORD_VERIFY':
+        return (
+          <PasswordCollectorView
+            key={reactKey}
+            collector={field}
+            value={value}
+            onChange={(updated) => {
+              setValue(field.key, updated);
+            }}
+          />
+        );
+      case 'SINGLE_SELECT':
+      case 'DROPDOWN':
+      case 'RADIO':
+        return (
+          <SingleSelectCollectorView
+            key={reactKey}
+            collector={field}
+            value={value}
+            onChange={(updated) => {
+              setValue(field.key, updated);
+            }}
+          />
+        );
+      case 'MULTI_SELECT':
+      case 'COMBOBOX':
+      case 'CHECKBOX':
+        return (
+          <MultiSelectCollectorView
+            key={reactKey}
+            collector={field}
+            value={value}
+            onChange={(updated) => {
+              setValue(field.key, updated);
+            }}
+          />
+        );
+      case 'PHONE_NUMBER':
+        return (
+          <PhoneNumberCollectorView
+            key={reactKey}
+            collector={field}
+            value={value}
+            onChange={(updated) => {
+              setValue(field.key, updated);
+            }}
+          />
+        );
+      case 'SINGLE_CHECKBOX':
+        return (
+          <BooleanCollectorView
+            key={reactKey}
+            collector={field}
+            value={value}
+            onChange={(updated) => {
+              setValue(field.key, updated);
+            }}
+          />
+        );
+      case 'DEVICE_REGISTRATION':
+        return (
+          <DeviceRegistrationCollectorView
+            key={reactKey}
+            collector={field}
+            value={value}
+            onChange={(updated) => {
+              setValue(field.key, updated);
+            }}
+          />
+        );
+      case 'DEVICE_AUTHENTICATION':
+        return (
+          <DeviceAuthenticationCollectorView
+            key={reactKey}
+            collector={field}
+            value={value}
+            onChange={(updated) => {
+              setValue(field.key, updated);
+            }}
+          />
+        );
+      case 'LABEL':
+        return <LabelCollectorView key={reactKey} collector={field} />;
+      case 'READ_ONLY_TEXT':
+        return <ReadOnlyTextCollectorView key={reactKey} collector={field} />;
+      case 'SUBMIT_BUTTON':
+        return (
+          <SubmitCollectorView
+            key={reactKey}
+            collector={field}
+            disabled={busy}
+            onSubmit={handleSubmit}
+          />
+        );
+      case 'ACTION':
+      case 'FLOW_BUTTON':
+      case 'FLOW_LINK':
+        return (
+          <FlowCollectorView
+            key={reactKey}
+            collector={field}
+            disabled={busy}
+            onFlow={handleFlow}
+          />
+        );
+      case 'POLLING':
+        return (
+          <PollingCollectorView
+            key={reactKey}
+            collector={field}
+            onPollStatus={handlePollStatus}
+          />
+        );
+      case 'QR_CODE':
+        return <QRCodeCollectorView key={reactKey} collector={field} />;
+      default:
+        return <IntegrationCollectorView key={reactKey} collector={field} />;
+    }
+  };
+
+  // Only a SUBMIT_BUTTON suppresses the fallback: flow controls advance the
+  // flow by their own key and never submit the field values.
+  const hasSubmitButton = fields.some(
+    (field) => field.type === 'SUBMIT_BUTTON',
+  );
+  const unsupportedFields = node.unsupportedFields ?? [];
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.flex}
+    >
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
+        {unsupportedFields.length > 0 ? (
+          <PingErrorMessage
+            message={`Unsupported fields skipped: ${unsupportedFields
+              .map((field) => `${field.key} (${field.type})`)
+              .join(', ')}`}
+          />
+        ) : null}
+
+        {fields.map(renderField)}
+
+        {hasSubmitButton ? null : (
+          <PingPrimaryButton
+            title="Next"
+            onPress={handleSubmit}
+            disabled={busy}
+          />
+        )}
+
+        {actionError ? <PingErrorMessage message={actionError} /> : null}
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  container: {
+    padding: 16,
+    gap: 4,
+  },
+});

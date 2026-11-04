@@ -1,0 +1,137 @@
+/*
+ * LabelCollectorView.tsx: DaVinci core collector
+ *
+ * Renders display text for a LABEL collector. Output only: a LABEL never
+ * contributes to the next() payload.
+ * Uses collector.richContent (a template with {{name}} tokens plus replacements,
+ * some of which carry an href) when present, otherwise collector.content.
+ *
+ * Also exports RichText, shared with BooleanCollectorView.
+ */
+
+import React from 'react';
+import { Linking, StyleSheet, Text, View } from 'react-native';
+import type { LabelCollector, RichContent } from '@ping-identity/rn-davinci';
+import { PingColors } from '../theme/PingTheme';
+
+type Part = { value: string; href?: string };
+
+function splitRichContent({ content, replacements }: RichContent): Part[] {
+  const parts: Part[] = [];
+  // Replacement names are arbitrary strings (Record<string, ...>), so capture
+  // the complete placeholder name; a word-only pattern would split names with
+  // hyphens or dots and leave the token unresolved.
+  const tokenPattern = /\{\{([^{}]+)\}\}/g;
+  let lastIndex = 0;
+  let match = tokenPattern.exec(content);
+
+  while (match !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ value: content.slice(lastIndex, match.index) });
+    }
+    const replacement = replacements[match[1] ?? ''];
+    parts.push(
+      replacement
+        ? { value: replacement.value, href: replacement.href }
+        : { value: match[0] },
+    );
+    lastIndex = match.index + match[0].length;
+    match = tokenPattern.exec(content);
+  }
+
+  if (lastIndex < content.length) {
+    parts.push({ value: content.slice(lastIndex) });
+  }
+  return parts;
+}
+
+type RichTextProps = {
+  text: string;
+  richContent?: RichContent;
+  style?: object;
+};
+
+/**
+ * Renders text, resolving {{name}} placeholder tokens through richContent
+ * replacements.
+ *
+ * @param text - Plain text to render.
+ * @param richContent - Optional token replacements, some carrying links.
+ * @param style - Style applied to the text.
+ * @returns The text element.
+ */
+export function RichText({
+  text,
+  richContent,
+  style,
+}: RichTextProps): React.ReactElement {
+  if (!richContent || !richContent.replacements) {
+    return <Text style={style}>{text}</Text>;
+  }
+
+  return (
+    <Text style={style}>
+      {splitRichContent(richContent).map((part, index) =>
+        part.href ? (
+          <Text
+            key={index}
+            style={styles.link}
+            accessibilityRole="link"
+            onPress={() => {
+              const target = part.href;
+              if (target) {
+                Linking.openURL(target).catch((error: unknown) => {
+                  console.warn(
+                    `[DaVinci] Could not open link ${target}`,
+                    error,
+                  );
+                });
+              }
+            }}
+          >
+            {part.value}
+          </Text>
+        ) : (
+          <Text key={index}>{part.value}</Text>
+        ),
+      )}
+    </Text>
+  );
+}
+
+type Props = {
+  collector: LabelCollector;
+};
+
+/**
+ * Renders the display text of a LABEL collector, resolving rich-content tokens when present.
+ *
+ * @returns The label element.
+ */
+export function LabelCollectorView({ collector }: Props): React.ReactElement {
+  return (
+    <View style={styles.container}>
+      <RichText
+        text={collector.content}
+        richContent={collector.richContent}
+        style={styles.text}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    marginBottom: 12,
+  },
+  text: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: PingColors.onSurface,
+  },
+  link: {
+    color: PingColors.red,
+    textDecorationLine: 'underline',
+  },
+});

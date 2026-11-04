@@ -1,0 +1,109 @@
+/*
+ * DeviceAuthenticationCollectorView.tsx: DaVinci core collector
+ *
+ * Renders one button per collector.devices entry for a DEVICE_AUTHENTICATION
+ * collector (the user's registered devices).
+ * Submit key: collector.key. Payload value: { type, id?, description? }.
+ */
+
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import type {
+  DaVinciFormValue,
+  DeviceAuthenticationCollector,
+} from '@ping-identity/rn-davinci';
+import { PingColors } from '../theme/PingTheme';
+
+type DeviceValue = { type: string; id?: string; description?: string };
+
+type Props = {
+  collector: DeviceAuthenticationCollector;
+  value: DaVinciFormValue | undefined;
+  onChange: (value: DeviceValue) => void;
+};
+
+/**
+ * Renders one authentication button per registered device of a DEVICE_AUTHENTICATION collector.
+ *
+ * @returns The device list element.
+ */
+export function DeviceAuthenticationCollectorView({
+  collector,
+  value,
+  onChange,
+}: Props): React.ReactElement {
+  const selected =
+    value !== null && typeof value === 'object' && 'type' in value
+      ? value
+      : undefined;
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.label}>
+        {collector.required ? `${collector.label} *` : collector.label}
+      </Text>
+      {collector.devices.map((device) => {
+        const isSelected =
+          selected !== undefined &&
+          selected.type === device.type &&
+          selected.id === device.id;
+        return (
+          <TouchableOpacity
+            key={device.id ?? device.type}
+            onPress={() =>
+              onChange({
+                type: device.type,
+                id: device.id,
+                description: device.description,
+              })
+            }
+            style={[styles.option, isSelected && styles.optionSelected]}
+            activeOpacity={0.75}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isSelected }}
+          >
+            <Text style={styles.optionTitle}>{device.title}</Text>
+            {device.description ? (
+              <Text style={styles.optionDescription}>{device.description}</Text>
+            ) : null}
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    marginBottom: 12,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: PingColors.onSurface,
+    marginBottom: 8,
+  },
+  option: {
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: PingColors.textField,
+    marginBottom: 6,
+    backgroundColor: PingColors.surface,
+  },
+  optionSelected: {
+    borderColor: PingColors.red,
+    backgroundColor: '#FFF5F4',
+  },
+  optionTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: PingColors.onSurface,
+  },
+  optionDescription: {
+    marginTop: 2,
+    fontSize: 12,
+    color: PingColors.outline,
+  },
+});
