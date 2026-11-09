@@ -169,7 +169,7 @@ Full list in `references/common-mistakes.md`.
 1. Replace placeholder config values (`<serverUrl>`, `<clientId>`, etc.) in the generated client file.
 2. For **OIDC on Android**: confirm `appRedirectUriScheme` in `android/app/build.gradle` matches your redirect URI scheme.
 3. For **FIDO / Passkeys**: register your app's origin / associated domain in the PingOne AIC console. For the **DaVinci Standard tier** the same Associated Domains / origin registration applies (used by `registerForDaVinci` / `authenticateForDaVinci`); Protect additionally needs `cd ios && pod install` and `startProtect({ envId })` with the PingOne environment ID. See `references/davinci-scaffold.md` step D5.
-4. For the **DaVinci Full tier**: complete the external IdP prerequisites in `references/davinci-scaffold.md` step D5 — provider SDK dependencies, provider console setup, iOS app-delegate callback routing (`application(_:open:options:)`), and the redirect scheme (the only redirect wiring in a DaVinci scaffold).
+4. For the **DaVinci Full tier**: complete the external IdP prerequisites in `references/davinci-scaffold.md` step D5 — provider SDK dependencies, provider console setup, iOS callback routing (AppDelegate-only vs scene delegate, per the lifecycle detection in `references/platform-setup.md`), and the redirect scheme (the only redirect wiring in a DaVinci scaffold).
 5. For **Device Binding**: ensure the AIC journey has a Device Binding node with biometric authentication type.
 6. For **Push Notifications**: add `google-services.json` (Android) and configure APNs (iOS). See SKILL.md "5 — Push MFA Integration" or ask the skill to scaffold Push for step-by-step instructions.
 7. Run `pod install` in `ios/` after `npm install`.

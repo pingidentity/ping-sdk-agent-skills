@@ -20,12 +20,11 @@
  *
  * Integration views run their own operation and advance through the parent
  * onNext (like the Journey integration views). Everything tier-specific lives
- * in the three PLACEHOLDER regions, which the scaffold fills per tier and then
- * removes: integration view imports and cases (PLACEHOLDER_INTEGRATION_*),
- * and the prepareIntegrations body with the handledCollectorTypes entries
- * PLACEHOLDER_TIER_STATEMENTS). Basic leaves all
- * of them empty. A type with no filled case falls through to
- * IntegrationCollectorView.
+ * in five PLACEHOLDER markers, which the scaffold replaces per tier:
+ * PLACEHOLDER_INTEGRATION_IMPORTS, PLACEHOLDER_TIER_STATEMENTS,
+ * PLACEHOLDER_CLIENT_STATEMENT, PLACEHOLDER_PRE_SUBMIT and
+ * PLACEHOLDER_INTEGRATION_CASES. Basic replaces each with nothing. A type with
+ * no filled case falls through to IntegrationCollectorView.
  *
  * Props:
  *   node: ContinueNode from useDaVinci()
