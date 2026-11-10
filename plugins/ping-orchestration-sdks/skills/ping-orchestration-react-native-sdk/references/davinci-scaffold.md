@@ -46,7 +46,7 @@ The shell carries marker comments that make it tier-agnostic; replace each with 
 | `collectorTier` | Region content |
 |---|---|
 | `basic` | Replace every marker with nothing |
-| `standard` | Imports: `useDaVinciContext` from `@ping-identity/rn-davinci`; `collectProtect`, `protectCollectorType` from `@ping-identity/rn-protect`; `fidoCollectorType` and the `FidoCollector` type from `@ping-identity/rn-fido`; `protectReady` from the config module; `FidoCollectorView`, `ProtectCollectorView` from `../collectors/`. Client statement: `const client = useDaVinciContext()?.client ?? null;`. Prepare body: `await protectReady;`. Handled types (managed shell only): `fidoCollectorType, protectCollectorType,`. Pre-submit (managed and manual shells): after a `client` null guard, call `collectProtect(client)` once when the node contains a `PROTECT` field, and throw an explanatory error before collecting when it contains more than one. Do not loop per field: the v1.1.0 `collectProtect` has no collector selector and both native bridges hardcode index 0, so a loop would collect the first collector repeatedly and leave the others uncollected. The throw surfaces through the shell's action error. Integration cases: an `if (field.type === fidoCollectorType)` branch rendering `FidoCollectorView` (`collector={field as unknown as FidoCollector}` — the `type` check does not narrow `DaVinciNormalizedCollector`; client, typeIndex among same-action FIDO collectors, `onPerform={run}`, `disabled={busy}`, `onNext={async () => { await next({ collectors: [] }); }}` (promise-returning; the view awaits it inside the guard)) and an `if (field.type === protectCollectorType)` branch rendering `ProtectCollectorView` |
+| `standard` | Imports: `useDaVinciContext` from `@ping-identity/rn-davinci`; `collectProtect`, `protectCollectorType` from `@ping-identity/rn-protect`; `fidoCollectorType` and the `FidoCollector` type from `@ping-identity/rn-fido`; `ensureProtect` from the config module; `FidoCollectorView`, `ProtectCollectorView` from `../collectors/`. Client statement: `const client = useDaVinciContext()?.client ?? null;`. Prepare body: `await ensureProtect();`. Handled types (managed shell only): `fidoCollectorType, protectCollectorType,`. Pre-submit (managed and manual shells): after a `client` null guard, call `collectProtect(client)` once when the node contains a `PROTECT` field, and throw an explanatory error before collecting when it contains more than one. Do not loop per field: the v1.1.0 `collectProtect` has no collector selector and both native bridges hardcode index 0, so a loop would collect the first collector repeatedly and leave the others uncollected. The throw surfaces through the shell's action error. Integration cases: an `if (field.type === fidoCollectorType)` branch rendering `FidoCollectorView` (`collector={field as unknown as FidoCollector}` — the `type` check does not narrow `DaVinciNormalizedCollector`; client, typeIndex among same-action FIDO collectors, `onPerform={run}`, `disabled={busy}`, `onNext={async () => { await next({ collectors: [] }); }}` (promise-returning; the view awaits it inside the guard)) and an `if (field.type === protectCollectorType)` branch rendering `ProtectCollectorView` |
 | `full` | The Standard content plus: `socialLoginCollectorType` and the `IdpCollector` type from `@ping-identity/rn-external-idp`; `SocialLoginCollectorView` import and an `if (field.type === socialLoginCollectorType)` case rendering `SocialLoginCollectorView` (`collector={field as unknown as IdpCollector}` — same non-narrowing `type` check; client, typeIndex among all SOCIAL_LOGIN_BUTTON collectors, `onPerform={run}`, `disabled={busy}`, `onNext={async () => { await next({ collectors: [] }); }}` (promise-returning; the view awaits it inside the guard)) |
 
 An integration collector type with no filled case falls through to `IntegrationCollectorView`. In the managed shell `HANDLED_COLLECTOR_TYPES` (from `PLACEHOLDER_HANDLED_TYPES`) is passed to `useDaVinciForm` so unhandled integration types do not block `canSubmit`; the manual shell has no such set because it builds its own payload. The ceremonies live in the views (`fidoClient`/`idpClient` come from the config module through the view files), so the shell imports only the type constants and the views.
@@ -56,7 +56,7 @@ An integration collector type with no filled case falls through to `IntegrationC
 - `assets/DaVinciLoginScreen.tsx.template` to `<projectDir>/src/screens/DaVinciLoginScreen.tsx`
 - `assets/DaVinciHomeScreen.tsx.template` to `<projectDir>/src/screens/DaVinciHomeScreen.tsx`
 
-The screens contain no `<AppName>` placeholder; the integration views do (they import the config module), so substitute it in every written file that contains it. The login screen awaits `prepareIntegrations()` (exported by the renderer shell) before `start()` in every tier. For Standard and Full that waits on `protectReady` from the config module in D2; for Basic it resolves immediately.
+The screens and `ProtectCollectorView` contain no `<AppName>` placeholder; the other integration views do (they import the config module), so substitute it in every written file that contains it. The login screen awaits `prepareIntegrations()` (exported by the renderer shell) before `start()` in every tier. For Standard and Full that waits on `ensureProtect()` from the config module in D3; for Basic it resolves immediately.
 
 **Acceptance:** all files exist with `<AppName>` substituted; `src/collectors/` holds 15, 17, or 18 views for Basic, Standard, or Full; the Basic output imports no `@ping-identity/rn-fido`, `rn-protect`, or `rn-external-idp` module; the renderer shell contains no leftover `// PLACEHOLDER_` marker comment (the header comment names the markers and is kept).
 
@@ -142,12 +142,24 @@ import { startProtect } from '@ping-identity/rn-protect';
 
 export const fidoClient = createFidoClient();
 
-export const protectReady: Promise<void> = startProtect({
-  envId: '<pingOneEnvironmentId>',
-});
+let protectAttempt: Promise<void> | null = null;
+
+// A rejected attempt clears the cache so a later call re-runs startProtect;
+// native initialize records only successes, so retrying a failure is safe.
+export function ensureProtect(): Promise<void> {
+  if (protectAttempt === null) {
+    protectAttempt = startProtect({
+      envId: '<pingOneEnvironmentId>',
+    }).catch((err) => {
+      protectAttempt = null;
+      throw err;
+    });
+  }
+  return protectAttempt;
+}
 ```
 
-`startProtect` must resolve before the first DaVinci operation, and the `PROTECT` collector type is registered only after it succeeds. This is why the D1 Standard region's prepare body awaits `protectReady` and the D1 login screen awaits `prepareIntegrations()` before `start()`. Ask the user for the PingOne environment ID in this step if W3 did not collect it.
+`startProtect` must resolve before the first DaVinci operation, and the `PROTECT` collector type is registered only after it succeeds. This is why the D1 Standard region's prepare body calls `ensureProtect()` and the D1 login screen awaits `prepareIntegrations()` before `start()`. Do not export a plain module-scope `startProtect(...)` promise instead: a rejected promise caches its rejection, and the login screen's Retry path re-awaits it through `prepareIntegrations()`, so Retry could never succeed without an app restart. `ensureProtect` clears its cache on rejection, and native initialize records only successes, so the next call re-runs `startProtect` cleanly. Ask the user for the PingOne environment ID in this step if W3 did not collect it.
 
 **Full** (adds Social Login). In addition, in the same config module:
 
@@ -163,12 +175,12 @@ export const idpClient = createExternalIdpClient({
 
 | Tier | View files that import the config module | Imported from the config module |
 |---|---|---|
-| `standard` | `FidoCollectorView` (`fidoClient`), `ProtectCollectorView` (`protectReady`) | `fidoClient`, `protectReady` |
-| `full` | Standard plus `SocialLoginCollectorView` (`idpClient`) | `fidoClient`, `protectReady`, `idpClient` |
+| `standard` | `FidoCollectorView` (`fidoClient`) | `fidoClient` |
+| `full` | Standard plus `SocialLoginCollectorView` (`idpClient`) | `fidoClient`, `idpClient` |
 
 In this provider-based scaffold the DaVinci client always comes from `useDaVinciContext()?.client`, resolved in the shell's tier region (not a prop), and both shells advance the flow through the `next` from `useDaVinci()` inside their single-flight guard, never through `client.next`.
 
-**Acceptance:** every integration the tier advertises has its client created at module scope, a `handledCollectorTypes` entry (managed shell), and a trigger path in its view; no integration code appears below the tier; in Standard and Full, `fidoClient` and `protectReady` are created at module scope; in Full, `idpClient` is created at module scope.
+**Acceptance:** every integration the tier advertises has its client created at module scope, a `handledCollectorTypes` entry (managed shell), and a trigger path in its view; no integration code appears below the tier; in Standard and Full, `fidoClient` and `ensureProtect` are defined at module scope; in Full, `idpClient` is created at module scope.
 
 ---
 
@@ -245,7 +257,7 @@ A plain DaVinci flow needs **no** redirect wiring: no `manifestPlaceholders`, no
 
 *FIDO (`rn-fido`).* Apply the app setup in the FIDO section of [platform-setup.md](platform-setup.md) yourself (Play Services dependencies, Associated Domains, `NSFaceIDUsageDescription`); passkeys fail at runtime without it. The server-side items that section lists (Digital Asset Links, the Apple App Site Association file, the RP origin domains) are the user's to complete: tell the user, and do not invent a console path. The only DaVinci-specific part is the call shape (`registerForDaVinci` / `authenticateForDaVinci`, wired in D3).
 
-*Protect (`rn-protect`).* Run `cd ios && pod install` after installing the package. `startProtect({ envId })` with the PingOne environment ID must resolve before the first DaVinci operation (wired in D3).
+*Protect (`rn-protect`).* Run `cd ios && pod install` after installing the package. `startProtect({ envId })` with the PingOne environment ID must resolve before the first DaVinci operation (wired in D3 through `ensureProtect`).
 
 **Full prerequisites** (`rn-external-idp`). Apply the Social login section of [platform-setup.md](platform-setup.md): the redirect scheme, the Android provider SDK dependencies, the iOS provider pods (then run `cd ios && pod install` again, because the first one ran before the pods were added), and the Google and Facebook callback routing. Add only the providers the flow uses; ask the user if you do not know which. The provider console setup is the user's to complete: tell the user. DaVinci-specific behavior: without a linked provider SDK, DaVinci falls back to browser sign-in; the redirect scheme is the only redirect wiring in a DaVinci scaffold.
 

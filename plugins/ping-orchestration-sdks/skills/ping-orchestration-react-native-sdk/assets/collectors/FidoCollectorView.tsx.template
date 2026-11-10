@@ -84,6 +84,11 @@ export function FidoCollectorView({
           }
           await onNext();
         } catch (err) {
+          // TODO: once @ping-identity/rn-fido exposes FidoError.clientError
+          // (not in the pinned v1.1.0), advance the flow with onNext() when a
+          // rejection carries it: a cancelled passkey prompt is a classified
+          // ceremony failure the server must branch on. Rejections without it
+          // (e.g. FIDO_COLLECTOR_NOT_FOUND) stay local so the node can retry.
           setError(err instanceof Error ? err.message : String(err));
         }
       });

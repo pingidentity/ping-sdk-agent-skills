@@ -6,7 +6,7 @@
  * the renderer shell calls collectProtect(client) once per node that contains
  * a PROTECT collector before it submits (see DaVinciCollectorRenderer).
  *
- * protectReady comes from the config module; the renderer's
+ * ensureProtect() comes from the config module; the renderer's
  * prepareIntegrations() awaits it before start(), because the PROTECT type is
  * registered only after startProtect() resolves.
  */
