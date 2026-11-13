@@ -1,0 +1,41 @@
+/*
+ * TextCollectorView.tsx: DaVinci core collector
+ *
+ * Renders a text input for a TEXT collector.
+ * Submit key: collector.key. Payload value: string.
+ * `value` is the current form value; collector.value is the server default.
+ */
+
+import React from 'react';
+import type {
+  DaVinciFormValue,
+  TextCollector,
+} from '@ping-identity/rn-davinci';
+import { PingTextField } from '../theme/PingTheme';
+
+type Props = {
+  collector: TextCollector;
+  value: DaVinciFormValue | undefined;
+  onChange: (value: string) => void;
+};
+
+/**
+ * Renders a text input for a TEXT collector.
+ *
+ * @returns The text field element.
+ */
+export function TextCollectorView({
+  collector,
+  value,
+  onChange,
+}: Props): React.ReactElement {
+  return (
+    <PingTextField
+      label={collector.required ? `${collector.label} *` : collector.label}
+      value={typeof value === 'string' ? value : collector.value}
+      onChangeText={onChange}
+      placeholder={collector.label}
+      autoCapitalize="none"
+    />
+  );
+}

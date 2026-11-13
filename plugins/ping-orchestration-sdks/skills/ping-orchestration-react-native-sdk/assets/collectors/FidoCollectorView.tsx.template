@@ -1,0 +1,117 @@
+/*
+ * FidoCollectorView.tsx: DaVinci integration collector (@ping-identity/rn-fido)
+ *
+ * Renders the trigger button for a FIDO2 collector (action 'REGISTER' or
+ * 'AUTHENTICATE') and runs the ceremony itself, then advances the flow through
+ * the parent-supplied onNext, mirroring the Journey FidoRegistrationCallbackView
+ * pattern (view owns the operation and its busy/error state).
+ *
+ * Ceremony order: registerForDaVinci / authenticateForDaVinci, then onNext().
+ * The FIDO collector key is never part of a payload. typeIndex is this
+ * collector's position among the collectors with the same action, because the
+ * native resolvers count registration and authentication collectors separately.
+ *
+ * fidoClient comes from the config module so createFidoClient() has registered
+ * the FIDO2 type before the first start().
+ */
+
+import React, { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import type { FidoCollector } from '@ping-identity/rn-fido';
+import type { DaVinciInstance } from '@ping-identity/rn-types';
+import { PingErrorMessage, PingPrimaryButton } from '../theme/PingTheme';
+import { fidoClient } from '../<AppName>DaVinciConfig';
+
+type Props = {
+  collector: FidoCollector;
+  /** DaVinci client from useDaVinciContext(); the ceremony targets its flow. */
+  client: DaVinciInstance | null;
+  /** Zero-based position of this collector among same-action FIDO collectors. */
+  typeIndex: number;
+  /**
+   * Runs an async operation inside the renderer's shared single-flight guard,
+   * which also covers submit, flow taps, and the polling advance. The whole
+   * ceremony plus the advancing onNext must run through it, so a pending
+   * ceremony blocks submit and vice versa.
+   */
+  onPerform: (action: () => Promise<void>) => Promise<void>;
+  /** True while the renderer's single-flight guard holds another operation. */
+  disabled?: boolean;
+  /** Awaits the parent's flow advance after the ceremony completes. */
+  onNext: () => Promise<void>;
+};
+
+/**
+ * Runs the passkey ceremony for a FIDO2 collector, then advances the flow.
+ *
+ * @returns The FIDO trigger element.
+ */
+export function FidoCollectorView({
+  collector,
+  client,
+  typeIndex,
+  onPerform,
+  disabled = false,
+  onNext,
+}: Props): React.ReactElement {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fallbackLabel =
+    collector.action === 'REGISTER'
+      ? 'Register passkey'
+      : 'Sign in with passkey';
+
+  const handlePress = async () => {
+    setBusy(true);
+    setError(null);
+    // Ceremony + advancing onNext acquire the renderer's shared guard, so a
+    // pending ceremony blocks submit and a pending submit blocks the button.
+    // The outer finally clears busy even when the guard declines execution.
+    try {
+      await onPerform(async () => {
+        try {
+          if (!client) {
+            throw new Error(
+              'No DaVinci client is available for the FIDO ceremony.',
+            );
+          }
+          if (collector.action === 'REGISTER') {
+            await fidoClient.registerForDaVinci(client, { index: typeIndex });
+          } else {
+            await fidoClient.authenticateForDaVinci(client, {
+              index: typeIndex,
+            });
+          }
+          await onNext();
+        } catch (err) {
+          // TODO: once @ping-identity/rn-fido exposes FidoError.clientError
+          // (not in the pinned v1.1.0), advance the flow with onNext() when a
+          // rejection carries it: a cancelled passkey prompt is a classified
+          // ceremony failure the server must branch on. Rejections without it
+          // (e.g. FIDO_COLLECTOR_NOT_FOUND) stay local so the node can retry.
+          setError(err instanceof Error ? err.message : String(err));
+        }
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      {error ? <PingErrorMessage message={error} /> : null}
+      <PingPrimaryButton
+        title={collector.label || fallbackLabel}
+        onPress={handlePress}
+        disabled={busy || disabled}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    marginBottom: 12,
+  },
+});

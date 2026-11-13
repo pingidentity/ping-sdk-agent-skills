@@ -124,10 +124,10 @@ Before submitting, verify your skill works:
 1. Install the skill locally:
    ```bash
    # Copy to your project's skills directory
-   cp -r ./plugins/ping-identity-sdks/skills/my-skill .github/skills/
+   cp -r ./plugins/ping-orchestration-sdks/skills/my-skill .github/skills/
 
    # Or install via Skills CLI from local path
-   npx skills add ./plugins/ping-identity-sdks
+   npx skills add ./plugins/ping-orchestration-sdks
    ```
 2. Open your AI coding assistant and ask it to perform the task your skill covers
 3. Verify the generated code is correct and follows the patterns in your skill

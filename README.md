@@ -99,7 +99,7 @@ The AI will load the appropriate skill and provide guidance based on the SKILL.m
 | Skill | Description |
 |-------|-------------|
 | [ping-orchestration-ios-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-ios-sdk/SKILL.md) | Implements authentication in iOS apps using the Ping Orchestration iOS SDK (`Ping/ping-ios-sdk`) — SwiftUI + MVVM, Journey callbacks, DaVinci collectors, OIDC centralized login (ASWebAuthenticationSession/SFSafariViewController), FIDO/passkeys, Protect, device binding, KeychainStorage, and full Xcode project scaffolding. Also covers PingAM/AIC Journey export analysis. |
-| [ping-orchestration-react-native-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-react-native-sdk/SKILL.md) | Implements authentication in React Native apps using the Ping Identity React Native SDK (`@ping-identity/rn-*`) — Journey flows with `createJourneyClient`/`useJourney`/`JourneyProvider`, callback rendering, `useJourneyForm` submit planning, OIDC Web flows with `createOidcClient`/`createOidcWebClient`/`useOidc`/`OidcProvider`, FIDO/passkeys, and both iOS and Android redirect URI wiring. |
+| [ping-orchestration-react-native-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-react-native-sdk/SKILL.md) | Implements authentication in React Native apps using the Ping Identity React Native SDK (`@ping-identity/rn-*`) — Journey flows with `createJourneyClient`/`useJourney`/`JourneyProvider`, callback rendering, `useJourneyForm` submit planning, DaVinci flows with `createDaVinciClient`/`useDaVinci`/`DaVinciProvider`, collector rendering, key-indexed submit, OIDC Web flows with `createOidcClient`/`createOidcWebClient`/`useOidc`/`OidcProvider`, FIDO/passkeys, and both iOS and Android redirect URI wiring. |
 | [ping-orchestration-android-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-android-sdk/SKILL.md) | Implements authentication in Android apps using the Ping Orchestration Android SDK (`com.pingidentity.sdks:android`) — Jetpack Compose + MVVM, Journey callbacks, DaVinci collectors, OIDC centralized login, FIDO/passkeys, Protect, device binding, EncryptedDataStore, and full project scaffolding. Covers both new project creation and existing app integration. |
 | [ping-orchestration-javascript-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-javascript-sdk/SKILL.md) | Implements authentication in web apps using the Ping Orchestration JavaScript SDK (`@forgerock/journey-client`, `@forgerock/davinci-client`, `@forgerock/oidc-client`) — React + Vite, Journey callbacks (via delegate), DaVinci collectors (via delegate), and OIDC centralized login. Covers both sample app creation and existing app integration. |
 | [ping-orchestration-reactjs-journey-sdk](./plugins/ping-orchestration-sdks/skills/ping-orchestration-reactjs-journey-sdk/SKILL.md) | Implements authentication in ReactJS SPAs using the Ping Orchestration JavaScript SDK (`@forgerock/journey-client`) — Vite + React 18, all Journey callbacks, OIDC token exchange, protected routes, and user profile display. |
@@ -150,7 +150,7 @@ plugins/
         │   ├── references/
         │   ├── assets/
         │   └── scripts/
-        ├── ping-orchestration-react-native-sdk/     # React Native umbrella skill (Journey, OIDC)
+        ├── ping-orchestration-react-native-sdk/     # React Native umbrella skill (Journey, DaVinci, OIDC)
         │   ├── SKILL.md
         │   └── references/
         └── forgerock-to-ping-journey-migration/     # ForgeRock SDK to Orchestration SDK migration

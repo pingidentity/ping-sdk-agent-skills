@@ -1,0 +1,55 @@
+/*
+ * ReadOnlyTextCollectorView.tsx: DaVinci core collector
+ *
+ * Renders a READ_ONLY_TEXT collector: an optional title (shown when
+ * collector.titleEnabled is true) and collector.content. Output only: it never
+ * contributes to the next() payload.
+ */
+
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import type { ReadOnlyTextCollector } from '@ping-identity/rn-davinci';
+import { PingColors } from '../theme/PingTheme';
+
+type Props = {
+  collector: ReadOnlyTextCollector;
+};
+
+/**
+ * Renders the title and content of a READ_ONLY_TEXT collector.
+ *
+ * @returns The read-only element.
+ */
+export function ReadOnlyTextCollectorView({
+  collector,
+}: Props): React.ReactElement {
+  return (
+    <View style={styles.container}>
+      {collector.titleEnabled && collector.title ? (
+        <Text style={styles.title}>{collector.title}</Text>
+      ) : null}
+      <Text style={styles.content}>{collector.content}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    marginBottom: 12,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: PingColors.background,
+    gap: 4,
+  },
+  title: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: PingColors.onSurface,
+  },
+  content: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: PingColors.onSurface,
+  },
+});

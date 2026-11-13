@@ -1,0 +1,68 @@
+/*
+ * IntegrationCollectorView.tsx: DaVinci fallback for collectors with no view
+ *
+ * Rendered by the renderer shells for any collector whose kind is 'integration'
+ * or 'unknown' when the matching integration view is not generated into this
+ * app (the tier did not include it): FIDO2, PROTECT or SOCIAL_LOGIN_BUTTON, or
+ * a type the bridge does not recognise. See references/davinci-collectors.md in
+ * the skill for the integration-required collector types.
+ */
+
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { PingColors } from '../theme/PingTheme';
+
+type Props = {
+  collector: { key: string; type: string };
+};
+
+/**
+ * Renders a placeholder for a collector whose type has no view in this app.
+ *
+ * @returns The placeholder card element.
+ */
+export function IntegrationCollectorView({
+  collector,
+}: Props): React.ReactElement {
+  return (
+    <View style={styles.container}>
+      <View style={styles.accentBar} />
+      <View style={styles.body}>
+        <Text style={styles.type}>{collector.type}</Text>
+        <Text style={styles.message}>
+          This collector needs an integration that is not set up in this app.
+        </Text>
+        <Text style={styles.type}>Key: {collector.key}</Text>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    backgroundColor: PingColors.background,
+    borderRadius: 8,
+    overflow: 'hidden',
+    width: '100%',
+    marginBottom: 8,
+  },
+  accentBar: {
+    width: 4,
+    backgroundColor: '#E65100',
+  },
+  body: {
+    flex: 1,
+    padding: 12,
+    gap: 4,
+  },
+  type: {
+    fontSize: 12,
+    color: PingColors.outline,
+  },
+  message: {
+    fontSize: 14,
+    color: PingColors.onSurface,
+    lineHeight: 20,
+  },
+});

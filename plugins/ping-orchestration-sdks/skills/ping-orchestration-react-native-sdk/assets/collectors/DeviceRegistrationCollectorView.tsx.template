@@ -1,0 +1,100 @@
+/*
+ * DeviceRegistrationCollectorView.tsx: DaVinci core collector
+ *
+ * Renders one button per collector.devices entry for a DEVICE_REGISTRATION
+ * collector (the device types the user may register, for example SMS or EMAIL).
+ * Submit key: collector.key. Payload value: { type: device.type }, a map with
+ * a `type` field and not the bare type string. Both native value appliers reject
+ * a string.
+ */
+
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import type {
+  DaVinciFormValue,
+  DeviceRegistrationCollector,
+} from '@ping-identity/rn-davinci';
+import { PingColors } from '../theme/PingTheme';
+
+type Props = {
+  collector: DeviceRegistrationCollector;
+  value: DaVinciFormValue | undefined;
+  onChange: (value: { type: string }) => void;
+};
+
+/**
+ * Renders one registration button per device option of a DEVICE_REGISTRATION collector.
+ *
+ * @returns The device list element.
+ */
+export function DeviceRegistrationCollectorView({
+  collector,
+  value,
+  onChange,
+}: Props): React.ReactElement {
+  const selectedType =
+    value !== null && typeof value === 'object' && 'type' in value
+      ? value.type
+      : undefined;
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.label}>
+        {collector.required ? `${collector.label} *` : collector.label}
+      </Text>
+      {collector.devices.map((device) => {
+        const isSelected = selectedType === device.type;
+        return (
+          <TouchableOpacity
+            key={device.type}
+            onPress={() => onChange({ type: device.type })}
+            style={[styles.option, isSelected && styles.optionSelected]}
+            activeOpacity={0.75}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isSelected }}
+          >
+            <Text style={styles.optionTitle}>{device.title}</Text>
+            {device.description ? (
+              <Text style={styles.optionDescription}>{device.description}</Text>
+            ) : null}
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    marginBottom: 12,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: PingColors.onSurface,
+    marginBottom: 8,
+  },
+  option: {
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: PingColors.textField,
+    marginBottom: 6,
+    backgroundColor: PingColors.surface,
+  },
+  optionSelected: {
+    borderColor: PingColors.red,
+    backgroundColor: '#FFF5F4',
+  },
+  optionTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: PingColors.onSurface,
+  },
+  optionDescription: {
+    marginTop: 2,
+    fontSize: 12,
+    color: PingColors.outline,
+  },
+});

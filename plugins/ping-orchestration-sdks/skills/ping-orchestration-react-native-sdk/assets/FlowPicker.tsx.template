@@ -1,0 +1,47 @@
+/*
+ * FlowPicker.tsx — Journey + OIDC flow
+ *
+ * Entry screen for an app that offers both flows. Routes to the Journey or the
+ * OIDC login screen.
+ * Uses navigation.navigate() so the back button returns to this screen.
+ *
+ * Required: JourneyProvider and OidcProvider must wrap NavigationContainer in App.tsx.
+ */
+
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { PingHeaderView, PingPrimaryButton } from '../theme/PingTheme';
+
+export function FlowPicker() {
+  const navigation = useNavigation<any>();
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <PingHeaderView title="Sign In" subtitle="Choose how to sign in" />
+      <View style={styles.content}>
+        <PingPrimaryButton
+          title="Sign in with Journey"
+          onPress={() => navigation.navigate('JourneyLogin')}
+        />
+        <PingPrimaryButton
+          title="Sign in with browser (OIDC)"
+          onPress={() => navigation.navigate('OidcLogin')}
+        />
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    padding: 24,
+    justifyContent: 'center',
+    gap: 12,
+  },
+});
